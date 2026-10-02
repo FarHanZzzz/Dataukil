@@ -1,0 +1,33 @@
+{
+  "dataset_sha256": "2da7c31503bb26ff41e6b9e4997892a02773728211a4ca66f90fe7f6c4445966",
+  "split_strategy": "complete dependent phrase families, cases and translations grouped",
+  "counts": {
+    "train": 1080,
+    "dev": 432,
+    "test": 432
+  },
+  "groups": {
+    "train": [
+      "phrase-family-0",
+      "phrase-family-1",
+      "phrase-family-2",
+      "phrase-family-3",
+      "phrase-family-4"
+    ],
+    "dev": [
+      "phrase-family-5",
+      "phrase-family-6"
+    ],
+    "test": [
+      "phrase-family-7",
+      "phrase-family-8"
+    ]
+  },
+  "cases": {
+    "train": 180,
+    "dev": 72,
+    "test": 72
+  },
+  "independent_human_review": false,
+  "hidden_truth_used": false
+}

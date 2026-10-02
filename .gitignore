@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+.pytest_cache/
+runtime/
+models/encoder/
+data/embedding_cache.npz
+*.pyc
+node_modules/
+artifacts/screenshots/

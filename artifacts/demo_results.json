@@ -1,0 +1,93 @@
+{
+  "synthetic": true,
+  "actual_artifact_inference": true,
+  "database": "D:\\dataukil\\runtime\\walkthrough-632bf85f.sqlite3",
+  "journeys": [
+    {
+      "journey": 1,
+      "case_version": 3,
+      "evidence_version": 1,
+      "facts": {
+        "qr_confirmed": true,
+        "cash_confirmed": true,
+        "purchase_total_minor": 50000,
+        "recorded_paid_minor": 100000,
+        "recorded_repaid_minor": 0,
+        "recorded_excess_minor": 50000,
+        "requirements": [],
+        "conflict": false,
+        "split_tender": false
+      },
+      "analysis_seconds_including_load": 6.877791100181639,
+      "model_engine": "rules_primary_with_trained_advisory",
+      "status": "verified"
+    },
+    {
+      "journey": 2,
+      "case_version": 2,
+      "evidence_version": 1,
+      "facts": {
+        "qr_confirmed": true,
+        "cash_confirmed": false,
+        "purchase_total_minor": 50000,
+        "recorded_paid_minor": 50000,
+        "recorded_repaid_minor": 0,
+        "recorded_excess_minor": 0,
+        "requirements": [
+          "Establish whether the second QR reference belongs to the same purchase."
+        ],
+        "conflict": false,
+        "split_tender": false
+      },
+      "analysis_seconds_including_load": 0.10135119990445673,
+      "model_engine": "rules_primary_with_trained_advisory",
+      "status": "verified"
+    },
+    {
+      "journey": 3,
+      "case_version": 3,
+      "evidence_version": 1,
+      "facts": {
+        "qr_confirmed": true,
+        "cash_confirmed": false,
+        "purchase_total_minor": null,
+        "recorded_paid_minor": 50000,
+        "recorded_repaid_minor": 0,
+        "recorded_excess_minor": null,
+        "requirements": [
+          "Obtain a merchant acknowledgement of the alleged cash payment and purchase reference.",
+          "Obtain an invoice identifying this purchase and its total."
+        ],
+        "conflict": false,
+        "split_tender": false
+      },
+      "analysis_seconds_including_load": 0.08008369989693165,
+      "model_engine": "rules_primary_with_trained_advisory",
+      "status": "verified"
+    },
+    {
+      "journey": 4,
+      "case_version": 2,
+      "evidence_version": 1,
+      "facts": {
+        "qr_confirmed": true,
+        "cash_confirmed": true,
+        "purchase_total_minor": 50000,
+        "recorded_paid_minor": 100000,
+        "recorded_repaid_minor": 0,
+        "recorded_excess_minor": 50000,
+        "requirements": [],
+        "conflict": false,
+        "split_tender": false
+      },
+      "analysis_seconds_including_load": 0.10106889996677637,
+      "model_engine": "rules_primary_with_trained_advisory",
+      "status": "verified"
+    }
+  ],
+  "repayment_update": {
+    "stale_analysis_invalidated": true,
+    "recorded_repaid_minor": 50000,
+    "human_review_cited": true
+  }
+}

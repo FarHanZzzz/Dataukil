@@ -1,0 +1,7 @@
+{
+  "primary": "rules",
+  "trained_advisory": true,
+  "reason": "Select the more reliable measured path on the frozen authored challenge; this is not independent human validation.",
+  "evaluation_version": 2,
+  "rules_version": 2
+}

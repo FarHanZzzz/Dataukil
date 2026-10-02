@@ -1,0 +1,48 @@
+{
+  "task": "three-label visible claim/passage assessment",
+  "architecture": "frozen multilingual E5-small + standardized logistic regression head",
+  "encoder": {
+    "repo": "intfloat/multilingual-e5-small",
+    "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "license": "MIT",
+    "encoder_frozen": true
+  },
+  "labels": [
+    "SUPPORTED_BY_PASSAGE",
+    "CONTRADICTED_BY_PASSAGE",
+    "INSUFFICIENT_EVIDENCE"
+  ],
+  "classifier_sha256": "7ae461354e62671b66c06f32d83a7388410669dff3d1b7916b9e6edf1b1d6a5c",
+  "dataset_sha256": "2da7c31503bb26ff41e6b9e4997892a02773728211a4ca66f90fe7f6c4445966",
+  "challenge_sha256_before_selection": "9851d23bc7298d08b175b8bb8bbcc295b12ff1896f50f063aae18df4b83368a2",
+  "preprocessing": {
+    "normalization": "NFC + Bengali digits to ASCII for model only; originals preserved",
+    "max_tokens": 256,
+    "prefix": "query: ",
+    "pooling": "masked mean, L2 normalization"
+  },
+  "trained_component": "logistic regression head only",
+  "encoder_finetuned": false,
+  "calibrated": false,
+  "training_pairs": 1080,
+  "development_pairs": 432,
+  "chosen_C": 1.0,
+  "development_candidates": [
+    {
+      "C": 0.05,
+      "dev_macro_f1": 0.6651168070660542
+    },
+    {
+      "C": 0.2,
+      "dev_macro_f1": 0.6613563145184832
+    },
+    {
+      "C": 1.0,
+      "dev_macro_f1": 0.6710291025643574
+    }
+  ],
+  "training_seconds": 27.02879670006223,
+  "python": "3.13.7",
+  "independent_human_review": false,
+  "limitations": "Fictional agent-labelled corpus; no production/domain accuracy certification."
+}

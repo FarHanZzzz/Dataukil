@@ -1,0 +1,543 @@
+{
+  "status": "completed",
+  "version": 1,
+  "synthetic": true,
+  "independent_human_review": false,
+  "model": {
+    "task": "three-label visible claim/passage assessment",
+    "architecture": "frozen multilingual E5-small + standardized logistic regression head",
+    "encoder": {
+      "repo": "intfloat/multilingual-e5-small",
+      "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+      "license": "MIT",
+      "encoder_frozen": true
+    },
+    "labels": [
+      "SUPPORTED_BY_PASSAGE",
+      "CONTRADICTED_BY_PASSAGE",
+      "INSUFFICIENT_EVIDENCE"
+    ],
+    "classifier_sha256": "7ae461354e62671b66c06f32d83a7388410669dff3d1b7916b9e6edf1b1d6a5c",
+    "dataset_sha256": "2da7c31503bb26ff41e6b9e4997892a02773728211a4ca66f90fe7f6c4445966",
+    "challenge_sha256_before_selection": "9851d23bc7298d08b175b8bb8bbcc295b12ff1896f50f063aae18df4b83368a2",
+    "preprocessing": {
+      "normalization": "NFC + Bengali digits to ASCII for model only; originals preserved",
+      "max_tokens": 256,
+      "prefix": "query: ",
+      "pooling": "masked mean, L2 normalization"
+    },
+    "trained_component": "logistic regression head only",
+    "encoder_finetuned": false,
+    "calibrated": false,
+    "training_pairs": 1080,
+    "development_pairs": 432,
+    "chosen_C": 1.0,
+    "development_candidates": [
+      {
+        "C": 0.05,
+        "dev_macro_f1": 0.6651168070660542
+      },
+      {
+        "C": 0.2,
+        "dev_macro_f1": 0.6613563145184832
+      },
+      {
+        "C": 1.0,
+        "dev_macro_f1": 0.6710291025643574
+      }
+    ],
+    "training_seconds": 27.02879670006223,
+    "python": "3.13.7",
+    "independent_human_review": false,
+    "limitations": "Fictional agent-labelled corpus; no production/domain accuracy certification."
+  },
+  "suites": {
+    "grouped_synthetic": {
+      "rules": {
+        "pairs": 432,
+        "case_bundles": 72,
+        "accuracy": 0.8541666666666666,
+        "macro_f1": 0.8099654482633206,
+        "confusion_matrix": [
+          [
+            54,
+            0,
+            18
+          ],
+          [
+            9,
+            60,
+            3
+          ],
+          [
+            21,
+            12,
+            255
+          ]
+        ],
+        "label_order": [
+          "SUPPORTED_BY_PASSAGE",
+          "CONTRADICTED_BY_PASSAGE",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "report": {
+          "SUPPORTED_BY_PASSAGE": {
+            "precision": 0.6428571428571429,
+            "recall": 0.75,
+            "f1-score": 0.6923076923076923,
+            "support": 72.0
+          },
+          "CONTRADICTED_BY_PASSAGE": {
+            "precision": 0.8333333333333334,
+            "recall": 0.8333333333333334,
+            "f1-score": 0.8333333333333334,
+            "support": 72.0
+          },
+          "INSUFFICIENT_EVIDENCE": {
+            "precision": 0.9239130434782609,
+            "recall": 0.8854166666666666,
+            "f1-score": 0.9042553191489362,
+            "support": 288.0
+          },
+          "accuracy": 0.8541666666666666,
+          "macro avg": {
+            "precision": 0.8000345065562456,
+            "recall": 0.8229166666666666,
+            "f1-score": 0.8099654482633206,
+            "support": 432.0
+          },
+          "weighted avg": {
+            "precision": 0.8619737750172533,
+            "recall": 0.8541666666666666,
+            "f1-score": 0.8571103837061285,
+            "support": 432.0
+          }
+        },
+        "unsupported_support_fraction": 0.35714285714285715,
+        "non_insufficient_coverage": 0.3611111111111111,
+        "seconds": 0.009870999958366156,
+        "mean_ms_per_pair": 0.0228495369406624,
+        "language_slices": {
+          "banglish": {
+            "pairs": 144,
+            "macro_f1": 0.9111111111111111
+          },
+          "bn": {
+            "pairs": 144,
+            "macro_f1": 0.6950967161493478
+          },
+          "en": {
+            "pairs": 144,
+            "macro_f1": 0.8193732193732194
+          }
+        }
+      },
+      "retrieval_only": {
+        "pairs": 432,
+        "case_bundles": 72,
+        "accuracy": 0.6203703703703703,
+        "macro_f1": 0.4255919959041259,
+        "confusion_matrix": [
+          [
+            72,
+            0,
+            0
+          ],
+          [
+            65,
+            0,
+            7
+          ],
+          [
+            92,
+            0,
+            196
+          ]
+        ],
+        "label_order": [
+          "SUPPORTED_BY_PASSAGE",
+          "CONTRADICTED_BY_PASSAGE",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "report": {
+          "SUPPORTED_BY_PASSAGE": {
+            "precision": 0.314410480349345,
+            "recall": 1.0,
+            "f1-score": 0.47840531561461797,
+            "support": 72.0
+          },
+          "CONTRADICTED_BY_PASSAGE": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 72.0
+          },
+          "INSUFFICIENT_EVIDENCE": {
+            "precision": 0.9655172413793104,
+            "recall": 0.6805555555555556,
+            "f1-score": 0.7983706720977597,
+            "support": 288.0
+          },
+          "accuracy": 0.6203703703703703,
+          "macro avg": {
+            "precision": 0.4266425739095518,
+            "recall": 0.5601851851851852,
+            "f1-score": 0.4255919959041259,
+            "support": 432.0
+          },
+          "weighted avg": {
+            "precision": 0.6960799076444311,
+            "recall": 0.6203703703703703,
+            "f1-score": 0.6119813340009428,
+            "support": 432.0
+          }
+        },
+        "unsupported_support_fraction": 0.6855895196506551,
+        "non_insufficient_coverage": 0.5300925925925926,
+        "seconds": 2.4024667001795024,
+        "mean_ms_per_pair": 5.561265509674774,
+        "language_slices": {
+          "banglish": {
+            "pairs": 144,
+            "macro_f1": 0.3670175438596492
+          },
+          "bn": {
+            "pairs": 144,
+            "macro_f1": 0.4696969696969697
+          },
+          "en": {
+            "pairs": 144,
+            "macro_f1": 0.4404040404040404
+          }
+        }
+      },
+      "trained_verifier": {
+        "pairs": 432,
+        "case_bundles": 72,
+        "accuracy": 0.8819444444444444,
+        "macro_f1": 0.8269820004556846,
+        "confusion_matrix": [
+          [
+            53,
+            0,
+            19
+          ],
+          [
+            0,
+            40,
+            32
+          ],
+          [
+            0,
+            0,
+            288
+          ]
+        ],
+        "label_order": [
+          "SUPPORTED_BY_PASSAGE",
+          "CONTRADICTED_BY_PASSAGE",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "report": {
+          "SUPPORTED_BY_PASSAGE": {
+            "precision": 1.0,
+            "recall": 0.7361111111111112,
+            "f1-score": 0.848,
+            "support": 72.0
+          },
+          "CONTRADICTED_BY_PASSAGE": {
+            "precision": 1.0,
+            "recall": 0.5555555555555556,
+            "f1-score": 0.7142857142857143,
+            "support": 72.0
+          },
+          "INSUFFICIENT_EVIDENCE": {
+            "precision": 0.8495575221238938,
+            "recall": 1.0,
+            "f1-score": 0.9186602870813397,
+            "support": 288.0
+          },
+          "accuracy": 0.8819444444444444,
+          "macro avg": {
+            "precision": 0.9498525073746312,
+            "recall": 0.763888888888889,
+            "f1-score": 0.8269820004556846,
+            "support": 432.0
+          },
+          "weighted avg": {
+            "precision": 0.8997050147492625,
+            "recall": 0.8819444444444444,
+            "f1-score": 0.8728211437685123,
+            "support": 432.0
+          }
+        },
+        "unsupported_support_fraction": 0.0,
+        "non_insufficient_coverage": 0.2152777777777778,
+        "seconds": 2.4024667001795024,
+        "mean_ms_per_pair": 5.561265509674774,
+        "language_slices": {
+          "banglish": {
+            "pairs": 144,
+            "macro_f1": 0.5277518446017165
+          },
+          "bn": {
+            "pairs": 144,
+            "macro_f1": 0.8994830743303464
+          },
+          "en": {
+            "pairs": 144,
+            "macro_f1": 0.9628942486085345
+          }
+        }
+      }
+    },
+    "authored_challenge": {
+      "rules": {
+        "pairs": 37,
+        "case_bundles": 36,
+        "accuracy": 0.6216216216216216,
+        "macro_f1": 0.6088829471182412,
+        "confusion_matrix": [
+          [
+            4,
+            1,
+            7
+          ],
+          [
+            0,
+            9,
+            3
+          ],
+          [
+            1,
+            2,
+            10
+          ]
+        ],
+        "label_order": [
+          "SUPPORTED_BY_PASSAGE",
+          "CONTRADICTED_BY_PASSAGE",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "report": {
+          "SUPPORTED_BY_PASSAGE": {
+            "precision": 0.8,
+            "recall": 0.3333333333333333,
+            "f1-score": 0.47058823529411764,
+            "support": 12.0
+          },
+          "CONTRADICTED_BY_PASSAGE": {
+            "precision": 0.75,
+            "recall": 0.75,
+            "f1-score": 0.75,
+            "support": 12.0
+          },
+          "INSUFFICIENT_EVIDENCE": {
+            "precision": 0.5,
+            "recall": 0.7692307692307693,
+            "f1-score": 0.6060606060606061,
+            "support": 13.0
+          },
+          "accuracy": 0.6216216216216216,
+          "macro avg": {
+            "precision": 0.6833333333333332,
+            "recall": 0.6175213675213675,
+            "f1-score": 0.6088829471182412,
+            "support": 37.0
+          },
+          "weighted avg": {
+            "precision": 0.6783783783783784,
+            "recall": 0.6216216216216216,
+            "f1-score": 0.608806667630197,
+            "support": 37.0
+          }
+        },
+        "unsupported_support_fraction": 0.2,
+        "non_insufficient_coverage": 0.4594594594594595,
+        "seconds": 0.0009593998547643423,
+        "mean_ms_per_pair": 0.025929725804441684,
+        "language_slices": {
+          "banglish": {
+            "pairs": 12,
+            "macro_f1": 0.6666666666666666
+          },
+          "bn": {
+            "pairs": 12,
+            "macro_f1": 0.47222222222222215
+          },
+          "en": {
+            "pairs": 13,
+            "macro_f1": 0.5884615384615385
+          }
+        }
+      },
+      "retrieval_only": {
+        "pairs": 37,
+        "case_bundles": 36,
+        "accuracy": 0.4594594594594595,
+        "macro_f1": 0.3668468468468469,
+        "confusion_matrix": [
+          [
+            10,
+            0,
+            2
+          ],
+          [
+            9,
+            0,
+            3
+          ],
+          [
+            6,
+            0,
+            7
+          ]
+        ],
+        "label_order": [
+          "SUPPORTED_BY_PASSAGE",
+          "CONTRADICTED_BY_PASSAGE",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "report": {
+          "SUPPORTED_BY_PASSAGE": {
+            "precision": 0.4,
+            "recall": 0.8333333333333334,
+            "f1-score": 0.5405405405405406,
+            "support": 12.0
+          },
+          "CONTRADICTED_BY_PASSAGE": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1-score": 0.0,
+            "support": 12.0
+          },
+          "INSUFFICIENT_EVIDENCE": {
+            "precision": 0.5833333333333334,
+            "recall": 0.5384615384615384,
+            "f1-score": 0.56,
+            "support": 13.0
+          },
+          "accuracy": 0.4594594594594595,
+          "macro avg": {
+            "precision": 0.3277777777777778,
+            "recall": 0.45726495726495725,
+            "f1-score": 0.3668468468468469,
+            "support": 37.0
+          },
+          "weighted avg": {
+            "precision": 0.3346846846846847,
+            "recall": 0.4594594594594595,
+            "f1-score": 0.37206720233747265,
+            "support": 37.0
+          }
+        },
+        "unsupported_support_fraction": 0.6,
+        "non_insufficient_coverage": 0.6756756756756757,
+        "seconds": 0.43173840013332665,
+        "mean_ms_per_pair": 11.668605409008828,
+        "language_slices": {
+          "banglish": {
+            "pairs": 12,
+            "macro_f1": 0.32996632996632996
+          },
+          "bn": {
+            "pairs": 12,
+            "macro_f1": 0.41269841269841273
+          },
+          "en": {
+            "pairs": 13,
+            "macro_f1": 0.3666666666666667
+          }
+        }
+      },
+      "trained_verifier": {
+        "pairs": 37,
+        "case_bundles": 36,
+        "accuracy": 0.5135135135135135,
+        "macro_f1": 0.4708994708994709,
+        "confusion_matrix": [
+          [
+            2,
+            0,
+            10
+          ],
+          [
+            0,
+            5,
+            7
+          ],
+          [
+            0,
+            1,
+            12
+          ]
+        ],
+        "label_order": [
+          "SUPPORTED_BY_PASSAGE",
+          "CONTRADICTED_BY_PASSAGE",
+          "INSUFFICIENT_EVIDENCE"
+        ],
+        "report": {
+          "SUPPORTED_BY_PASSAGE": {
+            "precision": 1.0,
+            "recall": 0.16666666666666666,
+            "f1-score": 0.2857142857142857,
+            "support": 12.0
+          },
+          "CONTRADICTED_BY_PASSAGE": {
+            "precision": 0.8333333333333334,
+            "recall": 0.4166666666666667,
+            "f1-score": 0.5555555555555556,
+            "support": 12.0
+          },
+          "INSUFFICIENT_EVIDENCE": {
+            "precision": 0.41379310344827586,
+            "recall": 0.9230769230769231,
+            "f1-score": 0.5714285714285714,
+            "support": 13.0
+          },
+          "accuracy": 0.5135135135135135,
+          "macro avg": {
+            "precision": 0.7490421455938697,
+            "recall": 0.5021367521367521,
+            "f1-score": 0.4708994708994709,
+            "support": 37.0
+          },
+          "weighted avg": {
+            "precision": 0.7399813606710158,
+            "recall": 0.5135135135135135,
+            "f1-score": 0.4736164736164736,
+            "support": 37.0
+          }
+        },
+        "unsupported_support_fraction": 0.0,
+        "non_insufficient_coverage": 0.21621621621621623,
+        "seconds": 0.43173840013332665,
+        "mean_ms_per_pair": 11.668605409008828,
+        "language_slices": {
+          "banglish": {
+            "pairs": 12,
+            "macro_f1": 0.45714285714285713
+          },
+          "bn": {
+            "pairs": 12,
+            "macro_f1": 0.6412698412698412
+          },
+          "en": {
+            "pairs": 13,
+            "macro_f1": 0.27777777777777773
+          }
+        }
+      }
+    }
+  },
+  "limitations": [
+    "All labels authored by the implementation agent; no independent human review.",
+    "Template-disjoint synthetic tests are not production incidents.",
+    "Separately authored challenge is frozen before selection but not an independent human test.",
+    "No external LLM baseline: no service configured.",
+    "OCR, reviewer correction/preparation time, customer comprehension, financial benefit and real partner accuracy not measured.",
+    "Latency is local CPU batch inference; no hosted billing or production load test."
+  ],
+  "operational_assertions": "Measured separately by API acceptance tests; classifier labels never grant source authority."
+}
