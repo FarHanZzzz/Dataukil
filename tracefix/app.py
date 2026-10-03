@@ -166,6 +166,16 @@ def customer_page(rest:str):
     return FileResponse(PAY_PAGES/'customer.html')
 
 
+@app.get('/admin')
+def admin_root():
+    return RedirectResponse('/admin/queue')
+
+
+@app.get('/admin/{rest:path}')
+def admin_page(rest:str):
+    return FileResponse(PAY_PAGES/'admin.html')
+
+
 @app.post('/api/session')
 async def start_session(request:Request,response:Response):
     p=await payload(request)
