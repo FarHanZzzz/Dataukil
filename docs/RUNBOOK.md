@@ -4,10 +4,34 @@
 
 ```powershell
 cd D:\dataukil
-.venv\Scripts\python.exe -m uvicorn tracefix.app:app --host 127.0.0.1 --port 8000
+.\run.ps1 -Restart
 ```
 
-Open http://127.0.0.1:8000. The local background server may already own port 8000; do not start a duplicate server. `Get-NetTCPConnection -LocalPort 8000 -State Listen` identifies its actual process. Inspect its command before stopping it; do not stop unrelated Python processes. Logs of the agent-started server: runtime/server.out.log and server.err.log. Alternatively run scripts/start.ps1 in a terminal.
+Open http://127.0.0.1:8000/customer or http://127.0.0.1:8000/operations. The launcher checks imports and `-Restart` replaces only this workspace's existing TraceFix server. Saved cases and uploads remain on disk. **Ctrl+C** stops it.
+
+Use `.\run.ps1 -Check` to check imports and port status without launching. `.\run.ps1 -Restart -Reload` enables development reload; an interrupted investigation needs an explicit restart. An unrelated application on port 8000 is left alone; choose another port with `.\run.ps1 -Port 8001`. The same switches work with `scripts/start.ps1`.
+
+The retained QR/cash simulation is at `/demo`. At `/customer`, create a synthetic bank-to-upay transfer, run its stages and report the issue. Open its case from Operations and click **Analyze Case** to enter the Studio. **Verified duplicate** supports a separately approved sandbox reversal. **Missing response** blocks repair and requires an owned handoff.
+
+## Run the mobile app simulation
+
+1. Open **Live simulation**, or choose **Customer app** for the phone alone. Use **Simulation controls → New simulation** to create another purchase while preserving previous work.
+2. Enter name, merchant, item, invoice total and QR amount. Continue to payment, choose **Pay by QR**, then record the cash payment in the unclear-result screen.
+3. Check the QR status, choose **Report paying twice**, and submit your own complaint wording. The saved case appears in the phone and investigator desk; an initial evidence assessment runs.
+4. In the investigator overview, check the **QR provider**, **Purchase invoice** and **Merchant cash record**, then **Update assessment**. Missing records yield a concrete request for evidence. No missing cash record is automatically classified as a false complaint.
+5. **Request evidence** saves a question and review time. In the phone, **Reply to request** sends a real case message. Staff see it in **Conversation** and as supplied **Evidence**. Review and resolve the request before recording a final outcome.
+6. On a supported assessment, **Request resolution** records a request only. In the separate simulation controls, **Advance repayment source** creates a fictional source record. Staff then check **Repayment record**, update the assessment and **Save review → Record the checked repayment outcome**, citing the completed source record.
+7. The phone displays the investigator's exact review note and confirmed source observations. **Back** returns to all complaints; **Activity** displays the selected purchase's saved events. The staff **Inbox** and simulation purchase selector restore earlier work.
+
+The optional source setup is selected before creating a purchase: independent cash acknowledgement, only a customer assertion, merchant denial or a failed QR. For split tender, enter an invoice total above the QR amount and record the remainder as cash. Model metadata and measured scores are available through **Simulation controls → Model evaluation**. **Evidence → Add supplied evidence** lets staff record additional wording; it stays unverified. Uploaded images have an original-image viewer and separately labelled human transcript.
+
+Reproduce the complete new journey with actual inference:
+
+```powershell
+.venv\Scripts\python.exe scripts\simulation_walkthrough.py
+```
+
+The script uses a new isolated SQLite database in `runtime/`, preserves the browser's database, and writes `artifacts/mobile_walkthrough.json`.
 
 ## Reproduce environment and training
 
@@ -35,10 +59,10 @@ The walkthrough uses a newly generated isolated database in runtime/, invokes th
 
 ## Four judge journeys
 
-1. Open Demo & evaluation, then the linked cash+QR case. Analyze, inspect mock QR/invoice/merchant source authority, and record evidence assembled with citations. No repayment executes.
+1. Open **Simulation controls → Open seeded example cases**, then the linked cash+QR case. Analyze, inspect mock QR/invoice/merchant source authority, and record evidence assembled with citations. No repayment executes.
 2. Open equal-value purchases. Inspect the different purchase reference and its mismatch gate. The recorded tender for this case stays BDT 500.
 3. Open unestablished cash. Inspect the Bangla transcript and unverified provenance, then save the merchant acknowledgement request and next review. Customer portal displays the saved step.
-4. Open repayment case before advancing the source. Requested does not mean completed. In judge view reveal source availability, then staff runs repayment check. Analysis becomes stale, source-backed returned amount becomes BDT 500, and re-analysis enables a cited human outcome record.
+4. Open the seeded repayment case before advancing the source. Requested does not mean completed. In simulation controls choose **Advance seeded repayment example**, then staff runs the repayment check. Analysis becomes stale, source-backed returned amount becomes BDT 500, and re-analysis enables a cited human outcome record.
 
 Useful fixture references: QR-DEMO-001, 003 and 004 for Customer 1; QR-DEMO-002 for Customer 2. Switch Investigator 2 to acknowledge an explicit handoff addressed to staff_2. A failed or unauthorized acknowledgement retains the old owner.
 

@@ -1,0 +1,4127 @@
+{
+  "synthetic": true,
+  "case_information": {
+    "id": "case_c3d6f50c9658",
+    "reference": "TF-42A36B4773BD",
+    "incident_id": "incident_4727318d13e6",
+    "transaction_id": "txn_a2cd79988d8b",
+    "customer_name": "Nadia — fictional QA",
+    "reported_amount_minor": 100000,
+    "issue_type": "PAID_TWICE",
+    "owner": "staff_1",
+    "status": "RESOLVED",
+    "version": 8
+  },
+  "customer_statement": "Please verify this ৳1,000 transfer and all exact postings.",
+  "customer_reported_context": {
+    "transaction_reference": "txn_a2cd79988d8b",
+    "merchant_information": "Fictional recipient wallet",
+    "approximate_time": "03 October 2026, Bangladesh time"
+  },
+  "transaction_reconstruction": {
+    "id": "txn_a2cd79988d8b",
+    "incident_id": "incident_4727318d13e6",
+    "case_id": "case_c3d6f50c9658",
+    "amount_minor": 100000,
+    "currency": "BDT",
+    "scale": 2,
+    "source_account": "DEMO-BANK-1-0042",
+    "destination_wallet": "DEMO-UPAY-1-0187",
+    "state": "CORRECTED",
+    "current_stage": "wallet",
+    "initiated_at": "2026-10-03T02:04:59.616916+00:00",
+    "updated_at": "2026-10-03T02:05:18.039800+00:00",
+    "version": 9,
+    "step": 6,
+    "customer_name": "Nadia — fictional QA",
+    "reset_of": null,
+    "pipeline": [
+      {
+        "id": "customer",
+        "title": "Customer initiated",
+        "status": "completed",
+        "purpose": "Identify the intended amount, source account and destination wallet.",
+        "event_ids": [
+          "event_a111edd2085c"
+        ],
+        "summary": "Simulated bank-to-upay transfer BDT 1000.00 initiated."
+      },
+      {
+        "id": "gateway",
+        "title": "MFS gateway",
+        "status": "completed",
+        "purpose": "Accept the request and assign one correlation identity.",
+        "event_ids": [
+          "event_7460fd42e88f"
+        ],
+        "summary": "Gateway request accepted and exact transaction reference matched."
+      },
+      {
+        "id": "bank",
+        "title": "Bank / partner",
+        "status": "completed",
+        "purpose": "Record the bank debit under the exact transfer reference.",
+        "event_ids": [
+          "event_fab61ba800b0",
+          "event_a4096ce6c492",
+          "event_4d00687ce64d",
+          "event_3e630f2a0f86"
+        ],
+        "summary": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691."
+      },
+      {
+        "id": "queue",
+        "title": "Processing queue",
+        "status": "completed",
+        "purpose": "Track queued processing and retry attempts without assuming another payment.",
+        "event_ids": [
+          "event_19ef70839bf9"
+        ],
+        "summary": "Retry request recorded under the same transaction."
+      },
+      {
+        "id": "response",
+        "title": "Response",
+        "status": "completed",
+        "purpose": "Check whether the partner returned a verified outcome.",
+        "event_ids": [
+          "event_e506d08ffbc9"
+        ],
+        "summary": "Partner response accepted the exact transfer reference."
+      },
+      {
+        "id": "settlement",
+        "title": "Settlement",
+        "status": "completed",
+        "purpose": "Reconcile the bank posting with final settlement.",
+        "event_ids": [
+          "event_4ef69481acac"
+        ],
+        "summary": "One intended settlement is confirmed for this transfer."
+      },
+      {
+        "id": "wallet",
+        "title": "upay wallet",
+        "status": "completed",
+        "purpose": "Confirm the intended wallet credit or retain the unresolved outcome.",
+        "event_ids": [
+          "event_4fa57909209c"
+        ],
+        "summary": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit."
+      }
+    ],
+    "synthetic": true,
+    "can_advance": false,
+    "balances": {
+      "BANK": 900000,
+      "WALLET": 300000,
+      "SUSPENSE": 0
+    },
+    "timeline": [
+      {
+        "id": "event_a111edd2085c",
+        "timestamp": "2026-10-03T02:04:59.616916+00:00",
+        "stage": "customer",
+        "status": "completed",
+        "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+        "purpose": "Identify the intended amount, source account and destination wallet."
+      },
+      {
+        "id": "event_7460fd42e88f",
+        "timestamp": "2026-10-03T02:05:01.616916+00:00",
+        "stage": "gateway",
+        "status": "completed",
+        "text": "Gateway request accepted and exact transaction reference matched.",
+        "purpose": "Accept the request and assign one correlation identity."
+      },
+      {
+        "id": "event_fab61ba800b0",
+        "timestamp": "2026-10-03T02:05:03.616916+00:00",
+        "stage": "bank",
+        "status": "completed",
+        "text": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+        "purpose": "Record the bank debit under the exact transfer reference."
+      },
+      {
+        "id": "event_19ef70839bf9",
+        "timestamp": "2026-10-03T02:05:05.616916+00:00",
+        "stage": "queue",
+        "status": "completed",
+        "text": "Retry request recorded under the same transaction.",
+        "purpose": "Track queued processing and retry attempts without assuming another payment."
+      },
+      {
+        "id": "event_a4096ce6c492",
+        "timestamp": "2026-10-03T02:05:07.616916+00:00",
+        "stage": "bank",
+        "status": "failure",
+        "text": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+        "purpose": "Record the bank debit under the exact transfer reference."
+      },
+      {
+        "id": "event_e506d08ffbc9",
+        "timestamp": "2026-10-03T02:05:09.616916+00:00",
+        "stage": "response",
+        "status": "completed",
+        "text": "Partner response accepted the exact transfer reference.",
+        "purpose": "Check whether the partner returned a verified outcome."
+      },
+      {
+        "id": "event_4ef69481acac",
+        "timestamp": "2026-10-03T02:05:11.616916+00:00",
+        "stage": "settlement",
+        "status": "completed",
+        "text": "One intended settlement is confirmed for this transfer.",
+        "purpose": "Reconcile the bank posting with final settlement."
+      },
+      {
+        "id": "event_4fa57909209c",
+        "timestamp": "2026-10-03T02:05:13.616916+00:00",
+        "stage": "wallet",
+        "status": "completed",
+        "text": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+        "purpose": "Confirm the intended wallet credit or retain the unresolved outcome."
+      },
+      {
+        "id": "event_4d00687ce64d",
+        "timestamp": "2026-10-03T02:05:15.616916+00:00",
+        "stage": "bank",
+        "status": "completed",
+        "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+        "purpose": "Record the bank debit under the exact transfer reference."
+      },
+      {
+        "id": "event_3e630f2a0f86",
+        "timestamp": "2026-10-03T02:05:17.616916+00:00",
+        "stage": "bank",
+        "status": "completed",
+        "text": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+        "purpose": "Record the bank debit under the exact transfer reference."
+      }
+    ],
+    "events": [
+      {
+        "id": "event_a111edd2085c",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 1,
+        "timestamp": "2026-10-03T02:04:59.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.617182+00:00",
+        "stage": "customer",
+        "source": "customer",
+        "status": "completed",
+        "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+        "purpose": "Identify the intended amount, source account and destination wallet.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [],
+        "error": null,
+        "synthetic": true,
+        "evidence": {
+          "id": "ev_1c23897bf814",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:04:59.617205+00:00",
+          "event_at": "2026-10-03T02:04:59.616916+00:00",
+          "as_of": "2026-10-03T02:04:59.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": 100000,
+          "capability": "transfer_intent",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+          "original_hash": "5730ed78e93b586c237c10af6ca9a47d4aec3e349b71b941349461f26f9c3d41",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:04:59.617205+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_a111edd2085c",
+          "source": "customer",
+          "record": {
+            "id": "event_a111edd2085c",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": null,
+            "sequence": 1,
+            "timestamp": "2026-10-03T02:04:59.616916+00:00",
+            "recorded_at": "2026-10-03T02:04:59.617182+00:00",
+            "stage": "customer",
+            "source": "customer",
+            "status": "completed",
+            "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+            "purpose": "Identify the intended amount, source account and destination wallet.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:1",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 0,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": null,
+            "related_event_ids": [],
+            "error": null,
+            "synthetic": true
+          }
+        }
+      },
+      {
+        "id": "event_7460fd42e88f",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 2,
+        "timestamp": "2026-10-03T02:05:01.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.627079+00:00",
+        "stage": "gateway",
+        "source": "gateway",
+        "status": "completed",
+        "text": "Gateway request accepted and exact transaction reference matched.",
+        "purpose": "Accept the request and assign one correlation identity.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_a111edd2085c"
+        ],
+        "error": null,
+        "synthetic": true,
+        "evidence": {
+          "id": "ev_711d787615b0",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:04:59.627098+00:00",
+          "event_at": "2026-10-03T02:05:01.616916+00:00",
+          "as_of": "2026-10-03T02:05:01.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": null,
+          "capability": "gateway_accepted",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "Gateway request accepted and exact transaction reference matched.",
+          "original_hash": "8f99579eb178d56c9dba85af4fe06cdd02e717c578d52fa9a13725f501c16d3f",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "Gateway request accepted and exact transaction reference matched.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:04:59.627098+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_7460fd42e88f",
+          "source": "gateway",
+          "record": {
+            "id": "event_7460fd42e88f",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": null,
+            "sequence": 2,
+            "timestamp": "2026-10-03T02:05:01.616916+00:00",
+            "recorded_at": "2026-10-03T02:04:59.627079+00:00",
+            "stage": "gateway",
+            "source": "gateway",
+            "status": "completed",
+            "text": "Gateway request accepted and exact transaction reference matched.",
+            "purpose": "Accept the request and assign one correlation identity.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:1",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 0,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": null,
+            "related_event_ids": [
+              "event_a111edd2085c"
+            ],
+            "error": null,
+            "synthetic": true
+          }
+        }
+      },
+      {
+        "id": "event_fab61ba800b0",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 3,
+        "timestamp": "2026-10-03T02:05:03.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.637056+00:00",
+        "stage": "bank",
+        "source": "bank",
+        "status": "completed",
+        "text": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+        "purpose": "Record the bank debit under the exact transfer reference.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_7460fd42e88f"
+        ],
+        "error": null,
+        "synthetic": true,
+        "posting_id": "posting_1fafd01032ae",
+        "evidence": {
+          "id": "ev_b02c1ec36642",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:04:59.637076+00:00",
+          "event_at": "2026-10-03T02:05:03.616916+00:00",
+          "as_of": "2026-10-03T02:05:03.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": 100000,
+          "capability": "bank_debit",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+          "original_hash": "ac66808fbc070421c89a65c353ee3814b57513b6f487640967ed9f0a1062c117",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:04:59.637076+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_fab61ba800b0",
+          "source": "bank",
+          "record": {
+            "id": "event_fab61ba800b0",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": null,
+            "sequence": 3,
+            "timestamp": "2026-10-03T02:05:03.616916+00:00",
+            "recorded_at": "2026-10-03T02:04:59.637056+00:00",
+            "stage": "bank",
+            "source": "bank",
+            "status": "completed",
+            "text": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+            "purpose": "Record the bank debit under the exact transfer reference.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:1",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 0,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": null,
+            "related_event_ids": [
+              "event_7460fd42e88f"
+            ],
+            "error": null,
+            "synthetic": true,
+            "posting_id": "posting_1fafd01032ae"
+          }
+        }
+      },
+      {
+        "id": "event_19ef70839bf9",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 4,
+        "timestamp": "2026-10-03T02:05:05.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.647762+00:00",
+        "stage": "queue",
+        "source": "queue",
+        "status": "completed",
+        "text": "Retry request recorded under the same transaction.",
+        "purpose": "Track queued processing and retry attempts without assuming another payment.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:2",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 1,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": {
+          "name": "sandbox-settlement",
+          "depth": 1,
+          "held": false
+        },
+        "related_event_ids": [
+          "event_fab61ba800b0"
+        ],
+        "error": null,
+        "synthetic": true,
+        "evidence": {
+          "id": "ev_da33d9ed76db",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:04:59.647786+00:00",
+          "event_at": "2026-10-03T02:05:05.616916+00:00",
+          "as_of": "2026-10-03T02:05:05.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": null,
+          "capability": "retry_observed",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "Retry request recorded under the same transaction.",
+          "original_hash": "bb049fd08d43d67118173ae117b594c4da1d3975b90da44154eb676fc7250b99",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "Retry request recorded under the same transaction.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:04:59.647786+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_19ef70839bf9",
+          "source": "queue",
+          "record": {
+            "id": "event_19ef70839bf9",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": null,
+            "sequence": 4,
+            "timestamp": "2026-10-03T02:05:05.616916+00:00",
+            "recorded_at": "2026-10-03T02:04:59.647762+00:00",
+            "stage": "queue",
+            "source": "queue",
+            "status": "completed",
+            "text": "Retry request recorded under the same transaction.",
+            "purpose": "Track queued processing and retry attempts without assuming another payment.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:2",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 1,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": {
+              "name": "sandbox-settlement",
+              "depth": 1,
+              "held": false
+            },
+            "related_event_ids": [
+              "event_fab61ba800b0"
+            ],
+            "error": null,
+            "synthetic": true
+          }
+        }
+      },
+      {
+        "id": "event_a4096ce6c492",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 5,
+        "timestamp": "2026-10-03T02:05:07.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.648943+00:00",
+        "stage": "bank",
+        "source": "bank",
+        "status": "failure",
+        "text": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+        "purpose": "Record the bank debit under the exact transfer reference.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:2",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 1,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_19ef70839bf9"
+        ],
+        "error": "DUPLICATE_POSTING",
+        "synthetic": true,
+        "posting_id": "posting_f91a5eb1f691",
+        "evidence": {
+          "id": "ev_435dc71de3d7",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:04:59.648961+00:00",
+          "event_at": "2026-10-03T02:05:07.616916+00:00",
+          "as_of": "2026-10-03T02:05:07.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": 100000,
+          "capability": "bank_debit",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+          "original_hash": "347529f1369c657819a7256ff2d8accdeeaf8027021ab8f2a8b47df9597b9502",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:04:59.648961+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_a4096ce6c492",
+          "source": "bank",
+          "record": {
+            "id": "event_a4096ce6c492",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": null,
+            "sequence": 5,
+            "timestamp": "2026-10-03T02:05:07.616916+00:00",
+            "recorded_at": "2026-10-03T02:04:59.648943+00:00",
+            "stage": "bank",
+            "source": "bank",
+            "status": "failure",
+            "text": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+            "purpose": "Record the bank debit under the exact transfer reference.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:2",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 1,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": null,
+            "related_event_ids": [
+              "event_19ef70839bf9"
+            ],
+            "error": "DUPLICATE_POSTING",
+            "synthetic": true,
+            "posting_id": "posting_f91a5eb1f691"
+          }
+        }
+      },
+      {
+        "id": "event_e506d08ffbc9",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 6,
+        "timestamp": "2026-10-03T02:05:09.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.657556+00:00",
+        "stage": "response",
+        "source": "response",
+        "status": "completed",
+        "text": "Partner response accepted the exact transfer reference.",
+        "purpose": "Check whether the partner returned a verified outcome.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": {
+          "code": "ACCEPTED"
+        },
+        "queue": null,
+        "related_event_ids": [
+          "event_a4096ce6c492"
+        ],
+        "error": null,
+        "synthetic": true,
+        "evidence": {
+          "id": "ev_c4555c931f9d",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:04:59.657568+00:00",
+          "event_at": "2026-10-03T02:05:09.616916+00:00",
+          "as_of": "2026-10-03T02:05:09.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": null,
+          "capability": "partner_accepted",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "Partner response accepted the exact transfer reference.",
+          "original_hash": "d7bb4dbd139403a438fdacbad082277f35e918e5f3a8f70f8aa9f75435db5d03",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "Partner response accepted the exact transfer reference.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:04:59.657568+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_e506d08ffbc9",
+          "source": "response",
+          "record": {
+            "id": "event_e506d08ffbc9",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": null,
+            "sequence": 6,
+            "timestamp": "2026-10-03T02:05:09.616916+00:00",
+            "recorded_at": "2026-10-03T02:04:59.657556+00:00",
+            "stage": "response",
+            "source": "response",
+            "status": "completed",
+            "text": "Partner response accepted the exact transfer reference.",
+            "purpose": "Check whether the partner returned a verified outcome.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:1",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 0,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": {
+              "code": "ACCEPTED"
+            },
+            "queue": null,
+            "related_event_ids": [
+              "event_a4096ce6c492"
+            ],
+            "error": null,
+            "synthetic": true
+          }
+        }
+      },
+      {
+        "id": "event_4ef69481acac",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 7,
+        "timestamp": "2026-10-03T02:05:11.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.665271+00:00",
+        "stage": "settlement",
+        "source": "settlement",
+        "status": "completed",
+        "text": "One intended settlement is confirmed for this transfer.",
+        "purpose": "Reconcile the bank posting with final settlement.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_e506d08ffbc9"
+        ],
+        "error": null,
+        "synthetic": true,
+        "evidence": {
+          "id": "ev_d9f063a8aef0",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:04:59.665284+00:00",
+          "event_at": "2026-10-03T02:05:11.616916+00:00",
+          "as_of": "2026-10-03T02:05:11.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": 100000,
+          "capability": "settlement_confirmed",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "One intended settlement is confirmed for this transfer.",
+          "original_hash": "fbcf174250059b6afed487aaab2dd8ad56df8f60c270ddf137a8f655bb0eea52",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "One intended settlement is confirmed for this transfer.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:04:59.665284+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_4ef69481acac",
+          "source": "settlement",
+          "record": {
+            "id": "event_4ef69481acac",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": null,
+            "sequence": 7,
+            "timestamp": "2026-10-03T02:05:11.616916+00:00",
+            "recorded_at": "2026-10-03T02:04:59.665271+00:00",
+            "stage": "settlement",
+            "source": "settlement",
+            "status": "completed",
+            "text": "One intended settlement is confirmed for this transfer.",
+            "purpose": "Reconcile the bank posting with final settlement.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:1",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 0,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": null,
+            "related_event_ids": [
+              "event_e506d08ffbc9"
+            ],
+            "error": null,
+            "synthetic": true
+          }
+        }
+      },
+      {
+        "id": "event_4fa57909209c",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 8,
+        "timestamp": "2026-10-03T02:05:13.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.673752+00:00",
+        "stage": "wallet",
+        "source": "wallet",
+        "status": "completed",
+        "text": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+        "purpose": "Confirm the intended wallet credit or retain the unresolved outcome.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_4ef69481acac"
+        ],
+        "error": null,
+        "synthetic": true,
+        "posting_id": "posting_ef2db629816a",
+        "evidence": {
+          "id": "ev_c8275e41c2b7",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:04:59.673768+00:00",
+          "event_at": "2026-10-03T02:05:13.616916+00:00",
+          "as_of": "2026-10-03T02:05:13.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": 100000,
+          "capability": "wallet_credit",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+          "original_hash": "f316f11db9b21d2f1ee3836c5270402c942f0ec1e445ea740ff8ae592d4dc84b",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:04:59.673768+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_4fa57909209c",
+          "source": "wallet",
+          "record": {
+            "id": "event_4fa57909209c",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": null,
+            "sequence": 8,
+            "timestamp": "2026-10-03T02:05:13.616916+00:00",
+            "recorded_at": "2026-10-03T02:04:59.673752+00:00",
+            "stage": "wallet",
+            "source": "wallet",
+            "status": "completed",
+            "text": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+            "purpose": "Confirm the intended wallet credit or retain the unresolved outcome.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:1",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 0,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": null,
+            "related_event_ids": [
+              "event_4ef69481acac"
+            ],
+            "error": null,
+            "synthetic": true,
+            "posting_id": "posting_ef2db629816a"
+          }
+        }
+      },
+      {
+        "id": "event_4d00687ce64d",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 9,
+        "timestamp": "2026-10-03T02:05:15.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.673961+00:00",
+        "stage": "bank",
+        "source": "bank",
+        "status": "completed",
+        "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+        "purpose": "Record the bank debit under the exact transfer reference.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_4fa57909209c"
+        ],
+        "error": null,
+        "synthetic": true,
+        "evidence": {
+          "id": "ev_1098cf125675",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:04:59.673970+00:00",
+          "event_at": "2026-10-03T02:05:15.616916+00:00",
+          "as_of": "2026-10-03T02:05:15.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": null,
+          "capability": "bank_inventory_complete",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+          "original_hash": "3e09c27ad1430b0a57855a98113f61bc8985f02ceb2fe912d0447bb2915db8ef",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:04:59.673970+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_4d00687ce64d",
+          "source": "bank",
+          "record": {
+            "id": "event_4d00687ce64d",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": null,
+            "sequence": 9,
+            "timestamp": "2026-10-03T02:05:15.616916+00:00",
+            "recorded_at": "2026-10-03T02:04:59.673961+00:00",
+            "stage": "bank",
+            "source": "bank",
+            "status": "completed",
+            "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+            "purpose": "Record the bank debit under the exact transfer reference.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:1",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 0,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": null,
+            "related_event_ids": [
+              "event_4fa57909209c"
+            ],
+            "error": null,
+            "synthetic": true
+          }
+        }
+      },
+      {
+        "id": "event_3e630f2a0f86",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": "case_c3d6f50c9658",
+        "sequence": 10,
+        "timestamp": "2026-10-03T02:05:17.616916+00:00",
+        "recorded_at": "2026-10-03T02:05:18.039535+00:00",
+        "stage": "bank",
+        "source": "bank",
+        "status": "completed",
+        "text": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+        "purpose": "Record the bank debit under the exact transfer reference.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_4d00687ce64d"
+        ],
+        "error": null,
+        "synthetic": true,
+        "posting_id": "posting_4252116697c7",
+        "evidence": {
+          "id": "ev_f56d780e2f97",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:05:18.039555+00:00",
+          "event_at": "2026-10-03T02:05:17.616916+00:00",
+          "as_of": "2026-10-03T02:05:17.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": 100000,
+          "capability": "reversal_posted",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+          "original_hash": "bee8bfd313ff1adfdb311e962a95cbdc8e4712230b0a1e3ef761abc1fd375eda",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:05:18.039555+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_3e630f2a0f86",
+          "source": "bank",
+          "record": {
+            "id": "event_3e630f2a0f86",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": "case_c3d6f50c9658",
+            "sequence": 10,
+            "timestamp": "2026-10-03T02:05:17.616916+00:00",
+            "recorded_at": "2026-10-03T02:05:18.039535+00:00",
+            "stage": "bank",
+            "source": "bank",
+            "status": "completed",
+            "text": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+            "purpose": "Record the bank debit under the exact transfer reference.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:1",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 0,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": null,
+            "related_event_ids": [
+              "event_4d00687ce64d"
+            ],
+            "error": null,
+            "synthetic": true,
+            "posting_id": "posting_4252116697c7"
+          }
+        }
+      }
+    ],
+    "ledger": {
+      "entries": [
+        {
+          "id": "posting_1fafd01032ae",
+          "transaction_id": "txn_a2cd79988d8b",
+          "incident_id": "incident_4727318d13e6",
+          "at": "2026-10-03T02:04:59.636451+00:00",
+          "kind": "BANK_DEBIT",
+          "amount_minor": 100000,
+          "postings": {
+            "BANK": -100000,
+            "SUSPENSE": 100000
+          },
+          "original_posting_id": null,
+          "synthetic": true
+        },
+        {
+          "id": "posting_f91a5eb1f691",
+          "transaction_id": "txn_a2cd79988d8b",
+          "incident_id": "incident_4727318d13e6",
+          "at": "2026-10-03T02:04:59.648754+00:00",
+          "kind": "BANK_DEBIT",
+          "amount_minor": 100000,
+          "postings": {
+            "BANK": -100000,
+            "SUSPENSE": 100000
+          },
+          "original_posting_id": null,
+          "synthetic": true
+        },
+        {
+          "id": "posting_ef2db629816a",
+          "transaction_id": "txn_a2cd79988d8b",
+          "incident_id": "incident_4727318d13e6",
+          "at": "2026-10-03T02:04:59.673280+00:00",
+          "kind": "WALLET_CREDIT",
+          "amount_minor": 100000,
+          "postings": {
+            "SUSPENSE": -100000,
+            "WALLET": 100000
+          },
+          "original_posting_id": null,
+          "synthetic": true
+        },
+        {
+          "id": "posting_4252116697c7",
+          "transaction_id": "txn_a2cd79988d8b",
+          "incident_id": "incident_4727318d13e6",
+          "at": "2026-10-03T02:05:18.038915+00:00",
+          "kind": "REVERSAL",
+          "amount_minor": 100000,
+          "postings": {
+            "SUSPENSE": -100000,
+            "BANK": 100000
+          },
+          "original_posting_id": "posting_f91a5eb1f691",
+          "synthetic": true
+        }
+      ],
+      "balances": {
+        "BANK": 900000,
+        "WALLET": 300000,
+        "SUSPENSE": 0
+      },
+      "balanced": true
+    }
+  },
+  "evidence_reviewed": [
+    {
+      "id": "ev_87175fe94ec6",
+      "kind": "customer_supplied",
+      "category": "Customer Statement",
+      "reliability": "User-provided",
+      "authority": "supplied / unverified",
+      "supplied_by": "customer_1",
+      "reference": null,
+      "event_at": "2026-10-03T02:04:59.683185+00:00",
+      "received_at": "2026-10-03T02:04:59.683185+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "5bdd2e7a9bc67ad5817f224c9d305bdf8d46d0cb2de28d7fa8d53a47cec878a3",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Please verify this ৳1,000 transfer and all exact postings.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.683185+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": null,
+      "event_id": null,
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": null,
+      "capability": null,
+      "assertion": null,
+      "record": null
+    },
+    {
+      "id": "ev_7e6020758619",
+      "kind": "customer_supplied",
+      "category": "Customer Evidence",
+      "reliability": "User-provided",
+      "authority": "supplied / unverified",
+      "supplied_by": "customer",
+      "reference": null,
+      "event_at": "2026-10-03T02:04:59.683256+00:00",
+      "received_at": "2026-10-03T02:04:59.683256+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "3f280e60dfea65ceed7701430da71aa37738cae3927c75cf5300639196371d4f",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Customer screenshot wording: payment confirmation unclear.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.683256+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": null,
+      "event_id": null,
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": null,
+      "capability": null,
+      "assertion": null,
+      "record": null
+    },
+    {
+      "id": "ev_02233efa66a1",
+      "kind": "customer_supplied",
+      "category": "Customer Evidence",
+      "reliability": "User-provided",
+      "authority": "supplied / unverified",
+      "supplied_by": "customer_1",
+      "reference": null,
+      "event_at": "2026-10-03T02:04:59.714962+00:00",
+      "received_at": "2026-10-03T02:04:59.714962+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "fcfc4fce868d0287ad52a103d62c30b3e391152eda20524b59c7beffa44cbbb1",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Human transcript: synthetic transfer ৳1,000; result unclear.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.714962+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": null,
+      "event_id": null,
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": null,
+      "capability": null,
+      "assertion": null,
+      "record": null
+    },
+    {
+      "id": "ev_1c23897bf814",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:04:59.616916+00:00",
+      "received_at": "2026-10-03T02:04:59.617205+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "5730ed78e93b586c237c10af6ca9a47d4aec3e349b71b941349461f26f9c3d41",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.617205+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_a111edd2085c",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": 100000,
+      "capability": "transfer_intent",
+      "assertion": null,
+      "record": {
+        "id": "event_a111edd2085c",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 1,
+        "timestamp": "2026-10-03T02:04:59.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.617182+00:00",
+        "stage": "customer",
+        "source": "customer",
+        "status": "completed",
+        "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+        "purpose": "Identify the intended amount, source account and destination wallet.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [],
+        "error": null,
+        "synthetic": true
+      }
+    },
+    {
+      "id": "ev_711d787615b0",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:05:01.616916+00:00",
+      "received_at": "2026-10-03T02:04:59.627098+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "8f99579eb178d56c9dba85af4fe06cdd02e717c578d52fa9a13725f501c16d3f",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Gateway request accepted and exact transaction reference matched.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.627098+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_7460fd42e88f",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": null,
+      "capability": "gateway_accepted",
+      "assertion": null,
+      "record": {
+        "id": "event_7460fd42e88f",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 2,
+        "timestamp": "2026-10-03T02:05:01.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.627079+00:00",
+        "stage": "gateway",
+        "source": "gateway",
+        "status": "completed",
+        "text": "Gateway request accepted and exact transaction reference matched.",
+        "purpose": "Accept the request and assign one correlation identity.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_a111edd2085c"
+        ],
+        "error": null,
+        "synthetic": true
+      }
+    },
+    {
+      "id": "ev_b02c1ec36642",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:05:03.616916+00:00",
+      "received_at": "2026-10-03T02:04:59.637076+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "ac66808fbc070421c89a65c353ee3814b57513b6f487640967ed9f0a1062c117",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.637076+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_fab61ba800b0",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": 100000,
+      "capability": "bank_debit",
+      "assertion": null,
+      "record": {
+        "id": "event_fab61ba800b0",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 3,
+        "timestamp": "2026-10-03T02:05:03.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.637056+00:00",
+        "stage": "bank",
+        "source": "bank",
+        "status": "completed",
+        "text": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+        "purpose": "Record the bank debit under the exact transfer reference.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_7460fd42e88f"
+        ],
+        "error": null,
+        "synthetic": true,
+        "posting_id": "posting_1fafd01032ae"
+      }
+    },
+    {
+      "id": "ev_435dc71de3d7",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:05:07.616916+00:00",
+      "received_at": "2026-10-03T02:04:59.648961+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "347529f1369c657819a7256ff2d8accdeeaf8027021ab8f2a8b47df9597b9502",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.648961+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_a4096ce6c492",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": 100000,
+      "capability": "bank_debit",
+      "assertion": null,
+      "record": {
+        "id": "event_a4096ce6c492",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 5,
+        "timestamp": "2026-10-03T02:05:07.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.648943+00:00",
+        "stage": "bank",
+        "source": "bank",
+        "status": "failure",
+        "text": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+        "purpose": "Record the bank debit under the exact transfer reference.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:2",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 1,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_19ef70839bf9"
+        ],
+        "error": "DUPLICATE_POSTING",
+        "synthetic": true,
+        "posting_id": "posting_f91a5eb1f691"
+      }
+    },
+    {
+      "id": "ev_1098cf125675",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:05:15.616916+00:00",
+      "received_at": "2026-10-03T02:04:59.673970+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "3e09c27ad1430b0a57855a98113f61bc8985f02ceb2fe912d0447bb2915db8ef",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.673970+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_4d00687ce64d",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": null,
+      "capability": "bank_inventory_complete",
+      "assertion": null,
+      "record": {
+        "id": "event_4d00687ce64d",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 9,
+        "timestamp": "2026-10-03T02:05:15.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.673961+00:00",
+        "stage": "bank",
+        "source": "bank",
+        "status": "completed",
+        "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+        "purpose": "Record the bank debit under the exact transfer reference.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_4fa57909209c"
+        ],
+        "error": null,
+        "synthetic": true
+      }
+    },
+    {
+      "id": "ev_da33d9ed76db",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:05:05.616916+00:00",
+      "received_at": "2026-10-03T02:04:59.647786+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "bb049fd08d43d67118173ae117b594c4da1d3975b90da44154eb676fc7250b99",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Retry request recorded under the same transaction.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.647786+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_19ef70839bf9",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": null,
+      "capability": "retry_observed",
+      "assertion": null,
+      "record": {
+        "id": "event_19ef70839bf9",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 4,
+        "timestamp": "2026-10-03T02:05:05.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.647762+00:00",
+        "stage": "queue",
+        "source": "queue",
+        "status": "completed",
+        "text": "Retry request recorded under the same transaction.",
+        "purpose": "Track queued processing and retry attempts without assuming another payment.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:2",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 1,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": {
+          "name": "sandbox-settlement",
+          "depth": 1,
+          "held": false
+        },
+        "related_event_ids": [
+          "event_fab61ba800b0"
+        ],
+        "error": null,
+        "synthetic": true
+      }
+    },
+    {
+      "id": "ev_c4555c931f9d",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:05:09.616916+00:00",
+      "received_at": "2026-10-03T02:04:59.657568+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "d7bb4dbd139403a438fdacbad082277f35e918e5f3a8f70f8aa9f75435db5d03",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Partner response accepted the exact transfer reference.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.657568+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_e506d08ffbc9",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": null,
+      "capability": "partner_accepted",
+      "assertion": null,
+      "record": {
+        "id": "event_e506d08ffbc9",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 6,
+        "timestamp": "2026-10-03T02:05:09.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.657556+00:00",
+        "stage": "response",
+        "source": "response",
+        "status": "completed",
+        "text": "Partner response accepted the exact transfer reference.",
+        "purpose": "Check whether the partner returned a verified outcome.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": {
+          "code": "ACCEPTED"
+        },
+        "queue": null,
+        "related_event_ids": [
+          "event_a4096ce6c492"
+        ],
+        "error": null,
+        "synthetic": true
+      }
+    },
+    {
+      "id": "ev_d9f063a8aef0",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:05:11.616916+00:00",
+      "received_at": "2026-10-03T02:04:59.665284+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "fbcf174250059b6afed487aaab2dd8ad56df8f60c270ddf137a8f655bb0eea52",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "One intended settlement is confirmed for this transfer.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.665284+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_4ef69481acac",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": 100000,
+      "capability": "settlement_confirmed",
+      "assertion": null,
+      "record": {
+        "id": "event_4ef69481acac",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 7,
+        "timestamp": "2026-10-03T02:05:11.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.665271+00:00",
+        "stage": "settlement",
+        "source": "settlement",
+        "status": "completed",
+        "text": "One intended settlement is confirmed for this transfer.",
+        "purpose": "Reconcile the bank posting with final settlement.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_e506d08ffbc9"
+        ],
+        "error": null,
+        "synthetic": true
+      }
+    },
+    {
+      "id": "ev_c8275e41c2b7",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:05:13.616916+00:00",
+      "received_at": "2026-10-03T02:04:59.673768+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "f316f11db9b21d2f1ee3836c5270402c942f0ec1e445ea740ff8ae592d4dc84b",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:04:59.673768+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_4fa57909209c",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": 100000,
+      "capability": "wallet_credit",
+      "assertion": null,
+      "record": {
+        "id": "event_4fa57909209c",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": null,
+        "sequence": 8,
+        "timestamp": "2026-10-03T02:05:13.616916+00:00",
+        "recorded_at": "2026-10-03T02:04:59.673752+00:00",
+        "stage": "wallet",
+        "source": "wallet",
+        "status": "completed",
+        "text": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+        "purpose": "Confirm the intended wallet credit or retain the unresolved outcome.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_4ef69481acac"
+        ],
+        "error": null,
+        "synthetic": true,
+        "posting_id": "posting_ef2db629816a"
+      }
+    },
+    {
+      "id": "ev_f56d780e2f97",
+      "kind": "mock_pipeline",
+      "category": "Confirmed System Record",
+      "reliability": "Confirmed",
+      "authority": "confirmed within simulated source contract",
+      "supplied_by": "mock_adapter",
+      "reference": "txn_a2cd79988d8b",
+      "event_at": "2026-10-03T02:05:17.616916+00:00",
+      "received_at": "2026-10-03T02:05:18.039555+00:00",
+      "scope": "this fictional purchase only",
+      "original_hash": "bee8bfd313ff1adfdb311e962a95cbdc8e4712230b0a1e3ef761abc1fd375eda",
+      "revisions": [
+        {
+          "version": 1,
+          "text": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+          "actor": "fixture",
+          "at": "2026-10-03T02:05:18.039555+00:00",
+          "reason": "original"
+        }
+      ],
+      "transaction_id": "txn_a2cd79988d8b",
+      "event_id": "event_3e630f2a0f86",
+      "purchase_id": "incident_4727318d13e6",
+      "amount_minor": 100000,
+      "capability": "reversal_posted",
+      "assertion": null,
+      "record": {
+        "id": "event_3e630f2a0f86",
+        "transaction_id": "txn_a2cd79988d8b",
+        "incident_id": "incident_4727318d13e6",
+        "case_id": "case_c3d6f50c9658",
+        "sequence": 10,
+        "timestamp": "2026-10-03T02:05:17.616916+00:00",
+        "recorded_at": "2026-10-03T02:05:18.039535+00:00",
+        "stage": "bank",
+        "source": "bank",
+        "status": "completed",
+        "text": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+        "purpose": "Record the bank debit under the exact transfer reference.",
+        "attempt_id": "txn_a2cd79988d8b:attempt:1",
+        "correlation_id": "corr_c6ed9cfec849",
+        "retry_count": 0,
+        "timeout_ms": null,
+        "request": {
+          "transaction_id": "txn_a2cd79988d8b",
+          "amount_minor": 100000,
+          "destination": "DEMO-UPAY-1-0187"
+        },
+        "response": null,
+        "queue": null,
+        "related_event_ids": [
+          "event_4d00687ce64d"
+        ],
+        "error": null,
+        "synthetic": true,
+        "posting_id": "posting_4252116697c7"
+      }
+    }
+  ],
+  "verifier_readings": [
+    {
+      "id": "analysis_3f2df668679e",
+      "at": "2026-10-03T02:05:17.922045+00:00",
+      "run_id": "run_7b36c43e1325",
+      "model": {
+        "engine": "rules_primary_with_trained_advisory",
+        "available": true,
+        "metadata": {
+          "task": "three-label visible claim/passage assessment",
+          "architecture": "frozen multilingual E5-small + standardized logistic regression head",
+          "encoder": {
+            "repo": "intfloat/multilingual-e5-small",
+            "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+            "license": "MIT",
+            "encoder_frozen": true
+          },
+          "labels": [
+            "SUPPORTED_BY_PASSAGE",
+            "CONTRADICTED_BY_PASSAGE",
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "classifier_sha256": "7ae461354e62671b66c06f32d83a7388410669dff3d1b7916b9e6edf1b1d6a5c",
+          "dataset_sha256": "2da7c31503bb26ff41e6b9e4997892a02773728211a4ca66f90fe7f6c4445966",
+          "challenge_sha256_before_selection": "9851d23bc7298d08b175b8bb8bbcc295b12ff1896f50f063aae18df4b83368a2",
+          "preprocessing": {
+            "normalization": "NFC + Bengali digits to ASCII for model only; originals preserved",
+            "max_tokens": 256,
+            "prefix": "query: ",
+            "pooling": "masked mean, L2 normalization"
+          },
+          "trained_component": "logistic regression head only",
+          "encoder_finetuned": false,
+          "calibrated": false,
+          "training_pairs": 1080,
+          "development_pairs": 432,
+          "chosen_C": 1.0,
+          "development_candidates": [
+            {
+              "C": 0.05,
+              "dev_macro_f1": 0.6651168070660542
+            },
+            {
+              "C": 0.2,
+              "dev_macro_f1": 0.6613563145184832
+            },
+            {
+              "C": 1.0,
+              "dev_macro_f1": 0.6710291025643574
+            }
+          ],
+          "training_seconds": 27.02879670006223,
+          "python": "3.13.7",
+          "independent_human_review": false,
+          "limitations": "Fictional agent-labelled corpus; no production/domain accuracy certification."
+        },
+        "error": null,
+        "runtime_policy": {
+          "primary": "rules",
+          "trained_advisory": true,
+          "reason": "Select the more reliable measured path on the frozen authored challenge; this is not independent human validation.",
+          "evaluation_version": 2,
+          "rules_version": 2
+        },
+        "rules_version": 2,
+        "limitations": "Synthetic agent-labelled training; no independent human validation; not a financial truth score."
+      },
+      "claims": [
+        {
+          "id": "debit",
+          "text": "The bank account was debited.",
+          "links": [
+            {
+              "evidence_id": "ev_87175fe94ec6",
+              "excerpt": "Please verify this ৳1,000 transfer and all exact postings.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_7e6020758619",
+              "excerpt": "Customer screenshot wording: payment confirmation unclear.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_02233efa66a1",
+              "excerpt": "Human transcript: synthetic transfer ৳1,000; result unclear.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_1c23897bf814",
+              "excerpt": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_711d787615b0",
+              "excerpt": "Gateway request accepted and exact transaction reference matched.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_b02c1ec36642",
+              "excerpt": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_435dc71de3d7",
+              "excerpt": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_1098cf125675",
+              "excerpt": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_da33d9ed76db",
+              "excerpt": "Retry request recorded under the same transaction.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_c4555c931f9d",
+              "excerpt": "Partner response accepted the exact transfer reference.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_d9f063a8aef0",
+              "excerpt": "One intended settlement is confirmed for this transfer.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_c8275e41c2b7",
+              "excerpt": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            }
+          ]
+        },
+        {
+          "id": "duplicate",
+          "text": "Two bank debits occurred for the same transfer.",
+          "links": [
+            {
+              "evidence_id": "ev_87175fe94ec6",
+              "excerpt": "Please verify this ৳1,000 transfer and all exact postings.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_7e6020758619",
+              "excerpt": "Customer screenshot wording: payment confirmation unclear.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_02233efa66a1",
+              "excerpt": "Human transcript: synthetic transfer ৳1,000; result unclear.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_1c23897bf814",
+              "excerpt": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_711d787615b0",
+              "excerpt": "Gateway request accepted and exact transaction reference matched.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_b02c1ec36642",
+              "excerpt": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_435dc71de3d7",
+              "excerpt": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_1098cf125675",
+              "excerpt": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_da33d9ed76db",
+              "excerpt": "Retry request recorded under the same transaction.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_c4555c931f9d",
+              "excerpt": "Partner response accepted the exact transfer reference.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_d9f063a8aef0",
+              "excerpt": "One intended settlement is confirmed for this transfer.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_c8275e41c2b7",
+              "excerpt": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            }
+          ]
+        },
+        {
+          "id": "wallet",
+          "text": "The wallet received the intended transfer.",
+          "links": [
+            {
+              "evidence_id": "ev_87175fe94ec6",
+              "excerpt": "Please verify this ৳1,000 transfer and all exact postings.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_7e6020758619",
+              "excerpt": "Customer screenshot wording: payment confirmation unclear.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_02233efa66a1",
+              "excerpt": "Human transcript: synthetic transfer ৳1,000; result unclear.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_1c23897bf814",
+              "excerpt": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_711d787615b0",
+              "excerpt": "Gateway request accepted and exact transaction reference matched.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_b02c1ec36642",
+              "excerpt": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_435dc71de3d7",
+              "excerpt": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_1098cf125675",
+              "excerpt": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_da33d9ed76db",
+              "excerpt": "Retry request recorded under the same transaction.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_c4555c931f9d",
+              "excerpt": "Partner response accepted the exact transfer reference.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "SUPPORTED_BY_PASSAGE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_d9f063a8aef0",
+              "excerpt": "One intended settlement is confirmed for this transfer.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_c8275e41c2b7",
+              "excerpt": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            }
+          ]
+        },
+        {
+          "id": "repayment",
+          "text": "The extra debit was reversed.",
+          "links": [
+            {
+              "evidence_id": "ev_87175fe94ec6",
+              "excerpt": "Please verify this ৳1,000 transfer and all exact postings.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_7e6020758619",
+              "excerpt": "Customer screenshot wording: payment confirmation unclear.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_02233efa66a1",
+              "excerpt": "Human transcript: synthetic transfer ৳1,000; result unclear.",
+              "transcript_version": 1,
+              "source_status": "supplied / unverified",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_1c23897bf814",
+              "excerpt": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_711d787615b0",
+              "excerpt": "Gateway request accepted and exact transaction reference matched.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_b02c1ec36642",
+              "excerpt": "Bank posting posting_1fafd01032ae confirms BDT 1000.00 debited.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_435dc71de3d7",
+              "excerpt": "A second confirmed bank debit posting_f91a5eb1f691 posted BDT 1000.00 for this same transfer.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_1098cf125675",
+              "excerpt": "The bank posting inventory for this exact reference is complete as of this recorded check.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_da33d9ed76db",
+              "excerpt": "Retry request recorded under the same transaction.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_c4555c931f9d",
+              "excerpt": "Partner response accepted the exact transfer reference.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_d9f063a8aef0",
+              "excerpt": "One intended settlement is confirmed for this transfer.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            },
+            {
+              "evidence_id": "ev_c8275e41c2b7",
+              "excerpt": "Wallet posting posting_ef2db629816a confirms one BDT 1000.00 credit.",
+              "transcript_version": 1,
+              "source_status": "confirmed within simulated source contract",
+              "mismatches": [],
+              "label": "INSUFFICIENT_EVIDENCE",
+              "learned_label": "INSUFFICIENT_EVIDENCE",
+              "engine": "rules_primary_with_trained_advisory",
+              "model_available": true,
+              "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
+            }
+          ]
+        }
+      ],
+      "assessment": {
+        "status": "SUPPORTED",
+        "headline": "Two bank debits support a duplicate-payment discrepancy",
+        "summary": "Two bank debits support a duplicate-payment discrepancy. Customer statements and retries alone do not establish another debit.",
+        "evidence_ids": [
+          "ev_1c23897bf814",
+          "ev_711d787615b0",
+          "ev_b02c1ec36642",
+          "ev_435dc71de3d7",
+          "ev_1098cf125675",
+          "ev_da33d9ed76db",
+          "ev_c4555c931f9d",
+          "ev_d9f063a8aef0",
+          "ev_c8275e41c2b7"
+        ],
+        "missing": [],
+        "recorded_excess_minor": 100000,
+        "engine": "source-grounded rules and balanced sandbox ledger checks",
+        "limitations": "Synthetic source records only."
+      },
+      "verification": "SUPPORTS_CLAIM",
+      "evidence_version": 12,
+      "source_version": 9
+    },
+    {
+      "id": "analysis_430ae226ed3d",
+      "at": "2026-10-03T02:05:18.043394+00:00",
+      "run_id": "run_7b36c43e1325",
+      "model": {
+        "engine": "verified_sandbox_ledger",
+        "available": false
+      },
+      "claims": [],
+      "assessment": {
+        "status": "REPAID",
+        "headline": "The sandbox correction is verified",
+        "summary": "The sandbox correction is verified. Customer statements and retries alone do not establish another debit.",
+        "evidence_ids": [
+          "ev_1c23897bf814",
+          "ev_711d787615b0",
+          "ev_b02c1ec36642",
+          "ev_435dc71de3d7",
+          "ev_1098cf125675",
+          "ev_da33d9ed76db",
+          "ev_c4555c931f9d",
+          "ev_d9f063a8aef0",
+          "ev_c8275e41c2b7",
+          "ev_f56d780e2f97"
+        ],
+        "missing": [],
+        "recorded_excess_minor": 0,
+        "engine": "source-grounded rules and balanced sandbox ledger checks",
+        "limitations": "Synthetic source records only."
+      },
+      "verification": "SUPPORTS_CLAIM",
+      "evidence_version": 13,
+      "source_version": 10
+    }
+  ],
+  "investigation_timeline": [
+    {
+      "id": "run_7b36c43e1325",
+      "case_id": "case_c3d6f50c9658",
+      "incident_id": "incident_4727318d13e6",
+      "transaction_id": "txn_a2cd79988d8b",
+      "status": "COMPLETE",
+      "requested_mode": "live",
+      "mode": "LIVE",
+      "mode_label": "LIVE AI INVESTIGATION",
+      "started_at": "2026-10-03T02:04:59.732706+00:00",
+      "updated_at": "2026-10-03T02:05:18.043665+00:00",
+      "actor": "staff_1",
+      "owner_at_start": "staff_1",
+      "evidence_version": 12,
+      "source_version": 9,
+      "sequence": 20,
+      "hypotheses": [
+        {
+          "id": "duplicate_debit",
+          "title": "Retry produced an additional debit",
+          "description": "Two financial postings, rather than two request events, establish the discrepancy.",
+          "status": "SUPPORTED",
+          "supporting_evidence": [
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7"
+          ],
+          "contradicting_evidence": [],
+          "unresolved_evidence": []
+        },
+        {
+          "id": "settlement_complete",
+          "title": "Intended settlement completed",
+          "description": "A settlement and the corresponding wallet credit establish completion.",
+          "status": "SUPPORTED",
+          "supporting_evidence": [
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "contradicting_evidence": [],
+          "unresolved_evidence": []
+        },
+        {
+          "id": "partner_timeout",
+          "title": "Partner response delayed / missing",
+          "description": "A response was unavailable when the path was first checked.",
+          "status": "CONTRADICTED",
+          "supporting_evidence": [],
+          "contradicting_evidence": [
+            "ev_c4555c931f9d"
+          ],
+          "unresolved_evidence": []
+        },
+        {
+          "id": "retry_idempotent",
+          "title": "Retry retained one posting",
+          "description": "Multiple requests can share one successful financial posting.",
+          "status": "CONTRADICTED",
+          "supporting_evidence": [],
+          "contradicting_evidence": [
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7"
+          ],
+          "unresolved_evidence": []
+        },
+        {
+          "id": "unsettled_debit",
+          "title": "Debit remains unsettled",
+          "description": "A complete negative wallet query and an explicit partner contract permit a bounded correction.",
+          "status": "UNRESOLVED",
+          "supporting_evidence": [],
+          "contradicting_evidence": [],
+          "unresolved_evidence": []
+        }
+      ],
+      "evidence_count": 12,
+      "current_phase": "decision",
+      "current_finding": "Your payment issue was verified and the approved sandbox correction completed. Your case is resolved.",
+      "source_checks": [
+        {
+          "id": "check_47739eef055e",
+          "kind": "customer",
+          "requested_at": "2026-10-03T02:04:59.885769+00:00",
+          "as_of": "2026-10-03T02:04:59.885781+00:00",
+          "state": "COMPLETED",
+          "result": "1 matching source record(s) inspected.",
+          "evidence_ids": [
+            "ev_1c23897bf814"
+          ],
+          "scope": "Exact transaction and incident only",
+          "states": [
+            {
+              "state": "RUNNING",
+              "at": "2026-10-03T02:04:59.885786+00:00"
+            },
+            {
+              "state": "COMPLETED",
+              "at": "2026-10-03T02:04:59.885788+00:00"
+            }
+          ]
+        },
+        {
+          "id": "check_fee03307a04f",
+          "kind": "gateway",
+          "requested_at": "2026-10-03T02:04:59.885847+00:00",
+          "as_of": "2026-10-03T02:04:59.885849+00:00",
+          "state": "COMPLETED",
+          "result": "1 matching source record(s) inspected.",
+          "evidence_ids": [
+            "ev_711d787615b0"
+          ],
+          "scope": "Exact transaction and incident only",
+          "states": [
+            {
+              "state": "RUNNING",
+              "at": "2026-10-03T02:04:59.885852+00:00"
+            },
+            {
+              "state": "COMPLETED",
+              "at": "2026-10-03T02:04:59.885855+00:00"
+            }
+          ]
+        },
+        {
+          "id": "check_02ec61dad1f9",
+          "kind": "bank",
+          "requested_at": "2026-10-03T02:04:59.885973+00:00",
+          "as_of": "2026-10-03T02:04:59.885976+00:00",
+          "state": "COMPLETED",
+          "result": "3 matching source record(s) inspected.",
+          "evidence_ids": [
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675"
+          ],
+          "scope": "Exact transaction and incident only",
+          "states": [
+            {
+              "state": "RUNNING",
+              "at": "2026-10-03T02:04:59.885978+00:00"
+            },
+            {
+              "state": "COMPLETED",
+              "at": "2026-10-03T02:04:59.885980+00:00"
+            }
+          ]
+        },
+        {
+          "id": "check_bb47c740c322",
+          "kind": "queue",
+          "requested_at": "2026-10-03T02:04:59.886042+00:00",
+          "as_of": "2026-10-03T02:04:59.886045+00:00",
+          "state": "COMPLETED",
+          "result": "1 matching source record(s) inspected.",
+          "evidence_ids": [
+            "ev_da33d9ed76db"
+          ],
+          "scope": "Exact transaction and incident only",
+          "states": [
+            {
+              "state": "RUNNING",
+              "at": "2026-10-03T02:04:59.886047+00:00"
+            },
+            {
+              "state": "COMPLETED",
+              "at": "2026-10-03T02:04:59.886049+00:00"
+            }
+          ]
+        },
+        {
+          "id": "check_ab4c6cabede1",
+          "kind": "response",
+          "requested_at": "2026-10-03T02:04:59.886097+00:00",
+          "as_of": "2026-10-03T02:04:59.886099+00:00",
+          "state": "COMPLETED",
+          "result": "1 matching source record(s) inspected.",
+          "evidence_ids": [
+            "ev_c4555c931f9d"
+          ],
+          "scope": "Exact transaction and incident only",
+          "states": [
+            {
+              "state": "RUNNING",
+              "at": "2026-10-03T02:04:59.886101+00:00"
+            },
+            {
+              "state": "COMPLETED",
+              "at": "2026-10-03T02:04:59.886103+00:00"
+            }
+          ]
+        },
+        {
+          "id": "check_bdb131b10a13",
+          "kind": "settlement",
+          "requested_at": "2026-10-03T02:04:59.886148+00:00",
+          "as_of": "2026-10-03T02:04:59.886150+00:00",
+          "state": "COMPLETED",
+          "result": "1 matching source record(s) inspected.",
+          "evidence_ids": [
+            "ev_d9f063a8aef0"
+          ],
+          "scope": "Exact transaction and incident only",
+          "states": [
+            {
+              "state": "RUNNING",
+              "at": "2026-10-03T02:04:59.886153+00:00"
+            },
+            {
+              "state": "COMPLETED",
+              "at": "2026-10-03T02:04:59.886155+00:00"
+            }
+          ]
+        },
+        {
+          "id": "check_d3c0b988318f",
+          "kind": "wallet",
+          "requested_at": "2026-10-03T02:04:59.886198+00:00",
+          "as_of": "2026-10-03T02:04:59.886200+00:00",
+          "state": "COMPLETED",
+          "result": "1 matching source record(s) inspected.",
+          "evidence_ids": [
+            "ev_c8275e41c2b7"
+          ],
+          "scope": "Exact transaction and incident only",
+          "states": [
+            {
+              "state": "RUNNING",
+              "at": "2026-10-03T02:04:59.886203+00:00"
+            },
+            {
+              "state": "COMPLETED",
+              "at": "2026-10-03T02:04:59.886205+00:00"
+            }
+          ]
+        }
+      ],
+      "verification": "SUPPORTS_CLAIM",
+      "provider": {
+        "available": true,
+        "model": "qwen3:4b-instruct",
+        "seconds": 8.17,
+        "assessment": {
+          "verification": "SUPPORTS_CLAIM",
+          "hypothesis_order": [
+            "duplicate_debit",
+            "settlement_complete",
+            "partner_timeout",
+            "retry_idempotent",
+            "unsettled_debit"
+          ],
+          "action": "REVERSE_DUPLICATE_DEBIT",
+          "evidence_ids": [
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7"
+          ]
+        },
+        "blocked_action": null,
+        "private_reasoning_stored": false
+      },
+      "recommendation": {
+        "eligible": true,
+        "authorization": "Eligible",
+        "action": "REVERSE_DUPLICATE_DEBIT",
+        "amount_minor": 100000,
+        "evidence_ids": [
+          "ev_1c23897bf814",
+          "ev_711d787615b0",
+          "ev_b02c1ec36642",
+          "ev_435dc71de3d7",
+          "ev_1098cf125675",
+          "ev_da33d9ed76db",
+          "ev_c4555c931f9d",
+          "ev_d9f063a8aef0",
+          "ev_c8275e41c2b7"
+        ],
+        "reason": "Two exact bank postings and one wallet credit establish the extra debit.",
+        "missing": [],
+        "risk": "Synthetic sandbox only; exact posting identity, current evidence and operator approval required.",
+        "approval_required": true,
+        "team": "Settlement Operations",
+        "next_action": "Operator reviews and approves this exact sandbox action.",
+        "id": "recommendation_5d9c4013d8d7",
+        "run_id": "run_7b36c43e1325",
+        "case_id": "case_c3d6f50c9658",
+        "incident_id": "incident_4727318d13e6",
+        "at": "2026-10-03T02:05:17.921988+00:00"
+      },
+      "completed_at": "2026-10-03T02:05:17.922005+00:00",
+      "strength": "Strong within checked source scope",
+      "resolution": {
+        "id": "repair_4c625cd8846a",
+        "approval_id": "approval_2539d51ec95f",
+        "case_id": "case_c3d6f50c9658",
+        "incident_id": "incident_4727318d13e6",
+        "at": "2026-10-03T02:05:18.038836+00:00",
+        "actor": "staff_1",
+        "action": "REVERSE_DUPLICATE_DEBIT",
+        "amount_minor": 100000,
+        "synthetic": true,
+        "status": "SUCCEEDED",
+        "result": "Balanced sandbox correction verified. No remaining unsettled or duplicate amount.",
+        "posting_id": "posting_4252116697c7"
+      },
+      "resolution_evidence": [
+        {
+          "id": "ev_f56d780e2f97",
+          "kind": "mock_pipeline",
+          "supplied_by": "mock_adapter",
+          "category": "Confirmed System Record",
+          "reliability": "Confirmed",
+          "received_at": "2026-10-03T02:05:18.039555+00:00",
+          "event_at": "2026-10-03T02:05:17.616916+00:00",
+          "as_of": "2026-10-03T02:05:17.616916+00:00",
+          "scope": "this fictional purchase only",
+          "reference": "txn_a2cd79988d8b",
+          "purchase_id": "incident_4727318d13e6",
+          "amount_minor": 100000,
+          "capability": "reversal_posted",
+          "verification": "documented synthetic fixture contract",
+          "authority": "confirmed within simulated source contract",
+          "original": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+          "original_hash": "bee8bfd313ff1adfdb311e962a95cbdc8e4712230b0a1e3ef761abc1fd375eda",
+          "revisions": [
+            {
+              "version": 1,
+              "text": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+              "actor": "fixture",
+              "at": "2026-10-03T02:05:18.039555+00:00",
+              "reason": "original"
+            }
+          ],
+          "blob": null,
+          "transaction_id": "txn_a2cd79988d8b",
+          "event_id": "event_3e630f2a0f86",
+          "source": "bank",
+          "record": {
+            "id": "event_3e630f2a0f86",
+            "transaction_id": "txn_a2cd79988d8b",
+            "incident_id": "incident_4727318d13e6",
+            "case_id": "case_c3d6f50c9658",
+            "sequence": 10,
+            "timestamp": "2026-10-03T02:05:17.616916+00:00",
+            "recorded_at": "2026-10-03T02:05:18.039535+00:00",
+            "stage": "bank",
+            "source": "bank",
+            "status": "completed",
+            "text": "Operator-approved sandbox correction returned BDT 1000.00 against posting posting_f91a5eb1f691.",
+            "purpose": "Record the bank debit under the exact transfer reference.",
+            "attempt_id": "txn_a2cd79988d8b:attempt:1",
+            "correlation_id": "corr_c6ed9cfec849",
+            "retry_count": 0,
+            "timeout_ms": null,
+            "request": {
+              "transaction_id": "txn_a2cd79988d8b",
+              "amount_minor": 100000,
+              "destination": "DEMO-UPAY-1-0187"
+            },
+            "response": null,
+            "queue": null,
+            "related_event_ids": [
+              "event_4d00687ce64d"
+            ],
+            "error": null,
+            "synthetic": true,
+            "posting_id": "posting_4252116697c7"
+          }
+        }
+      ],
+      "events": [
+        {
+          "sequence": 1,
+          "id": "trace_5993371a4b83",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:04:59.740339+00:00",
+          "phase": "initialize",
+          "title": "Investigator initialized",
+          "purpose": "Identify the case and the operational problem.",
+          "action": "Start an observable investigation",
+          "finding": "One existing incident and case selected; no additional case created.",
+          "evidence_ids": [],
+          "evidence_revisions": {},
+          "changed": "One existing incident and case selected; no additional case created.",
+          "next_step": "Case context loaded",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 2,
+          "id": "trace_1f1eddb97838",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:04:59.789857+00:00",
+          "phase": "context",
+          "title": "Case context loaded",
+          "purpose": "Separate the customer allegation from confirmed source facts.",
+          "action": "Load the saved complaint, owner and evidence",
+          "finding": "Customer statement preserved separately from confirmed system records.",
+          "evidence_ids": [
+            "ev_87175fe94ec6",
+            "ev_7e6020758619",
+            "ev_02233efa66a1"
+          ],
+          "evidence_revisions": {
+            "ev_87175fe94ec6": 1,
+            "ev_7e6020758619": 1,
+            "ev_02233efa66a1": 1
+          },
+          "changed": "Customer statement preserved separately from confirmed system records.",
+          "next_step": "Transaction reconstructed",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 3,
+          "id": "trace_00a8ffaea99e",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:04:59.838909+00:00",
+          "phase": "reconstruct",
+          "title": "Transaction reconstructed",
+          "purpose": "Match attempts, references and correlation identities.",
+          "action": "Match transaction, purchase and attempt identities",
+          "finding": "Exact references define the scope. Equal amounts alone do not link payments.",
+          "evidence_ids": [],
+          "evidence_revisions": {},
+          "changed": "Exact references define the scope. Equal amounts alone do not link payments.",
+          "next_step": "Relevant records retrieved",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 4,
+          "id": "trace_8dd19de3c763",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:04:59.878273+00:00",
+          "phase": "retrieve",
+          "title": "Relevant records retrieved",
+          "purpose": "Obtain the available records and identify missing sources.",
+          "action": "Query the scoped synthetic sources",
+          "finding": "Retrieving the records available for this incident; no financial conclusion has been made.",
+          "evidence_ids": [],
+          "evidence_revisions": {},
+          "changed": "Retrieving the records available for this incident; no financial conclusion has been made.",
+          "next_step": "Processing path followed",
+          "state": "active",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 5,
+          "id": "trace_b773ca496053",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:04:59.896692+00:00",
+          "phase": "retrieve",
+          "title": "Relevant records retrieved",
+          "purpose": "Obtain the available records and identify missing sources.",
+          "action": "Retrieve matching source records",
+          "finding": "12 distinct records available; 0 source checks unavailable.",
+          "evidence_ids": [
+            "ev_87175fe94ec6",
+            "ev_7e6020758619",
+            "ev_02233efa66a1",
+            "ev_1c23897bf814",
+            "ev_711d787615b0",
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675",
+            "ev_da33d9ed76db",
+            "ev_c4555c931f9d",
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_87175fe94ec6": 1,
+            "ev_7e6020758619": 1,
+            "ev_02233efa66a1": 1,
+            "ev_1c23897bf814": 1,
+            "ev_711d787615b0": 1,
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1,
+            "ev_1098cf125675": 1,
+            "ev_da33d9ed76db": 1,
+            "ev_c4555c931f9d": 1,
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "12 distinct records available; 0 source checks unavailable.",
+          "next_step": "Processing path followed",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 6,
+          "id": "trace_dc4202b4224d",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:04:59.949922+00:00",
+          "phase": "follow",
+          "title": "Processing path followed",
+          "purpose": "Locate the point where the payment became uncertain.",
+          "action": "Follow the observed processing path",
+          "finding": "Retry request recorded under the same transaction.",
+          "evidence_ids": [
+            "ev_da33d9ed76db"
+          ],
+          "evidence_revisions": {
+            "ev_da33d9ed76db": 1
+          },
+          "changed": "Retry request recorded under the same transaction.",
+          "next_step": "Evidence compared",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 7,
+          "id": "trace_876fd5f04268",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:04:59.996310+00:00",
+          "phase": "compare",
+          "title": "Evidence compared",
+          "purpose": "Reconcile debit, settlement and wallet or merchant records.",
+          "action": "Run the trained claim/passage verifier",
+          "finding": "Comparing wording with the trained advisory verifier and reconciling authoritative amounts independently.",
+          "evidence_ids": [
+            "ev_87175fe94ec6",
+            "ev_7e6020758619",
+            "ev_02233efa66a1",
+            "ev_1c23897bf814",
+            "ev_711d787615b0",
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675",
+            "ev_da33d9ed76db",
+            "ev_c4555c931f9d",
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_87175fe94ec6": 1,
+            "ev_7e6020758619": 1,
+            "ev_02233efa66a1": 1,
+            "ev_1c23897bf814": 1,
+            "ev_711d787615b0": 1,
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1,
+            "ev_1098cf125675": 1,
+            "ev_da33d9ed76db": 1,
+            "ev_c4555c931f9d": 1,
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "Comparing wording with the trained advisory verifier and reconciling authoritative amounts independently.",
+          "next_step": "Claim verified",
+          "state": "active",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 8,
+          "id": "trace_58d8e79988e9",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:09.294607+00:00",
+          "phase": "compare",
+          "title": "Evidence compared",
+          "purpose": "Reconcile debit, settlement and wallet or merchant records.",
+          "action": "Compare postings and assess claim/passage wording",
+          "finding": "Checked payments: BDT 2000.00; returned: BDT 0.00. Trained text readings remain advisory.",
+          "evidence_ids": [
+            "ev_87175fe94ec6",
+            "ev_7e6020758619",
+            "ev_02233efa66a1",
+            "ev_1c23897bf814",
+            "ev_711d787615b0",
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675",
+            "ev_da33d9ed76db",
+            "ev_c4555c931f9d",
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_87175fe94ec6": 1,
+            "ev_7e6020758619": 1,
+            "ev_02233efa66a1": 1,
+            "ev_1c23897bf814": 1,
+            "ev_711d787615b0": 1,
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1,
+            "ev_1098cf125675": 1,
+            "ev_da33d9ed76db": 1,
+            "ev_c4555c931f9d": 1,
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "Checked payments: BDT 2000.00; returned: BDT 0.00. Trained text readings remain advisory.",
+          "next_step": "Claim verified",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 9,
+          "id": "trace_bccd7e935a95",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:09.341574+00:00",
+          "phase": "verify",
+          "title": "Claim verified",
+          "purpose": "Establish whether duplicate payment is supported, contradicted or inconclusive.",
+          "action": "Verify the reported payment issue",
+          "finding": "SUPPORTS CLAIM. Two bank debits support a duplicate-payment discrepancy",
+          "evidence_ids": [
+            "ev_87175fe94ec6",
+            "ev_7e6020758619",
+            "ev_02233efa66a1",
+            "ev_1c23897bf814",
+            "ev_711d787615b0",
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675",
+            "ev_da33d9ed76db",
+            "ev_c4555c931f9d",
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_87175fe94ec6": 1,
+            "ev_7e6020758619": 1,
+            "ev_02233efa66a1": 1,
+            "ev_1c23897bf814": 1,
+            "ev_711d787615b0": 1,
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1,
+            "ev_1098cf125675": 1,
+            "ev_da33d9ed76db": 1,
+            "ev_c4555c931f9d": 1,
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "SUPPORTS CLAIM. Two bank debits support a duplicate-payment discrepancy",
+          "next_step": "Possible causes evaluated",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 10,
+          "id": "trace_f3f788fb2ccb",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:09.397116+00:00",
+          "phase": "causes",
+          "title": "Possible causes evaluated",
+          "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
+          "action": "Evaluate Partner response delayed / missing",
+          "finding": "CONTRADICTED: A response was unavailable when the path was first checked.",
+          "evidence_ids": [
+            "ev_c4555c931f9d"
+          ],
+          "evidence_revisions": {
+            "ev_c4555c931f9d": 1
+          },
+          "changed": "CONTRADICTED: A response was unavailable when the path was first checked.",
+          "next_step": "Repair eligibility checked",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": [
+            {
+              "id": "partner_timeout",
+              "title": "Partner response delayed / missing",
+              "description": "A response was unavailable when the path was first checked.",
+              "status": "CONTRADICTED",
+              "supporting_evidence": [],
+              "contradicting_evidence": [
+                "ev_c4555c931f9d"
+              ],
+              "unresolved_evidence": []
+            }
+          ]
+        },
+        {
+          "sequence": 11,
+          "id": "trace_e79a0654e8d2",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:09.444221+00:00",
+          "phase": "causes",
+          "title": "Possible causes evaluated",
+          "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
+          "action": "Evaluate Retry produced an additional debit",
+          "finding": "SUPPORTED: Two financial postings, rather than two request events, establish the discrepancy.",
+          "evidence_ids": [
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7"
+          ],
+          "evidence_revisions": {
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1
+          },
+          "changed": "SUPPORTED: Two financial postings, rather than two request events, establish the discrepancy.",
+          "next_step": "Repair eligibility checked",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": [
+            {
+              "id": "partner_timeout",
+              "title": "Partner response delayed / missing",
+              "description": "A response was unavailable when the path was first checked.",
+              "status": "CONTRADICTED",
+              "supporting_evidence": [],
+              "contradicting_evidence": [
+                "ev_c4555c931f9d"
+              ],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "duplicate_debit",
+              "title": "Retry produced an additional debit",
+              "description": "Two financial postings, rather than two request events, establish the discrepancy.",
+              "status": "SUPPORTED",
+              "supporting_evidence": [
+                "ev_b02c1ec36642",
+                "ev_435dc71de3d7"
+              ],
+              "contradicting_evidence": [],
+              "unresolved_evidence": []
+            }
+          ]
+        },
+        {
+          "sequence": 12,
+          "id": "trace_7637f43d8f59",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:09.489204+00:00",
+          "phase": "causes",
+          "title": "Possible causes evaluated",
+          "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
+          "action": "Evaluate Intended settlement completed",
+          "finding": "SUPPORTED: A settlement and the corresponding wallet credit establish completion.",
+          "evidence_ids": [
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "SUPPORTED: A settlement and the corresponding wallet credit establish completion.",
+          "next_step": "Repair eligibility checked",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": [
+            {
+              "id": "partner_timeout",
+              "title": "Partner response delayed / missing",
+              "description": "A response was unavailable when the path was first checked.",
+              "status": "CONTRADICTED",
+              "supporting_evidence": [],
+              "contradicting_evidence": [
+                "ev_c4555c931f9d"
+              ],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "duplicate_debit",
+              "title": "Retry produced an additional debit",
+              "description": "Two financial postings, rather than two request events, establish the discrepancy.",
+              "status": "SUPPORTED",
+              "supporting_evidence": [
+                "ev_b02c1ec36642",
+                "ev_435dc71de3d7"
+              ],
+              "contradicting_evidence": [],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "settlement_complete",
+              "title": "Intended settlement completed",
+              "description": "A settlement and the corresponding wallet credit establish completion.",
+              "status": "SUPPORTED",
+              "supporting_evidence": [
+                "ev_d9f063a8aef0",
+                "ev_c8275e41c2b7"
+              ],
+              "contradicting_evidence": [],
+              "unresolved_evidence": []
+            }
+          ]
+        },
+        {
+          "sequence": 13,
+          "id": "trace_e083ccdb12cd",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:09.536437+00:00",
+          "phase": "causes",
+          "title": "Possible causes evaluated",
+          "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
+          "action": "Evaluate Retry retained one posting",
+          "finding": "CONTRADICTED: Multiple requests can share one successful financial posting.",
+          "evidence_ids": [
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7"
+          ],
+          "evidence_revisions": {
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1
+          },
+          "changed": "CONTRADICTED: Multiple requests can share one successful financial posting.",
+          "next_step": "Repair eligibility checked",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": [
+            {
+              "id": "partner_timeout",
+              "title": "Partner response delayed / missing",
+              "description": "A response was unavailable when the path was first checked.",
+              "status": "CONTRADICTED",
+              "supporting_evidence": [],
+              "contradicting_evidence": [
+                "ev_c4555c931f9d"
+              ],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "duplicate_debit",
+              "title": "Retry produced an additional debit",
+              "description": "Two financial postings, rather than two request events, establish the discrepancy.",
+              "status": "SUPPORTED",
+              "supporting_evidence": [
+                "ev_b02c1ec36642",
+                "ev_435dc71de3d7"
+              ],
+              "contradicting_evidence": [],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "settlement_complete",
+              "title": "Intended settlement completed",
+              "description": "A settlement and the corresponding wallet credit establish completion.",
+              "status": "SUPPORTED",
+              "supporting_evidence": [
+                "ev_d9f063a8aef0",
+                "ev_c8275e41c2b7"
+              ],
+              "contradicting_evidence": [],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "retry_idempotent",
+              "title": "Retry retained one posting",
+              "description": "Multiple requests can share one successful financial posting.",
+              "status": "CONTRADICTED",
+              "supporting_evidence": [],
+              "contradicting_evidence": [
+                "ev_b02c1ec36642",
+                "ev_435dc71de3d7"
+              ],
+              "unresolved_evidence": []
+            }
+          ]
+        },
+        {
+          "sequence": 14,
+          "id": "trace_52523f935c9c",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:09.581856+00:00",
+          "phase": "causes",
+          "title": "Possible causes evaluated",
+          "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
+          "action": "Evaluate Debit remains unsettled",
+          "finding": "UNRESOLVED: A complete negative wallet query and an explicit partner contract permit a bounded correction.",
+          "evidence_ids": [],
+          "evidence_revisions": {},
+          "changed": "UNRESOLVED: A complete negative wallet query and an explicit partner contract permit a bounded correction.",
+          "next_step": "Repair eligibility checked",
+          "state": "attention",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": [
+            {
+              "id": "partner_timeout",
+              "title": "Partner response delayed / missing",
+              "description": "A response was unavailable when the path was first checked.",
+              "status": "CONTRADICTED",
+              "supporting_evidence": [],
+              "contradicting_evidence": [
+                "ev_c4555c931f9d"
+              ],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "duplicate_debit",
+              "title": "Retry produced an additional debit",
+              "description": "Two financial postings, rather than two request events, establish the discrepancy.",
+              "status": "SUPPORTED",
+              "supporting_evidence": [
+                "ev_b02c1ec36642",
+                "ev_435dc71de3d7"
+              ],
+              "contradicting_evidence": [],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "settlement_complete",
+              "title": "Intended settlement completed",
+              "description": "A settlement and the corresponding wallet credit establish completion.",
+              "status": "SUPPORTED",
+              "supporting_evidence": [
+                "ev_d9f063a8aef0",
+                "ev_c8275e41c2b7"
+              ],
+              "contradicting_evidence": [],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "retry_idempotent",
+              "title": "Retry retained one posting",
+              "description": "Multiple requests can share one successful financial posting.",
+              "status": "CONTRADICTED",
+              "supporting_evidence": [],
+              "contradicting_evidence": [
+                "ev_b02c1ec36642",
+                "ev_435dc71de3d7"
+              ],
+              "unresolved_evidence": []
+            },
+            {
+              "id": "unsettled_debit",
+              "title": "Debit remains unsettled",
+              "description": "A complete negative wallet query and an explicit partner contract permit a bounded correction.",
+              "status": "UNRESOLVED",
+              "supporting_evidence": [],
+              "contradicting_evidence": [],
+              "unresolved_evidence": []
+            }
+          ]
+        },
+        {
+          "sequence": 15,
+          "id": "trace_997c11daa97d",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:09.628358+00:00",
+          "phase": "causes",
+          "title": "Possible causes evaluated",
+          "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
+          "action": "Request a bounded local AI assessment",
+          "finding": "Local Qwen is evaluating reviewed evidence. Its proposals cannot authorize repairs.",
+          "evidence_ids": [
+            "ev_87175fe94ec6",
+            "ev_7e6020758619",
+            "ev_02233efa66a1",
+            "ev_1c23897bf814",
+            "ev_711d787615b0",
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675",
+            "ev_da33d9ed76db",
+            "ev_c4555c931f9d",
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_87175fe94ec6": 1,
+            "ev_7e6020758619": 1,
+            "ev_02233efa66a1": 1,
+            "ev_1c23897bf814": 1,
+            "ev_711d787615b0": 1,
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1,
+            "ev_1098cf125675": 1,
+            "ev_da33d9ed76db": 1,
+            "ev_c4555c931f9d": 1,
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "Local Qwen is evaluating reviewed evidence. Its proposals cannot authorize repairs.",
+          "next_step": "Repair eligibility checked",
+          "state": "active",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 16,
+          "id": "trace_83ef63f3b37f",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:17.819329+00:00",
+          "phase": "eligibility",
+          "title": "Repair eligibility checked",
+          "purpose": "Determine whether a supported action is authorized by backend rules.",
+          "action": "Check backend eligibility and permissions",
+          "finding": "Eligible: Two exact bank postings and one wallet credit establish the extra debit.",
+          "evidence_ids": [
+            "ev_1c23897bf814",
+            "ev_711d787615b0",
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675",
+            "ev_da33d9ed76db",
+            "ev_c4555c931f9d",
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_1c23897bf814": 1,
+            "ev_711d787615b0": 1,
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1,
+            "ev_1098cf125675": 1,
+            "ev_da33d9ed76db": 1,
+            "ev_c4555c931f9d": 1,
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "Eligible: Two exact bank postings and one wallet credit establish the extra debit.",
+          "next_step": "Recommendation generated",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 17,
+          "id": "trace_d33a692b5323",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:17.875873+00:00",
+          "phase": "recommend",
+          "title": "Recommendation generated",
+          "purpose": "Present an evidence-cited proposal and its constraints.",
+          "action": "Generate a cited operator recommendation",
+          "finding": "REVERSE DUPLICATE DEBIT. Operator reviews and approves this exact sandbox action.",
+          "evidence_ids": [
+            "ev_1c23897bf814",
+            "ev_711d787615b0",
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675",
+            "ev_da33d9ed76db",
+            "ev_c4555c931f9d",
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_1c23897bf814": 1,
+            "ev_711d787615b0": 1,
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1,
+            "ev_1098cf125675": 1,
+            "ev_da33d9ed76db": 1,
+            "ev_c4555c931f9d": 1,
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "REVERSE DUPLICATE DEBIT. Operator reviews and approves this exact sandbox action.",
+          "next_step": "Operator decision required",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 18,
+          "id": "trace_4b417df2c098",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:17.925151+00:00",
+          "phase": "decision",
+          "title": "Operator decision required",
+          "purpose": "Require approval or an owned handoff; investigation completion is not resolution.",
+          "action": "Require an operator decision",
+          "finding": "Investigation finished. The payment is resolved only after a verified outcome or correction.",
+          "evidence_ids": [
+            "ev_1c23897bf814",
+            "ev_711d787615b0",
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675",
+            "ev_da33d9ed76db",
+            "ev_c4555c931f9d",
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_1c23897bf814": 1,
+            "ev_711d787615b0": 1,
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1,
+            "ev_1098cf125675": 1,
+            "ev_da33d9ed76db": 1,
+            "ev_c4555c931f9d": 1,
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "Operator approval required.",
+          "next_step": "Approve, reject, record review or hand off.",
+          "state": "attention",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 19,
+          "id": "trace_aaab3f95e3af",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:18.004157+00:00",
+          "phase": "decision",
+          "title": "Operator decision required",
+          "purpose": "Require approval or an owned handoff; investigation completion is not resolution.",
+          "action": "Record cited operator approval",
+          "finding": "Two bank debits and one intended wallet credit authorize returning exactly the extra debit.",
+          "evidence_ids": [
+            "ev_1c23897bf814",
+            "ev_711d787615b0",
+            "ev_b02c1ec36642",
+            "ev_435dc71de3d7",
+            "ev_1098cf125675",
+            "ev_da33d9ed76db",
+            "ev_c4555c931f9d",
+            "ev_d9f063a8aef0",
+            "ev_c8275e41c2b7"
+          ],
+          "evidence_revisions": {
+            "ev_1c23897bf814": 1,
+            "ev_711d787615b0": 1,
+            "ev_b02c1ec36642": 1,
+            "ev_435dc71de3d7": 1,
+            "ev_1098cf125675": 1,
+            "ev_da33d9ed76db": 1,
+            "ev_c4555c931f9d": 1,
+            "ev_d9f063a8aef0": 1,
+            "ev_c8275e41c2b7": 1
+          },
+          "changed": "Approval saved; no financial posting applied.",
+          "next_step": "Execute separately; current eligibility will be rechecked.",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        },
+        {
+          "sequence": 20,
+          "id": "trace_77915be7da52",
+          "run_id": "run_7b36c43e1325",
+          "case_id": "case_c3d6f50c9658",
+          "incident_id": "incident_4727318d13e6",
+          "timestamp": "2026-10-03T02:05:18.043568+00:00",
+          "phase": "decision",
+          "title": "Operator decision required",
+          "purpose": "Require approval or an owned handoff; investigation completion is not resolution.",
+          "action": "Verify the approved sandbox correction",
+          "finding": "Your payment issue was verified and the approved sandbox correction completed. Your case is resolved.",
+          "evidence_ids": [
+            "ev_f56d780e2f97"
+          ],
+          "evidence_revisions": {
+            "ev_f56d780e2f97": 1
+          },
+          "changed": "Transaction, case, graph, history and bilingual customer update committed together.",
+          "next_step": "Customer receives the verified resolution.",
+          "state": "completed",
+          "record_category": "Derived Observation",
+          "uncertainty": "Scoped to checked synthetic records",
+          "hypotheses": null
+        }
+      ]
+    }
+  ],
+  "findings": {
+    "qr_confirmed": false,
+    "qr_not_completed": false,
+    "cash_confirmed": false,
+    "purchase_total_minor": 100000,
+    "recorded_paid_minor": 200000,
+    "recorded_repaid_minor": 100000,
+    "recorded_excess_minor": 0,
+    "requirements": [],
+    "conflict": false,
+    "split_tender": false,
+    "bank_debit_minor": 200000,
+    "wallet_credit_minor": 100000,
+    "capabilities": [
+      "bank_debit",
+      "bank_inventory_complete",
+      "gateway_accepted",
+      "partner_accepted",
+      "retry_observed",
+      "reversal_posted",
+      "settlement_confirmed",
+      "transfer_intent",
+      "wallet_credit"
+    ],
+    "bank_inventory_complete": true,
+    "remaining_unsettled_minor": 0,
+    "evidence_ids": [
+      "ev_1c23897bf814",
+      "ev_711d787615b0",
+      "ev_b02c1ec36642",
+      "ev_435dc71de3d7",
+      "ev_1098cf125675",
+      "ev_da33d9ed76db",
+      "ev_c4555c931f9d",
+      "ev_d9f063a8aef0",
+      "ev_c8275e41c2b7",
+      "ev_f56d780e2f97"
+    ]
+  },
+  "possible_causes": [
+    {
+      "id": "duplicate_debit",
+      "title": "Retry produced an additional debit",
+      "description": "Two financial postings, rather than two request events, establish the discrepancy.",
+      "status": "SUPPORTED",
+      "supporting_evidence": [
+        "ev_b02c1ec36642",
+        "ev_435dc71de3d7"
+      ],
+      "contradicting_evidence": [],
+      "unresolved_evidence": []
+    },
+    {
+      "id": "settlement_complete",
+      "title": "Intended settlement completed",
+      "description": "A settlement and the corresponding wallet credit establish completion.",
+      "status": "SUPPORTED",
+      "supporting_evidence": [
+        "ev_d9f063a8aef0",
+        "ev_c8275e41c2b7"
+      ],
+      "contradicting_evidence": [],
+      "unresolved_evidence": []
+    },
+    {
+      "id": "partner_timeout",
+      "title": "Partner response delayed / missing",
+      "description": "A response was unavailable when the path was first checked.",
+      "status": "CONTRADICTED",
+      "supporting_evidence": [],
+      "contradicting_evidence": [
+        "ev_c4555c931f9d"
+      ],
+      "unresolved_evidence": []
+    },
+    {
+      "id": "retry_idempotent",
+      "title": "Retry retained one posting",
+      "description": "Multiple requests can share one successful financial posting.",
+      "status": "CONTRADICTED",
+      "supporting_evidence": [],
+      "contradicting_evidence": [
+        "ev_b02c1ec36642",
+        "ev_435dc71de3d7"
+      ],
+      "unresolved_evidence": []
+    },
+    {
+      "id": "unsettled_debit",
+      "title": "Debit remains unsettled",
+      "description": "A complete negative wallet query and an explicit partner contract permit a bounded correction.",
+      "status": "UNRESOLVED",
+      "supporting_evidence": [],
+      "contradicting_evidence": [],
+      "unresolved_evidence": []
+    }
+  ],
+  "verification_result": "SUPPORTS_CLAIM",
+  "recommended_action": {
+    "eligible": true,
+    "authorization": "Eligible",
+    "action": "REVERSE_DUPLICATE_DEBIT",
+    "amount_minor": 100000,
+    "evidence_ids": [
+      "ev_1c23897bf814",
+      "ev_711d787615b0",
+      "ev_b02c1ec36642",
+      "ev_435dc71de3d7",
+      "ev_1098cf125675",
+      "ev_da33d9ed76db",
+      "ev_c4555c931f9d",
+      "ev_d9f063a8aef0",
+      "ev_c8275e41c2b7"
+    ],
+    "reason": "Two exact bank postings and one wallet credit establish the extra debit.",
+    "missing": [],
+    "risk": "Synthetic sandbox only; exact posting identity, current evidence and operator approval required.",
+    "approval_required": true,
+    "team": "Settlement Operations",
+    "next_action": "Operator reviews and approves this exact sandbox action.",
+    "id": "recommendation_5d9c4013d8d7",
+    "run_id": "run_7b36c43e1325",
+    "case_id": "case_c3d6f50c9658",
+    "incident_id": "incident_4727318d13e6",
+    "at": "2026-10-03T02:05:17.921988+00:00"
+  },
+  "operator_decisions": [
+    {
+      "id": "decision_0510cc0e68be",
+      "decision": "APPROVE_SANDBOX_REPAIR",
+      "note": "Two bank debits and one intended wallet credit authorize returning exactly the extra debit.",
+      "evidence_ids": [
+        "ev_1c23897bf814",
+        "ev_711d787615b0",
+        "ev_b02c1ec36642",
+        "ev_435dc71de3d7",
+        "ev_1098cf125675",
+        "ev_da33d9ed76db",
+        "ev_c4555c931f9d",
+        "ev_d9f063a8aef0",
+        "ev_c8275e41c2b7"
+      ],
+      "evidence_version": 12,
+      "actor": "staff_1",
+      "at": "2026-10-03T02:05:18.004116+00:00",
+      "stale": false
+    }
+  ],
+  "approvals": [
+    {
+      "id": "approval_2539d51ec95f",
+      "case_id": "case_c3d6f50c9658",
+      "incident_id": "incident_4727318d13e6",
+      "recommendation_id": "recommendation_5d9c4013d8d7",
+      "run_id": "run_7b36c43e1325",
+      "actor": "staff_1",
+      "at": "2026-10-03T02:05:18.003523+00:00",
+      "status": "EXECUTED",
+      "evidence_version": 12,
+      "source_version": 9,
+      "action": "REVERSE_DUPLICATE_DEBIT",
+      "amount_minor": 100000,
+      "evidence_ids": [
+        "ev_1c23897bf814",
+        "ev_711d787615b0",
+        "ev_b02c1ec36642",
+        "ev_435dc71de3d7",
+        "ev_1098cf125675",
+        "ev_da33d9ed76db",
+        "ev_c4555c931f9d",
+        "ev_d9f063a8aef0",
+        "ev_c8275e41c2b7"
+      ],
+      "note": "Two bank debits and one intended wallet credit authorize returning exactly the extra debit."
+    }
+  ],
+  "repair_results": [
+    {
+      "id": "repair_4c625cd8846a",
+      "approval_id": "approval_2539d51ec95f",
+      "case_id": "case_c3d6f50c9658",
+      "incident_id": "incident_4727318d13e6",
+      "at": "2026-10-03T02:05:18.038836+00:00",
+      "actor": "staff_1",
+      "action": "REVERSE_DUPLICATE_DEBIT",
+      "amount_minor": 100000,
+      "synthetic": true,
+      "status": "SUCCEEDED",
+      "result": "Balanced sandbox correction verified. No remaining unsettled or duplicate amount.",
+      "posting_id": "posting_4252116697c7"
+    }
+  ],
+  "remaining_issues": {
+    "evidence_gaps": [],
+    "remaining_duplicate_minor": 0,
+    "remaining_unsettled_minor": 0,
+    "outstanding_requests": [],
+    "owner": "staff_1",
+    "next_review": "2026-10-03T06:04:59.683173+00:00"
+  },
+  "tasks": [],
+  "handoffs": [],
+  "customer_updates": [
+    {
+      "at": "2026-10-03T02:04:59.683275+00:00",
+      "text": "Your transfer complaint is saved under one incident. An operator will verify the payment records.",
+      "text_bn": "আপনার মামলার নতুন আপডেট সংরক্ষণ করা হয়েছে। তদন্তকারী বিস্তারিত পর্যালোচনা করবেন।"
+    },
+    {
+      "at": "2026-10-03T02:04:59.715021+00:00",
+      "text": "New evidence was saved. The assigned investigator will review what changed.",
+      "text_bn": "আপনার মামলার নতুন আপডেট সংরক্ষণ করা হয়েছে। তদন্তকারী বিস্তারিত পর্যালোচনা করবেন।"
+    },
+    {
+      "at": "2026-10-03T02:05:17.922702+00:00",
+      "text": "Two bank debits support a duplicate-payment discrepancy",
+      "text_bn": "একই ট্রান্সফারের জন্য ব্যাংকে দুইটি ডেবিট নিশ্চিত হয়েছে।"
+    },
+    {
+      "at": "2026-10-03T02:05:18.043371+00:00",
+      "text": "Your payment issue was verified and the approved sandbox correction completed. Your case is resolved.",
+      "text_bn": "আপনার লেনদেনের সমস্যা যাচাই করা হয়েছে এবং অনুমোদিত সিমুলেটেড সংশোধন সম্পন্ন হয়েছে। আপনার মামলাটি সমাধান হয়েছে।"
+    }
+  ],
+  "case_history": [
+    {
+      "id": 1,
+      "case_id": "case_c3d6f50c9658",
+      "actor": "customer_1",
+      "action": "transfer_complaint",
+      "at": "2026-10-03T02:04:59.684806+00:00",
+      "version": 1,
+      "detail": ""
+    },
+    {
+      "id": 2,
+      "case_id": "case_c3d6f50c9658",
+      "actor": "customer_1",
+      "action": "upload",
+      "at": "2026-10-03T02:04:59.716117+00:00",
+      "version": 2,
+      "detail": ""
+    },
+    {
+      "id": 3,
+      "case_id": "case_c3d6f50c9658",
+      "actor": "staff_1",
+      "action": "investigation_started",
+      "at": "2026-10-03T02:04:59.733799+00:00",
+      "version": 3,
+      "detail": "run_7b36c43e1325"
+    },
+    {
+      "id": 4,
+      "case_id": "case_c3d6f50c9658",
+      "actor": "investigator",
+      "action": "records_retrieved",
+      "at": "2026-10-03T02:04:59.887536+00:00",
+      "version": 4,
+      "detail": "[\"check_47739eef055e\", \"check_fee03307a04f\", \"check_02ec61dad1f9\", \"check_bb47c740c322\", \"check_ab4c6cabede1\", \"check_bdb131b10a13\", \"check_d3c0b988318f\"]"
+    },
+    {
+      "id": 5,
+      "case_id": "case_c3d6f50c9658",
+      "actor": "investigator",
+      "action": "investigation_completed",
+      "at": "2026-10-03T02:05:17.926187+00:00",
+      "version": 5,
+      "detail": "run_7b36c43e1325"
+    },
+    {
+      "id": 6,
+      "case_id": "case_c3d6f50c9658",
+      "actor": "staff_1",
+      "action": "approve_sandbox",
+      "at": "2026-10-03T02:05:18.006802+00:00",
+      "version": 6,
+      "detail": ""
+    },
+    {
+      "id": 7,
+      "case_id": "case_c3d6f50c9658",
+      "actor": "sandbox",
+      "action": "transaction_event",
+      "at": "2026-10-03T02:05:18.041749+00:00",
+      "version": 7,
+      "detail": "event_3e630f2a0f86"
+    },
+    {
+      "id": 8,
+      "case_id": "case_c3d6f50c9658",
+      "actor": "staff_1",
+      "action": "execute_sandbox",
+      "at": "2026-10-03T02:05:18.044855+00:00",
+      "version": 8,
+      "detail": ""
+    }
+  ]
+}

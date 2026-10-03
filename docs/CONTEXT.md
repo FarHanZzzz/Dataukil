@@ -6,6 +6,8 @@ The user requested a working, accurately grounded AI/ML implementation and persi
 
 Scope: Paid-Twice Investigation Workspace. One purchase complaint, customer/staff/judge journeys, synthetic read-only records, trained three-label text-pair verifier. No money movement, external messages, receipt authentication or fraud determination.
 
+Latest extension: the static story was replaced by a persistent mobile wallet simulation and shared investigator workspace. The customer enters the purchase and complaint; the investigator checks its records, requests and reviews customer replies, assesses source support, hands off, and records a cited outcome. Start new work with [mobile interaction context](MOBILE_SIMULATION.md), [simulation assessment context](SIMULATION_AI.md), and [observed mobile validation](MOBILE_VALIDATION.md).
+
 Read in order:
 1. [Audit](AUDIT.md)
 2. [Implementation plan](PLAN.md)

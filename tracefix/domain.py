@@ -15,6 +15,8 @@ def uid(prefix):
 def evidence(text, kind='customer_supplied', reference=None, amount=None, purchase=None, capability=None):
     stamp = now()
     return dict(id=uid('ev'), kind=kind, supplied_by='mock_adapter' if kind.startswith('mock_') else 'customer',
+                category='Confirmed System Record' if kind.startswith('mock_') else 'Customer Evidence' if kind=='customer_supplied' else 'External Record',
+                reliability='Confirmed' if kind.startswith('mock_') else 'User-provided' if kind=='customer_supplied' else 'Unverified',
                 received_at=stamp, event_at=stamp, as_of=stamp, scope='this fictional purchase only',
                 reference=reference, purchase_id=purchase, amount_minor=amount, capability=capability,
                 verification='documented synthetic fixture contract' if kind.startswith('mock_') else 'unverified supplied assertion',
@@ -28,16 +30,21 @@ def current_text(e):
 
 
 def facts(c):
+    if c.get('transaction_id'):
+        from .payments import transfer_facts
+        return transfer_facts(c)
     # Only explicit capabilities from trusted mock adapters can establish source facts.
     valid = [e for e in c['evidence'] if e['kind'].startswith('mock_') and e['purchase_id'] == c['purchase_id']]
     qr = [e for e in valid if e['capability'] == 'qr_completed' and e['reference'] == c['qr_reference']]
+    qr_failed = [e for e in valid if e['capability'] == 'qr_not_completed' and e['reference'] == c['qr_reference']]
     cash = [e for e in valid if e['capability'] == 'cash_received']
+    second_qr = [e for e in valid if e['capability'] == 'second_qr_completed']
     repayment = [e for e in valid if e['capability'] == 'repayment_completed' and e['reference'] == c['qr_reference']]
     total = next((e['amount_minor'] for e in valid if e['capability'] == 'purchase_total'), None)
-    paid = sum(e['amount_minor'] or 0 for e in qr + cash)
+    paid = sum(e['amount_minor'] or 0 for e in qr + cash + second_qr)
     returned = sum(e['amount_minor'] or 0 for e in repayment)
     missing = []
-    if not qr:
+    if not qr and not qr_failed:
         missing.append('Confirm the exact QR reference under the simulated payment source.')
     if not cash and c['second_method'] == 'cash':
         missing.append('Obtain a merchant acknowledgement of the alleged cash payment and purchase reference.')
@@ -45,34 +52,77 @@ def facts(c):
         missing.append('Obtain an invoice identifying this purchase and its total.')
     if c['second_method'] == 'qr' and not any(e['capability'] == 'second_qr_completed' for e in valid):
         missing.append('Establish whether the second QR reference belongs to the same purchase.')
-    denial = any(e['kind'] == 'merchant_supplied' and e.get('assertion') == 'denial' for e in c['evidence'])
+    denial = any(e['kind'] in ('merchant_supplied','mock_merchant') and e.get('assertion') == 'denial' for e in c['evidence'])
     if denial:
         missing.insert(0, 'Resolve the conflicting merchant denial with a cited purchase-level record.')
-    return dict(qr_confirmed=bool(qr), cash_confirmed=bool(cash), purchase_total_minor=total,
+    return dict(qr_confirmed=bool(qr), qr_not_completed=bool(qr_failed), cash_confirmed=bool(cash), purchase_total_minor=total,
                 recorded_paid_minor=paid, recorded_repaid_minor=returned,
                 recorded_excess_minor=max(0, paid - total - returned) if total is not None else None,
                 requirements=missing, conflict=denial,
-                split_tender=total is not None and len(qr+cash)>1 and paid <= total)
+                split_tender=total is not None and len(qr+cash+second_qr)>1 and paid <= total)
+
+
+def assessment(c):
+    """Assessment of visible record support, never hidden simulation truth or liability."""
+    f=facts(c)
+    if c.get('transaction_id'):
+        from .payments import transfer_assessment
+        return transfer_assessment(c)
+    if f['conflict']:
+        status,headline,summary='CONFLICTING','The records need further review','The cash allegation conflicts with a merchant response. Keep the complaint open and obtain purchase-level corroboration.'
+    elif f['requirements']:
+        status,headline,summary='NEEDS_EVIDENCE','More evidence is needed','Your report has been accepted. The available evidence cannot yet establish whether this purchase was paid twice.'
+    elif f['recorded_repaid_minor'] and f['recorded_excess_minor']==0:
+        status,headline,summary='REPAID','A completed repayment is recorded','A checked simulated source records the repayment. An investigator must review and communicate the recorded outcome.'
+    elif f['recorded_excess_minor']:
+        status,headline,summary='SUPPORTED','Records support a duplicate payment','Matching payment and purchase records show recorded payments above the invoice total. This supports further resolution review.'
+    else:
+        status,headline,summary='NOT_SUPPORTED','The checked records do not show an overpayment','Recorded payments do not exceed this purchase total. The customer can provide additional evidence or request further review.'
+    ids=[e['id'] for e in c['evidence'] if e['kind'].startswith('mock_') and e['purchase_id']==c['purchase_id']]
+    return dict(status=status,headline=headline,summary=summary,evidence_ids=ids,missing=f['requirements'],engine='source-grounded rules and integer amount checks',
+                recorded_excess_minor=f['recorded_excess_minor'],limitations='Synthetic source assessment; no real-world eligibility, fraud or liability determination.')
 
 
 def fresh(c):
     from ml.features import RULES_VERSION
-    return bool(c.get('analysis') and c['analysis']['evidence_version'] == c['evidence_version'] and c['analysis'].get('rules_version')==RULES_VERSION)
+    return bool(c.get('analysis') and c['analysis']['evidence_version'] == c['evidence_version'] and c['analysis'].get('rules_version')==RULES_VERSION
+                and (not c.get('transaction_id') or c['analysis'].get('source_version')==c.get('source_version')))
 
 
 def customer_view(c):
+    from . import localization
     f = facts(c)
     confirmed = []
     if f['qr_confirmed']:
         confirmed.append('The QR payment is confirmed in the simulated provider record. This alone does not resolve your paid-twice complaint.')
     if f['cash_confirmed']:
         confirmed.append('The mock merchant confirmation records cash for this purchase.')
+    if f['qr_not_completed']:
+        confirmed.append('The checked simulated provider record shows that the QR payment did not complete.')
     if f['recorded_repaid_minor']:
         confirmed.append(f"A simulated completed-repayment record shows BDT {f['recorded_repaid_minor']/100:.2f} returned.")
+    if c.get('transaction_id'):
+        confirmed=[]
+        if f['bank_debit_minor']:confirmed.append(f"Checked bank records show BDT {f['bank_debit_minor']/100:.2f} debited for this transfer.")
+        if f['wallet_credit_minor']:confirmed.append(f"Checked wallet records show BDT {f['wallet_credit_minor']/100:.2f} credited.")
+        if f['recorded_repaid_minor']:confirmed.append(f"The verified sandbox correction returned BDT {f['recorded_repaid_minor']/100:.2f}.")
     return {k:c[k] for k in ['id','reference','version','status','owner','created_at','updated_at','next_review','reported_amount_minor','second_method']} | dict(
-        scale=2, currency='BDT', confirmed_facts=confirmed, unresolved=f['requirements'],
-        next_step=c['tasks'][-1]['question'] if c['tasks'] and c['tasks'][-1]['status']=='OPEN' else 'The assigned investigator will review the saved evidence.',
-        notifications=c['notifications'], synthetic=True)
+        scale=2, currency='BDT', confirmed_facts=confirmed,confirmed_facts_bn=localization.confirmed_facts(c,f),
+        unresolved=f['requirements'],unresolved_bn=[localization.REQUIREMENTS.get(r,r) for r in f['requirements']],
+        next_step=('The verified outcome is recorded. You can send further evidence for another review.' if c['status'] in ('RESOLVED','OUTCOME_RECORDED') else
+                   next((t['question'] for t in reversed(c['tasks']) if t['status'] in ('OPEN','RESPONDED') and t.get('audience','customer')=='customer'), 'The assigned investigator will review the saved evidence.')),
+        notifications=[n for n in c['notifications'] if not any(t['question'] in n['text'] for t in c['tasks'] if t.get('audience','customer')!='customer')], messages=c.get('messages',[]),
+        requests=[t for t in c['tasks'] if t.get('audience','customer')=='customer'],
+        assessment=c['analysis'].get('assessment') if fresh(c) else None,analysis_fresh=fresh(c),
+        analysis_state='CURRENT' if fresh(c) else 'STALE' if c.get('analysis') else 'NOT_RUN',
+        simulation_id=c.get('simulation_id'),purchase_label=c.get('purchase_label','Merchant purchase'),
+        evidence_receipts=[dict(id=e['id'],at=e['received_at'],text=current_text(e),kind=e['kind'],
+                               category='Customer Statement' if index==0 else 'Customer Evidence',
+                               mime=e.get('blob',{}).get('mime') if e.get('blob') else 'text/plain') for index,e in enumerate(c['evidence']) if e['kind']=='customer_supplied'],
+        reviews=[dict(note=d['note'],at=d['at'],decision=d['decision'],stale=d['stale']) for d in c['decisions']],
+        incident_id=c.get('incident_id'),transaction_id=c.get('transaction_id'),issue_type=c.get('issue_type','PAID_TWICE'),
+        last_verified_update=c.get('last_verified_update'),investigation_stage=c.get('investigation_stage','NOT_STARTED'),
+        resolution=({k:c['resolution'].get(k) for k in ('action','result','amount_minor','at','synthetic')} if c.get('resolution') else None),synthetic=True)
 
 
 def seed_cases():

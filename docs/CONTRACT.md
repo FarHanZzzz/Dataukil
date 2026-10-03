@@ -40,3 +40,7 @@ Route map:
 * GET /api/evaluation?version=1 — preserved first-run benchmark; current version is explicitly test-reused.
 
 Every mutation: authorize -> scoped idempotency key + payload digest -> successful identical retry -> expected-version check for new writes -> atomic mutation/audit/notification -> persisted response. Changed payload returns 409. All GETs have no model/source/action side effects.
+# Mobile simulation additions
+
+The versioned simulation routes, shared conversation and separate surface-session header are mapped in [MOBILE_SIMULATION.md](MOBILE_SIMULATION.md). Customer projection now additionally exposes their own supplied evidence wording, user-facing messages and requests, safe review notes, current assessment and explicit freshness state. It still excludes the staff evidence matrix, raw model scores, internal/merchant tasks, audit log and hidden simulation source data. Source records are imported only by read-only checks; the ordinary text model never receives simulation profiles or future source records.
+

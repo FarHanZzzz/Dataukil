@@ -7,3 +7,5 @@ data/embedding_cache.npz
 *.pyc
 node_modules/
 artifacts/screenshots/
+artifacts/*_stdout.log
+artifacts/*_stderr.log

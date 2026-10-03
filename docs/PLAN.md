@@ -1,5 +1,7 @@
 # Ordered implementation and exit gates
 
+The subsequent mobile interaction revamp has its own [plan and contract](MOBILE_SIMULATION.md), [AI context](SIMULATION_AI.md), and [actual validation](MOBILE_VALIDATION.md). The historical six gates below describe the initial prototype; the new simulator adds persisted purchase stages and shared case work.
+
 ## 1. Contract and fixture foundation
 Freeze source capabilities, server-issued demo roles, identities, integer amounts, evidence revisions, four journeys, idempotency/version rules and customer projection. Exit: persisted fixtures and mapped API.
 

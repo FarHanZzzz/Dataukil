@@ -37,3 +37,11 @@ The approved synthetic-only scope is delivered. Independent human labels, author
 No archive transaction labels were used to train entailment. No reimbursement/fraud classifier, financial action route, external message, publishing action, or invented business metrics were added. Original repository files are preserved; changes have not been committed.
 
 Pitch and likely objections: PITCH.md. Plan/context per area: CONTEXT.md and PLAN.md.
+# Latest handoff: interactive mobile simulation
+
+The customer story is now an actual persisted form and payment flow. `tracefix/simulation.py` owns synthetic purchase actions, stable complaint linkage, bounded mock source adapters, case messaging and the explicit repayment-source control. `static/app.js`, `index.html` and `style.css` were replaced with a responsive phone app and investigator desk. Two header-bound server-issued demo sessions keep the two surfaces independent even when browser cookies change.
+
+Customer replies become unverified evidence and invalidate old analysis/decisions. Model inference runs outside the SQLite write transaction; stale input snapshots cannot be committed. A final repayment outcome needs current analysis, a completed source citation and reviewed outstanding requests. Existing records survive restart; no reset-on-refresh or destructive database migration was introduced.
+
+Read [MOBILE_SIMULATION.md](MOBILE_SIMULATION.md), [SIMULATION_AI.md](SIMULATION_AI.md), [MOBILE_VALIDATION.md](MOBILE_VALIDATION.md) and the updated [RUNBOOK.md](RUNBOOK.md). Reproduce actual inference with `scripts/simulation_walkthrough.py`; its output is `artifacts/mobile_walkthrough.json`. Historical handoff details below remain background for the original four seeded examples.
+

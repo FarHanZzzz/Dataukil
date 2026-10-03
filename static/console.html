@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101c37">
+  <title>TraceFix · Transaction Operations</title>
+  <link rel="stylesheet" href="/static/console.css?v=1">
+  <script src="/static/console.js?v=1" defer></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to workspace</a>
+  <div id="shell">
+    <aside class="sidebar">
+      <a class="brand" href="/operations"><span class="brand-mark">t↗</span><span>tracefix<small>OPERATIONS INTELLIGENCE</small></span></a>
+      <div class="nav-caption">WORKSPACES</div>
+      <nav aria-label="Workspace navigation">
+        <a href="/customer" data-nav="customer"><span>◈</span>Customer dashboard</a>
+        <a href="/operations" data-nav="operations"><span>▦</span>Operations center</a>
+        <a href="/demo" data-nav="demo"><span>▷</span>QR + cash demo lab</a>
+      </nav>
+      <div class="sidebar-note"><span class="signal"></span><strong>Connected by evidence</strong><p>One payment incident.<br>One accountable case.<br>A verified next action.</p></div>
+      <div class="sandbox-note"><span>◇ SYNTHETIC SANDBOX</span><p>Fictional accounts, records and corrections. Local persistence.</p></div>
+    </aside>
+    <div class="page">
+      <header class="topbar">
+        <div><span class="breadcrumb" id="breadcrumb">Transaction operations</span><span class="top-status"><i></i> Synthetic environment</span></div>
+        <div class="top-actions"><button class="button quiet small" id="refresh-page" type="button" aria-label="Refresh current workspace">↻ Refresh</button><label id="language-wrap" hidden><span class="sr-only">Customer language</span><select id="language" aria-label="Customer language"><option value="en">English</option><option value="bn">বাংলা</option></select></label><label id="identity-wrap" hidden><span class="sr-only">Operator identity</span><select id="identity" aria-label="Operator identity"><option value="staff">Operator 1</option><option value="other_staff">Operator 2</option></select></label><span class="avatar" id="avatar">O</span></div>
+      </header>
+      <div id="feedback" class="toast" role="status" aria-live="polite" hidden></div>
+      <main id="content" tabindex="-1"><div class="loading"><span class="spinner"></span>Opening your saved workspace…</div></main>
+      <footer class="page-footer"><span>TraceFix / Built around the evidence.</span><span id="sync-status">Connecting…</span></footer>
+    </div>
+  </div>
+  <aside id="evidence-drawer" class="drawer" aria-label="Evidence inspection" hidden></aside>
+  <dialog id="dialog" aria-labelledby="dialog-title"><form id="dialog-form"><div class="dialog-header"><div><p class="eyebrow" id="dialog-kicker">OPERATOR ACTION</p><h2 id="dialog-title"></h2></div><button class="icon-button" type="button" data-action="close-dialog" aria-label="Close dialog">×</button></div><div id="dialog-body"></div><p id="dialog-error" class="form-error" role="alert"></p><div class="dialog-footer"><button class="button secondary" type="button" data-action="close-dialog">Cancel</button><button class="button primary" id="dialog-submit" type="submit">Save</button></div></form></dialog>
+</body>
+</html>

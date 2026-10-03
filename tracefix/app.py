@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import hashlib
@@ -8,9 +9,10 @@ import re
 import io
 import base64
 from fastapi import FastAPI, Request, Response, HTTPException, UploadFile, File, Form
-from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
+from starlette.concurrency import run_in_threadpool
 from . import store
 from .domain import now, uid, evidence, current_text, facts, fresh, customer_view
 
@@ -22,7 +24,15 @@ MAX_FILE=2*1024*1024
 @asynccontextmanager
 async def lifespan(app):
     store.initialize()
-    yield
+    from .investigation import recover
+    recover()
+    app.state.investigation_tasks={}
+    try:
+        yield
+    finally:
+        tasks=list(app.state.investigation_tasks.values())
+        for task in tasks:task.cancel()
+        if tasks:await asyncio.gather(*tasks,return_exceptions=True)
 
 
 app=FastAPI(title='TraceFix synthetic investigation workspace',lifespan=lifespan)
@@ -45,7 +55,7 @@ async def headers(request,call_next):
 
 
 def session(request):
-    token=request.cookies.get('tracefix_session','')
+    token=request.headers.get('X-TraceFix-Session') or request.cookies.get('tracefix_session','')
     with store.connect() as db:
         r=db.execute('SELECT * FROM sessions WHERE token=?',(token,)).fetchone()
     if not r or r['expires'] < now():
@@ -115,6 +125,8 @@ def operation(request,p,case_id,action,fn,staff=True):
         if type(p.get('version')) is not int or p['version']!=c['version']:
             raise HTTPException(409,'This case changed. Refresh before making a new change.')
         fn(db,c,s,p)
+        if c.get('analysis') and not fresh(c):
+            db.execute("UPDATE approvals SET status='STALE' WHERE case_id=? AND status='APPROVED'",(case_id,))
         c['version']+=1
         c['updated_at']=now()
         store.save_case(db,c)
@@ -124,8 +136,16 @@ def operation(request,p,case_id,action,fn,staff=True):
         return result
 
 
-def notify(c,message):
-    c['notifications'].append(dict(at=now(),text=message))
+def notify(c,message,text_bn=None):
+    c['notifications'].append(dict(at=now(),text=message,text_bn=text_bn or 'আপনার মামলার নতুন আপডেট সংরক্ষণ করা হয়েছে। তদন্তকারী বিস্তারিত পর্যালোচনা করবেন।'))
+
+
+def trace_operator_action(db,c,action,finding,next_step):
+    from . import investigation
+    run=investigation.get_run(db,c.get('current_run_id',''))
+    if run and run['status']!='RUNNING':
+        investigation.emit(db,run,'decision',action,finding,run.get('recommendation',{}).get('evidence_ids',[]),
+                           'Operator action saved in case history.',next_step,state='attention' if c['status']!='RESOLVED' else 'completed')
 
 
 def new_evidence(c,e):
@@ -144,7 +164,20 @@ def staff_view(db,c):
 
 @app.get('/')
 def home():
+    return RedirectResponse('/operations',status_code=307)
+
+
+@app.get('/demo')
+def legacy_demo():
     return FileResponse(ROOT/'static'/'index.html')
+
+
+@app.get('/customer')
+@app.get('/operations')
+@app.get('/operations/cases/{case_id}')
+@app.get('/operations/cases/{case_id}/studio')
+def console_page():
+    return FileResponse(ROOT/'static'/'console.html')
 
 
 @app.post('/api/session')
@@ -159,7 +192,7 @@ async def start_session(request:Request,response:Response):
     with store.transaction() as db:
         db.execute('INSERT INTO sessions VALUES (?,?,?,?)',(token,actor,actual,(datetime.now(timezone.utc)+timedelta(hours=8)).isoformat()))
     response.set_cookie('tracefix_session',token,httponly=True,samesite='strict',max_age=28800)
-    return dict(actor=actor,role=actual,synthetic=True)
+    return dict(actor=actor,role=actual,synthetic=True,token=token)
 
 
 @app.get('/api/session')
@@ -177,7 +210,8 @@ def lookup(reference:str,request:Request):
         for r in db.execute('SELECT body FROM cases'):
             c=json.loads(r['body'])
             if c['customer_id']==s['actor'] and c['qr_reference']==reference:
-                return dict(reference=reference,purchase_id=c['purchase_id'],amount_minor=50000,currency='BDT',scale=2,synthetic=True)
+                amount=next((e['amount_minor'] for e in c['evidence'] if e['capability']=='qr_completed' and e['reference']==reference),c.get('qr_amount_minor',c['reported_amount_minor']))
+                return dict(reference=reference,purchase_id=c['purchase_id'],amount_minor=amount,currency='BDT',scale=2,synthetic=True)
     raise HTTPException(404,'No accessible exact match. You can still submit an unlinked complaint.')
 
 
@@ -219,6 +253,16 @@ async def intake(request:Request):
             return json.loads(old['response'])
         all_cases=[json.loads(r['body']) for r in db.execute('SELECT body FROM cases')]
         owned=next((c for c in all_cases if c['customer_id']==s['actor'] and requested and c['qr_reference']==requested),None)
+        incident_id=p.get('incident_id')
+        if incident_id:
+            incident=db.execute('SELECT * FROM incidents WHERE id=? AND customer_id=?',(incident_id,s['actor'])).fetchone()
+            if not incident:raise HTTPException(404,'Incident not found.')
+            existing=db.execute('SELECT case_id FROM case_incidents WHERE incident_id=?',(incident_id,)).fetchone()
+            if existing:owned=store.get_case(db,existing['case_id'])
+            elif db.execute('SELECT id FROM transactions WHERE incident_id=?',(incident_id,)).fetchone():
+                raise HTTPException(409,'Report this transfer through its transaction complaint endpoint so posting references remain linked.')
+        elif not owned and requested and purchase:
+            owned=next((c for c in all_cases if c['customer_id']==s['actor'] and c.get('unlinked_reference')==requested and c.get('reported_purchase')==purchase),None)
         if owned:
             # Exact owned logical mapping; never deduplicate on amount/time.
             if description and not any(current_text(e)==description for e in owned['evidence']):
@@ -234,6 +278,7 @@ async def intake(request:Request):
               second_method=method,description=description,reported_amount_minor=claimed,owner='staff_1',status='OPEN',
               version=1,evidence_version=1,created_at=now(),updated_at=now(),next_review=(datetime.now(timezone.utc)+timedelta(hours=24)).isoformat(),
               evidence=[evidence(description or 'Customer reports a second payment.',purchase=None)],analysis=None,analyses=[],checks=[],tasks=[],handoffs=[],decisions=[],notifications=[])
+            if incident_id:c['incident_id']=incident_id
             notify(c,'Your complaint was accepted, including any unmatched reference. An investigator and next review are saved.')
             store.save_case(db,c)
             store.audit(db,c,s['actor'],'intake')
@@ -330,7 +375,9 @@ def evidence_file(evidence_id:str,request:Request):
             c=json.loads(r['body'])
             e=next((e for e in c['evidence'] if e['id']==evidence_id),None)
             if e:
-                authorize(s,c,staff=True)
+                authorize(s,c)
+                if s['role']=='customer' and e['kind']!='customer_supplied':
+                    raise HTTPException(404,'Record not found.')
                 if e['blob']:
                     return Response(base64.b64decode(e['blob']['base64']),media_type=e['blob']['mime'])
                 return PlainTextResponse(e['original'])
@@ -363,16 +410,32 @@ async def correct(case_id:str,request:Request):
 @app.post('/api/cases/{case_id}/analyze')
 async def analyze(case_id:str,request:Request):
     p=await payload(request)
+    # Model inference uses a visible snapshot outside a write transaction. Customer
+    # replies and reads remain available; operation() rejects a stale snapshot.
+    s=session(request)
+    key=request.headers.get('Idempotency-Key','')
+    if not key or len(key)>128:
+        raise HTTPException(422,'A bounded Idempotency-Key is required.')
+    digest=hashlib.sha256(json.dumps(p,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+    with store.connect() as db:
+        snapshot=store.get_case(db,case_id);authorize(s,snapshot,staff=True)
+        old=db.execute('SELECT * FROM operations WHERE actor=? AND scope=? AND key=?',(s['actor'],f'{case_id}:analyze',key)).fetchone()
+        if old:
+            if old['digest']!=digest:
+                raise HTTPException(409,'This operation key was already used with different content.')
+            return json.loads(old['response'])
+    if type(p.get('version')) is not int or p['version']!=snapshot['version']:
+        raise HTTPException(409,'This case changed. Refresh before making a new change.')
+    from .verifier import verifier
+    claim_defs=[('qr','The QR payment completed.'),('cash','A cash payment was received.' if snapshot['second_method']=='cash' else 'A second QR payment completed.'),
+                ('same','Both payments are for the same purchase.'),('repayment','Repayment completed.')]
+    originals=dict(claim_defs)
+    claim_defs=[(key,snapshot.get('claim_overrides',{}).get(key,{}).get('text',text)) for key,text in claim_defs]
+    pairs=[(text,current_text(e)) for key,text in claim_defs for e in snapshot['evidence']]
+    predictions=await run_in_threadpool(verifier.predict,pairs)
     def act(db,c,s,p):
-        from .verifier import verifier
         from ml.features import RULES_VERSION
-        claim_defs=[('qr','The QR payment completed.'),('cash','A cash payment was received.' if c['second_method']=='cash' else 'A second QR payment completed.'),
-                    ('same','Both payments are for the same purchase.'),('repayment','Repayment completed.')]
         claims=[]
-        originals=dict(claim_defs)
-        claim_defs=[(key,c.get('claim_overrides',{}).get(key,{}).get('text',text)) for key,text in claim_defs]
-        pairs=[(text,current_text(e)) for key,text in claim_defs for e in c['evidence']]
-        predictions=verifier.predict(pairs)
         index=0
         for key,text in claim_defs:
             links=[]
@@ -387,7 +450,8 @@ async def analyze(case_id:str,request:Request):
                     label=result['label'] if not mismatches else 'INSUFFICIENT_EVIDENCE',raw_model_label=result['label'],
                     source_status=e['authority'],mismatches=mismatches,**{k:v for k,v in result.items() if k!='label'}))
             claims.append(dict(id=key,text=text,original_text=originals[key],normalized_model_text=text,purchase_id=c['purchase_id'],links=links))
-        a=dict(id=uid('analysis'),at=now(),case_version=c['version']+1,evidence_version=c['evidence_version'],model=verifier.identity(),claims=claims,
+        from .domain import assessment
+        a=dict(id=uid('analysis'),at=now(),case_version=c['version']+1,evidence_version=c['evidence_version'],model=verifier.identity(),claims=claims,assessment=assessment(c),
                unresolved=facts(c)['requirements'],next_step_engine='explicit workflow rules',rules_version=RULES_VERSION)
         c['analysis']=a
         c['analyses'].append(a)
@@ -440,14 +504,15 @@ async def link_case(case_id:str,request:Request):
 async def resolve_task(case_id:str,request:Request):
     p=await payload(request)
     def act(db,c,s,p):
-        t=next((t for t in c['tasks'] if t['id']==p.get('task_id') and t['status']=='OPEN'),None)
+        t=next((t for t in c['tasks'] if t['id']==p.get('task_id') and t['status'] in ('OPEN','RESPONDED')),None)
         if not t:
             raise HTTPException(404,'Open task not found.')
         e=next((e for e in c['evidence'] if e['id']==p.get('evidence_id')),None)
         if not e:
             raise HTTPException(422,'Cite the evidence addressing this request.')
         t.update(status='RESOLVED',resolved_at=now(),resolved_by=s['actor'],evidence_id=e['id'],resolution=text_field(p,'reason',1000))
-        c['status']='OPEN'
+        if c['status'] not in ('REVIEWED','OUTCOME_RECORDED'):
+            c['status']='OPEN'
         notify(c,'An evidence request was reviewed. Your investigator continues the saved follow-up.')
     return operation(request,p,case_id,'resolve-task',act)
 
@@ -457,12 +522,20 @@ async def check(case_id:str,request:Request):
     p=await payload(request)
     def act(db,c,s,p):
         kind=p.get('kind')
-        if kind not in ('qr','repayment'):
-            raise HTTPException(422,'Only read-only mock QR and repayment checks are available.')
+        if kind not in ('qr','repayment','merchant','invoice'):
+            raise HTTPException(422,'Choose a QR, invoice, merchant or repayment source check.')
         ch=dict(id=uid('check'),kind=kind,requested_at=now(),scope='exact case QR reference only',as_of=now(),
                 states=[dict(state='REQUESTED',at=now()),dict(state='QUEUED',at=now()),dict(state='RUNNING',at=now())])
         available=db.execute("SELECT value FROM demo WHERE key='repayment_available'").fetchone()['value']=='true'
-        if not c['qr_reference']:
+        if p.get('simulate_unavailable'):
+            ch.update(state='UNAVAILABLE',result='Synthetic source unavailable; no financial conclusion follows.')
+        elif c.get('simulation_id'):
+            from .simulation import check_source
+            ch.update(**check_source(db,c,kind))
+        elif kind in ('merchant','invoice'):
+            matches=[e for e in c['evidence'] if e['kind']==('mock_merchant' if kind=='merchant' else 'mock_invoice') and e['purchase_id']==c['purchase_id']]
+            ch.update(state='COMPLETED' if matches else 'UNAVAILABLE',result='Existing simulated source record inspected.' if matches else 'No record is available for this source. Request the missing evidence.')
+        elif not c['qr_reference']:
             ch.update(state='UNAVAILABLE',result='No verified exact reference is linked. No external query was made.')
         elif p.get('simulate_unavailable'):
             ch.update(state='UNAVAILABLE',result='Synthetic source unavailable; no financial conclusion follows.')
@@ -484,10 +557,15 @@ async def task(case_id:str,request:Request):
     def act(db,c,s,p):
         question=text_field(p,'question',1000)
         due=future_time(p.get('next_review'))
-        c['tasks'].append(dict(id=uid('task'),question=question,owner=c['owner'],created_at=now(),next_review=due,status='OPEN'))
+        audience=p.get('audience','customer')
+        if audience not in ('customer','merchant','internal'):
+            raise HTTPException(422,'Choose a customer, merchant or internal request.')
+        c['tasks'].append(dict(id=uid('task'),question=question,owner=c['owner'],created_at=now(),next_review=due,status='OPEN',audience=audience))
+        if audience=='customer':
+            c.setdefault('messages',[]).append(dict(id=uid('msg'),at=now(),actor=s['actor'],role='staff',text=question,task_id=c['tasks'][-1]['id']))
         c['next_review']=due
         c['status']='WAITING_EVIDENCE'
-        notify(c,'Additional evidence was requested in the demo: '+question)
+        if audience=='customer':notify(c,'Additional evidence was requested in the demo: '+question)
     return operation(request,p,case_id,'task',act)
 
 
@@ -510,9 +588,17 @@ async def handoff(case_id:str,request:Request):
         if any(h['status']=='REQUESTED' for h in c['handoffs']):
             raise HTTPException(409,'A handoff is already awaiting acknowledgement.')
         reason=text_field(p,'reason',1000)
-        c['handoffs'].append(dict(id=uid('handoff'),origin=c['owner'],destination=destination,reason=reason,at=now(),status='REQUESTED'))
+        team=p.get('team','Partner Operations')
+        if team not in ('Operations','Partner Operations','Settlement Operations','Merchant Support'):
+            raise HTTPException(422,'Choose an operational team.')
+        priority=p.get('priority',c.get('priority','NORMAL'))
+        if priority not in ('HIGH','NORMAL','LOW'):raise HTTPException(422,'Choose a valid priority.')
+        c['handoffs'].append(dict(id=uid('handoff'),origin=c['owner'],destination=destination,reason=reason,at=now(),status='REQUESTED',
+                                 team=team,priority=priority,next_action=p.get('next_action') or reason))
+        c['priority']=priority
         c['status']='ESCALATED'
         notify(c,'Further review was requested. Your current investigator retains responsibility until the handoff is accepted.')
+        trace_operator_action(db,c,'Request an owned handoff',team+': '+reason,'Current owner remains accountable until '+destination+' acknowledges. '+c['handoffs'][-1]['next_action'])
     return operation(request,p,case_id,'handoff',act)
 
 
@@ -525,10 +611,12 @@ async def acknowledge(case_id:str,request:Request):
             raise HTTPException(403,'Only the receiving investigator can acknowledge this handoff.')
         h['status']='ACKNOWLEDGED';h['acknowledged_at']=now()
         c['owner']=s['actor']
+        db.execute("UPDATE approvals SET status='STALE' WHERE case_id=? AND status='APPROVED'",(c['id'],))
         for t in c['tasks']:
-            if t['status']=='OPEN':
+            if t['status'] in ('OPEN','RESPONDED'):
                 t['owner']=s['actor']
         notify(c,'The handoff was accepted by your new investigator.')
+        trace_operator_action(db,c,'Acknowledge the handoff','Ownership changed to '+s['actor']+'.',h.get('next_action',h['reason']))
     return operation(request,p,case_id,'acknowledge',act)
 
 
@@ -546,10 +634,17 @@ async def decision(case_id:str,request:Request):
             raise HTTPException(422,'Cite actual evidence in this case.')
         if kind=='OUTCOME_RECORDED' and not any(e['id'] in ids and e['capability']=='repayment_completed' and e['kind']=='mock_repayment' for e in c['evidence']):
             raise HTTPException(422,'A recorded repayment outcome requires a completed source record; a request is insufficient.')
+        if kind=='OUTCOME_RECORDED' and any(t['status'] in ('OPEN','RESPONDED') for t in c['tasks']):
+            raise HTTPException(409,'Review and resolve outstanding evidence requests before recording the final outcome.')
+        if kind=='OUTCOME_RECORDED':
+            f=facts(c)
+            if f['requirements'] or f['conflict'] or f['recorded_excess_minor']!=0 or not f['recorded_repaid_minor']:
+                raise HTTPException(409,'The evidence does not establish a complete repayment. Keep remaining amounts and follow-up open.')
         note=text_field(p,'note',2000)
         c['decisions'].append(dict(id=uid('decision'),decision=kind,note=note,evidence_ids=ids,evidence_version=c['evidence_version'],actor=s['actor'],at=now(),stale=False))
         c['status']='REVIEWED' if kind=='EVIDENCE_ASSEMBLED' else 'WAITING_EVIDENCE' if kind=='FURTHER_EVIDENCE' else 'ESCALATED' if kind=='REFERRAL' else 'OUTCOME_RECORDED'
-        notify(c,'An investigator saved a human review. No financial transaction was executed.')
+        c.setdefault('messages',[]).append(dict(id=uid('msg'),at=now(),actor=s['actor'],role='staff',text=note,decision=kind))
+        notify(c,'Your investigator saved a review: '+note)
     return operation(request,p,case_id,'decision',act)
 
 
@@ -579,6 +674,7 @@ def dossier(case_id:str,request:Request):
                           '> '+link['excerpt'].replace('\n','\n> ')]
     for title,key in [('Missing evidence','tasks'),('Attempted read-only checks','checks'),('Handoff','handoffs'),('Human review (no financial execution)','decisions')]:
         lines += ['',f'## {title}',json.dumps(c[key],ensure_ascii=False,indent=2)]
+    lines += ['', '## Shared case conversation',json.dumps(c.get('messages',[]),ensure_ascii=False,indent=2)]
     lines += ['', '## Claim and purchase-link corrections',json.dumps(c.get('claim_corrections',[])+c.get('links',[]),ensure_ascii=False,indent=2)]
     body='\n'.join(lines)
     return PlainTextResponse(body,media_type='text/markdown',headers={'Content-Disposition':f'attachment; filename="{c["reference"]}-v{c["version"]}.md"',
@@ -615,3 +711,10 @@ def evaluation(request:Request,version:int|None=None):
         raise HTTPException(422,'Known evaluation versions are 1 and 2.')
     p=ROOT/'artifacts'/('evaluation_v1.json' if version==1 else 'evaluation.json')
     return json.loads(p.read_text(encoding='utf-8')) if p.exists() else dict(status='Evaluation not yet run')
+
+
+from .simulation import router as simulation_router
+app.include_router(simulation_router)
+
+from .operations import router as operations_router
+app.include_router(operations_router)

@@ -1,0 +1,352 @@
+{
+  "synthetic": true,
+  "observed_at": "2026-10-03T00:09:31.058989+00:00",
+  "simulation_stages": [
+    "QR_UNCLEAR",
+    "SECOND_PAID",
+    "QR_CONFIRMED"
+  ],
+  "assessments": [
+    "NEEDS_EVIDENCE",
+    "SUPPORTED",
+    "REPAID"
+  ],
+  "final_status": "OUTCOME_RECORDED",
+  "owner": "staff_2",
+  "facts": {
+    "qr_confirmed": true,
+    "qr_not_completed": false,
+    "cash_confirmed": true,
+    "purchase_total_minor": 72550,
+    "recorded_paid_minor": 145100,
+    "recorded_repaid_minor": 72550,
+    "recorded_excess_minor": 0,
+    "requirements": [],
+    "conflict": false,
+    "split_tender": false
+  },
+  "messages": 6,
+  "source_checks": 4,
+  "model": {
+    "engine": "rules_primary_with_trained_advisory",
+    "available": true,
+    "metadata": {
+      "task": "three-label visible claim/passage assessment",
+      "architecture": "frozen multilingual E5-small + standardized logistic regression head",
+      "encoder": {
+        "repo": "intfloat/multilingual-e5-small",
+        "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+        "license": "MIT",
+        "encoder_frozen": true
+      },
+      "labels": [
+        "SUPPORTED_BY_PASSAGE",
+        "CONTRADICTED_BY_PASSAGE",
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "classifier_sha256": "7ae461354e62671b66c06f32d83a7388410669dff3d1b7916b9e6edf1b1d6a5c",
+      "dataset_sha256": "2da7c31503bb26ff41e6b9e4997892a02773728211a4ca66f90fe7f6c4445966",
+      "challenge_sha256_before_selection": "9851d23bc7298d08b175b8bb8bbcc295b12ff1896f50f063aae18df4b83368a2",
+      "preprocessing": {
+        "normalization": "NFC + Bengali digits to ASCII for model only; originals preserved",
+        "max_tokens": 256,
+        "prefix": "query: ",
+        "pooling": "masked mean, L2 normalization"
+      },
+      "trained_component": "logistic regression head only",
+      "encoder_finetuned": false,
+      "calibrated": false,
+      "training_pairs": 1080,
+      "development_pairs": 432,
+      "chosen_C": 1.0,
+      "development_candidates": [
+        {
+          "C": 0.05,
+          "dev_macro_f1": 0.6651168070660542
+        },
+        {
+          "C": 0.2,
+          "dev_macro_f1": 0.6613563145184832
+        },
+        {
+          "C": 1.0,
+          "dev_macro_f1": 0.6710291025643574
+        }
+      ],
+      "training_seconds": 27.02879670006223,
+      "python": "3.13.7",
+      "independent_human_review": false,
+      "limitations": "Fictional agent-labelled corpus; no production/domain accuracy certification."
+    },
+    "error": null,
+    "runtime_policy": {
+      "primary": "rules",
+      "trained_advisory": true,
+      "reason": "Select the more reliable measured path on the frozen authored challenge; this is not independent human validation.",
+      "evaluation_version": 2,
+      "rules_version": 2
+    },
+    "rules_version": 2,
+    "limitations": "Synthetic agent-labelled training; no independent human validation; not a financial truth score."
+  },
+  "text_readings": [
+    {
+      "claim": "The QR payment completed.",
+      "passage": "The QR response was unclear. I then paid BDT 725.50 cash for the same notebooks. Please check both payments.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "The QR payment completed.",
+      "passage": "Supplied handwritten receipt: cash BDT 725.50.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "The QR payment completed.",
+      "passage": "The receipt reference is CASH-NADIA-17, for this same purchase.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "The QR payment completed.",
+      "passage": "QR payment QR-7EAE99B0 completed. BDT 725.50 was posted for purchase PUR-7EAE99B0.",
+      "label": "SUPPORTED_BY_PASSAGE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "The QR payment completed.",
+      "passage": "Invoice for purchase PUR-7EAE99B0. Purchase total BDT 725.50. Merchant: Campus Bookshop. Item: Study notebooks.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "The QR payment completed.",
+      "passage": "Cash payment of BDT 725.50 was received for purchase PUR-7EAE99B0. Both payments are for the same purchase. Merchant: Campus Bookshop.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "The QR payment completed.",
+      "passage": "Repayment of BDT 725.50 requested. It is not completed yet. Resolution review requested based on the matching purchase records.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "The QR payment completed.",
+      "passage": "Repayment completed. BDT 725.50 returned against QR-7EAE99B0 for purchase PUR-7EAE99B0.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "A cash payment was received.",
+      "passage": "The QR response was unclear. I then paid BDT 725.50 cash for the same notebooks. Please check both payments.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "A cash payment was received.",
+      "passage": "Supplied handwritten receipt: cash BDT 725.50.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "A cash payment was received.",
+      "passage": "The receipt reference is CASH-NADIA-17, for this same purchase.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "A cash payment was received.",
+      "passage": "QR payment QR-7EAE99B0 completed. BDT 725.50 was posted for purchase PUR-7EAE99B0.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "A cash payment was received.",
+      "passage": "Invoice for purchase PUR-7EAE99B0. Purchase total BDT 725.50. Merchant: Campus Bookshop. Item: Study notebooks.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "A cash payment was received.",
+      "passage": "Cash payment of BDT 725.50 was received for purchase PUR-7EAE99B0. Both payments are for the same purchase. Merchant: Campus Bookshop.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "A cash payment was received.",
+      "passage": "Repayment of BDT 725.50 requested. It is not completed yet. Resolution review requested based on the matching purchase records.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "A cash payment was received.",
+      "passage": "Repayment completed. BDT 725.50 returned against QR-7EAE99B0 for purchase PUR-7EAE99B0.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "Both payments are for the same purchase.",
+      "passage": "The QR response was unclear. I then paid BDT 725.50 cash for the same notebooks. Please check both payments.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "Both payments are for the same purchase.",
+      "passage": "Supplied handwritten receipt: cash BDT 725.50.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "Both payments are for the same purchase.",
+      "passage": "The receipt reference is CASH-NADIA-17, for this same purchase.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "Both payments are for the same purchase.",
+      "passage": "QR payment QR-7EAE99B0 completed. BDT 725.50 was posted for purchase PUR-7EAE99B0.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "Both payments are for the same purchase.",
+      "passage": "Invoice for purchase PUR-7EAE99B0. Purchase total BDT 725.50. Merchant: Campus Bookshop. Item: Study notebooks.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "Both payments are for the same purchase.",
+      "passage": "Cash payment of BDT 725.50 was received for purchase PUR-7EAE99B0. Both payments are for the same purchase. Merchant: Campus Bookshop.",
+      "label": "SUPPORTED_BY_PASSAGE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "Both payments are for the same purchase.",
+      "passage": "Repayment of BDT 725.50 requested. It is not completed yet. Resolution review requested based on the matching purchase records.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "Both payments are for the same purchase.",
+      "passage": "Repayment completed. BDT 725.50 returned against QR-7EAE99B0 for purchase PUR-7EAE99B0.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "Repayment completed.",
+      "passage": "The QR response was unclear. I then paid BDT 725.50 cash for the same notebooks. Please check both payments.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "Repayment completed.",
+      "passage": "Supplied handwritten receipt: cash BDT 725.50.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "Repayment completed.",
+      "passage": "The receipt reference is CASH-NADIA-17, for this same purchase.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "Repayment completed.",
+      "passage": "QR payment QR-7EAE99B0 completed. BDT 725.50 was posted for purchase PUR-7EAE99B0.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "Repayment completed.",
+      "passage": "Invoice for purchase PUR-7EAE99B0. Purchase total BDT 725.50. Merchant: Campus Bookshop. Item: Study notebooks.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "Repayment completed.",
+      "passage": "Cash payment of BDT 725.50 was received for purchase PUR-7EAE99B0. Both payments are for the same purchase. Merchant: Campus Bookshop.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    },
+    {
+      "claim": "Repayment completed.",
+      "passage": "Repayment of BDT 725.50 requested. It is not completed yet. Resolution review requested based on the matching purchase records.",
+      "label": "INSUFFICIENT_EVIDENCE",
+      "learned_label": "CONTRADICTED_BY_PASSAGE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "supplied / unverified"
+    },
+    {
+      "claim": "Repayment completed.",
+      "passage": "Repayment completed. BDT 725.50 returned against QR-7EAE99B0 for purchase PUR-7EAE99B0.",
+      "label": "SUPPORTED_BY_PASSAGE",
+      "learned_label": "INSUFFICIENT_EVIDENCE",
+      "engine": "rules_primary_with_trained_advisory",
+      "source_status": "confirmed within simulated source contract"
+    }
+  ],
+  "customer_projection_verified": true,
+  "limitations": "One actual-inference synthetic integration rehearsal; no independent human/real-case accuracy validation."
+}

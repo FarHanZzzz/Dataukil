@@ -45,6 +45,50 @@ def test_server_session_and_private_projection(client):
     assert client.get('/api/payments/QR-DEMO-003').status_code==200
 
 
+def test_internal_followup_is_private_including_legacy_notifications(client):
+    login(client)
+    marker='PRIVATE_PARTNER_FOLLOWUP'
+    assert post(client,'task',{'question':marker,'audience':'internal','next_review':due()}).status_code==200
+    with store.transaction() as db:
+        c=store.get_case(db,'case_3')
+        c['notifications'].append({'at':now(),'text':'Additional evidence was requested in the demo: '+marker})
+        store.save_case(db,c)
+    login(client,'customer')
+    assert marker not in json.dumps(get(client))
+
+
+def test_unmatched_reference_reuses_incident_across_action_keys(client):
+    login(client,'customer')
+    body={'qr_reference':'UNKNOWN-OWN-REF','purchase_id':'REPORTED-PURCHASE','amount_minor':50000,'second_method':'cash','description':'Same incident.'}
+    a=client.post('/api/cases',json=body,headers={'Idempotency-Key':'first-intake'}).json()
+    b=client.post('/api/cases',json=body,headers={'Idempotency-Key':'second-intake'}).json()
+    assert a['id']==b['id'] and a['incident_id']==b['incident_id']
+    assert not a['confirmed_facts']
+
+
+def test_partial_repayment_cannot_receive_final_outcome(client):
+    login(client)
+    with store.transaction() as db:
+        c=store.get_case(db,'case_4')
+        e=evidence('Repayment BDT 1 completed.','mock_repayment',c['qr_reference'],100,c['purchase_id'],'repayment_completed')
+        c['evidence'].append(e);c['evidence_version']+=1
+        store.save_case(db,c)
+    analyzed=post(client,'analyze',id='case_4').json()
+    assert analyzed['facts']['recorded_excess_minor']==49900
+    assert post(client,'decision',{'decision':'OUTCOME_RECORDED','note':'Partial cannot close.','evidence_ids':[e['id']]},id='case_4').status_code==409
+
+
+def test_read_connection_closes_and_migration_preserves_cases(client):
+    with store.connect() as db:
+        before=[tuple(r) for r in db.execute('SELECT id,body FROM cases ORDER BY id')]
+    import sqlite3
+    with pytest.raises(sqlite3.ProgrammingError):db.execute('SELECT 1')
+    store.initialize()
+    with store.connect() as db:
+        assert before==[tuple(r) for r in db.execute('SELECT id,body FROM cases ORDER BY id')]
+        assert db.execute('SELECT COUNT(*) FROM case_incidents').fetchone()[0]==4
+
+
 @pytest.mark.parametrize('action',['analyze','evidence','correct','claim','link','task','check','review','handoff','acknowledge','decision','resolve-task'])
 def test_customers_cannot_execute_staff_actions(client,action):
     login(client,'customer');assert post(client,action).status_code==403
@@ -207,7 +251,8 @@ def test_image_original_and_human_transcript(client):
     login(client);e=get(client)['evidence'][-1]
     assert e['original_hash']==hashlib.sha256(content).hexdigest() and e['transcription']=='human transcript'
     assert client.get('/api/evidence/'+e['id']+'/file').content==content
-    login(client,'other_customer');assert client.get('/api/evidence/'+e['id']+'/file').status_code==403
+    login(client,'customer');assert client.get('/api/evidence/'+e['id']+'/file').content==content
+    login(client,'other_customer');assert client.get('/api/evidence/'+e['id']+'/file').status_code==404
 
 
 def test_dossier_authorization_and_grounding(client):
