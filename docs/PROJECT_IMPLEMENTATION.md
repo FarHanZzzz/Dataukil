@@ -194,7 +194,7 @@ The current-stage banner stays in document flow and scrolls away with the page a
 - The draft preserves image bytes, hash, MIME type, transcript and simulation association.
 - Idempotent retry returns the saved evidence association.
 - Complaint submission promotes the exact `receipt_evidence_id` atomically.
-- A purchase-specific watermarked synthetic receipt and “Use sample receipt” option are provided.
+- A realistic, itemized BDT paper receipt is issued once with separate invoice total/cash paid, timestamp, measured template and original hash. “Use sample receipt” attaches those exact bytes. The default nine-row basket is editable and totals ৳500 before optional tax.
 - Additional post-complaint uploads and previous JSON complaint compatibility remain available.
 - A receipt is customer evidence pending corroboration.
 
@@ -204,18 +204,18 @@ Pinned `opencv-python-headless==4.10.0.84` performs image validation, decode, gr
 
 The manifest records the original evidence ID/hash, engine/version, scan status, regions, displayed transcript values, value source, visual confidence, warnings, timestamp and evidence version. Originals remain immutable and the derived preview is bounded separately.
 
-The operator sees original/annotated receipts, scan beam, staged field highlights, live progress and human-review flags. Reduced-motion mode removes animation and preserves the findings. Scan completion gates Marketplace checks.
+The operator opens an evidence-first workbench with Original/Processed/Annotated views, coordinate-aligned SVG boxes, zoom, enlarged dialog, downloads and a six-second top-to-bottom scan reveal. Polling preserves its mounted evidence task. Reduced-motion mode removes animation and preserves the findings. The owner explicitly acknowledges and saves field-to-region review before Marketplace checks. Transcript correction invalidates the scan and downstream decisions; arbitrary uploads receive no inferred semantic labels.
 
 OpenCV performs visual assistance, not OCR, authentication or proof of cash payment.
 
 ### Synthetic Marketplace and branches
 
-The private, bounded catalog is keyed by the exact purchase. Checks compare purchase, merchant, item, amounts, QR reference, bank reference, timestamp, independent payment context and prior-refund state. There is no external Marketplace request.
+The private, bounded catalog is keyed by the exact purchase. Checks compare exact purchase, merchant, currency, itemization, subtotal/tax/invoice total, cash paid, references, timestamp, independent payment amounts and prior refunds. Refund eligibility is verified QR plus confirmed cash minus invoice total, bounded by the posted QR amount; valid split tender creates no refund. There is no external Marketplace request.
 
 | Branch | Implemented handling |
 | --- | --- |
 | Legitimate | Saved matching source result; refund proposal; current owner approval; saved request; separate simulated completed-refund event; customer update |
-| Rejected | Documented explicit denial or exact-context conflict; saved verdict/customer explanation; no refund |
+| Rejected | Documented explicit denial, exact-context conflict or verified NO_OVERPAYMENT split tender; saved verdict/customer explanation; no refund |
 | Uncertain | Missing/unavailable/timeout/conflicting records or incomplete evidence; automation paused; owned human handoff with queue, review time and missing evidence; no refund |
 
 The customer never initiates a refund. A proposed or requested refund is distinct from a completed one. Prior refund state blocks another completion. New evidence or changed source results invalidate earlier decisions.
@@ -265,13 +265,13 @@ Predefined demo-role switching is intentionally available locally. It is not pro
 
 ## 13. Recorded verification and limits
 
-These are recorded checks from the implementation work, not newly rerun results for this documentation-only update:
+These checks were rerun during the realistic receipt implementation on 4 October 2026; the current-stage scroll repair also retains its earlier recorded check:
 
 | Check | Recorded result |
 | --- | --- |
-| QR backend | 24 passed |
-| Combined QR/simulation/workflow/integration/transfer/master suites | 141 passed |
-| QR browser journeys | 112 assertions passed |
+| QR backend | 48 passed |
+| Combined non-ML backend suites | 165 passed |
+| QR browser journeys | 151 assertions passed |
 | Add money browser journeys | 192 assertions passed across four scenarios |
 | Shared light theme | 86 assertions passed across ten page types and six widths |
 | Desktop Add money graph comparison | Byte-identical 1440/1920 screenshots against baseline graph assets with the same new palette applied |

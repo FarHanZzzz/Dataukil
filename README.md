@@ -21,7 +21,7 @@ Merged verification: **121 tests passed**, followed by **27 passing add-money/in
 | 5–6 — Studio and controlled outcomes | Implemented; both saved endings verified | Evidence graph, hypotheses, replay, isolated reset, three approved atomic sandbox actions and owned handoff |
 | 7 — Coverage, reports and final verification | Implementation documented; validation recorded | Markdown/JSON exports, [33-section coverage matrix](docs/MASTER_COVERAGE.md) and [integration validation](docs/MAIN_SYNC_VALIDATION.md) |
 
-The **QR + cash investigation** at `/qr-demo` keeps the customer phone and operator workflow in one saved journey: QR failure → cash receipt → later observed debit → receipt attachment and complaint → OpenCV visual scan → synthetic Marketplace comparison → verdict. Matching records propose an operator-approved simulated refund; rejected cases create no refund, while uncertain cases remain owned and open for human review. Refresh and exact-context bookmarks restore progress. [Workflow and API contract](docs/QR_CASH_INVESTIGATION.md).
+The **QR + cash investigation** at `/qr-demo` keeps the customer phone and operator workflow in one saved journey: QR failure → cash receipt → later observed debit → receipt attachment and complaint → realistic itemized BDT receipt → OpenCV visual scan → operator field review → synthetic Marketplace comparison → verdict. Corroborated overpayments propose their exact excess as an operator-approved simulated refund; valid split payments create no refund; rejected cases create no refund, while uncertain cases remain owned and open for human review. Refresh and exact-context bookmarks restore progress. [Workflow and API contract](docs/QR_CASH_INVESTIGATION.md).
 
 Interaction context: [mobile simulation](docs/MOBILE_SIMULATION.md), [assessment behavior](docs/SIMULATION_AI.md), and [observed validation](docs/MOBILE_VALIDATION.md).
 
@@ -40,7 +40,7 @@ The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the
 | `/customer` | Eight bank-to-upay scenarios, complaints, evidence and verified English/বাংলা updates |
 | `/operations` | Persistent queue, overview and case workspace |
 | `/operations/cases/{case_id}/studio` | Dedicated AI investigation, hypotheses, citations, replay and separate approval/execution |
-| `/qr-demo` | Unified QR + cash customer, receipt scan, Marketplace, verdict and simulated resolution journey |
+| `/qr-demo` | Unified QR + cash journey with editable basket, realistic receipt reader, OpenCV regions, saved review, Marketplace and simulated resolution |
 | `/mfs` (also `/demo`) | Five-stage Add money guide: explicit scenario choice, same-tab progression and exact-run resume |
 | `/customer/payment[/{id}]`, `/customer/cases/{id}` | Add money form, saved review, customer-safe status and investigation updates |
 | `/admin/queue`, `/admin/cases/{id}[ /report]` | Light investigation board with existing topology and controls, mobile Board/Details/Activity views, report and exports |

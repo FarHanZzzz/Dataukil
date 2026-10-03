@@ -58,12 +58,25 @@ async function journey(profile='confirmed',motion='reduce',upload=false){
  const savedURL=page.url();const id=new URL(savedURL).searchParams.get('case');check(id,'Exact case in URL');
  await click(page,'Scan receipt');
  if(motion==='no-preference'){
-  await ready(page,'.qr-scan-beam');check(await page.locator('.qr-scan-beam').isVisible(),'Top-to-bottom scan animation is visible');
+  await ready(page,'.qr-scan-beam');await page.evaluate(()=>{window.receiptNode=document.querySelector('#qr-evidence .qr-reader');});await page.evaluate(()=>sync(true));check(await page.evaluate(()=>window.receiptNode===document.querySelector('#qr-evidence .qr-reader')),'Polling preserves the mounted receipt canvas');check(await page.locator('.qr-scan-beam').isVisible(),'Top-to-bottom scan animation is visible');
   await page.waitForFunction(()=>document.querySelector('.qr-scan-announcement')?.textContent.includes('Scanning'));check((await page.locator('.qr-scan-announcement').innerText()).includes('Scanning'),'Scanning field announced');
  }
  await page.getByRole('button',{name:'Verify with Marketplace',exact:true}).waitFor({state:'visible'});
- await page.waitForFunction(()=>!document.querySelector('[data-check=marketplace]')?.disabled);
- check(await page.locator('.qr-receipt-pair img').count()===2,'Original and annotated receipt shown together');
+ await page.waitForFunction(()=>typeof S!=='undefined'&&!S.busy.staff);
+ check(await page.locator('#qr-evidence .qr-reader img').count()===1,'Large coordinate-aligned receipt reader replaces tiny paired previews');
+ const reader=page.locator('#qr-evidence .qr-reader');
+ const alignment=await reader.evaluate(el=>{const a=el.querySelector('img').getBoundingClientRect(),b=el.querySelector('svg').getBoundingClientRect();return Math.abs(a.width-b.width)<1&&Math.abs(a.height-b.height)<1;});
+ check(alignment,'Preview and overlay share exactly the same displayed coordinates');
+ await reader.getByRole('button',{name:'Original',exact:true}).click();
+ check(await reader.locator('.qr-region-overlay').isHidden(),'Original view preserves pixels without derived overlay');
+ await reader.getByRole('button',{name:'Annotated',exact:true}).click();
+ await reader.getByRole('button',{name:'View larger',exact:true}).click();
+ await ready(page,'#receipt-reader-dialog[open]');
+ await page.keyboard.press('+');check(await page.locator('#receipt-reader-dialog .qr-paper-canvas').evaluate(e=>e.style.width)==='125%','Keyboard zoom enlarges receipt');
+ await page.keyboard.press('Escape');check(await page.locator('#receipt-reader-dialog').isHidden(),'Enlarged receipt closes with Escape');
+ check(await page.getByRole('button',{name:'Verify with Marketplace',exact:true}).isDisabled(),'Verification requires explicit review acknowledgement');
+ await page.locator('#receipt-review-ack').check();
+ if(profile==='confirmed'){for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1050});await overflow(page,`Receipt reader width ${width}`);await page.screenshot({path:join(output,`receipt-${width}.png`),fullPage:true});}await page.setViewportSize({width:1440,height:1050});}
  check((await page.locator('.qr-fields').innerText()).includes('500.00'),'Receipt values visible with source labels');
  await click(page,'Verify with Marketplace');
  if(motion==='no-preference'){
@@ -102,12 +115,43 @@ async function journey(profile='confirmed',motion='reduce',upload=false){
  await page.goto(savedURL.replace('view=operator','view=both'));await ready(page,'.graph--qr');
  return {context,page,sim,id};
 }
+async function basketEditor(){
+ const context=await browser.newContext({viewport:{width:390,height:900},reducedMotion:'reduce'}),page=await context.newPage();
+ page.on('pageerror',e=>errors.push(e.message));await page.goto(base+'/qr-demo');await ready(page,'#purchase-form');
+ check(await page.locator('.qr-basket-item').count()===9,'Default purchase contains nine editable grocery items');
+ check(await page.locator('.qr-basket').getAttribute('open')===null,'Basket editor starts compact instead of overwhelming the phone');
+ await page.locator('.qr-basket > summary').click();
+ await page.locator('#basket-price-0').fill('8.35');await page.locator('#basket-quantity-0').fill('2');await page.locator('#purchase-tax_minor').fill('1.23');
+ check(await page.locator('#purchase-qr_amount_minor').inputValue()==='437.93','QR amount follows exact basket arithmetic including tax');
+ await page.locator('#purchase-qr_amount_minor').fill('100.00');await page.locator('#basket-quantity-0').fill('3');
+ check(await page.locator('#purchase-qr_amount_minor').inputValue()==='100.00','Explicit partial QR amount survives basket edits');
+ await page.reload();await ready(page,'#purchase-form');await page.locator('.qr-basket > summary').click();
+ check(await page.locator('#basket-quantity-0').inputValue()==='3'&&await page.locator('#purchase-tax_minor').inputValue()==='1.23','Basket and tax draft survive refresh without submission');
+ await page.locator('[data-basket-remove="8"]').click();await page.locator('.qr-basket > summary').click();
+ await page.locator('[data-basket-add]').click();await page.locator('.qr-basket > summary').click();await page.locator('#basket-description-8').fill('Tea');
+ await overflow(page,'Editable basket at 390');
+ await page.locator('#purchase-form button[type=submit]').click();await ready(page,'[data-action=attempt-qr]');
+ check(await page.evaluate(()=>S.sim.total_minor===30728&&S.sim.tax_minor===123&&S.sim.line_items[0].line_total_minor===2505),'Server saves exact itemized purchase snapshot');
+ await click(page,'Pay by QR');await ready(page,'#cash-form');await page.locator('#cash-form input[name=amount_minor]').fill('207.28');
+ await click(page,'Pay cash and get receipt');await ready(page,'[data-action=observe-debit]');
+ await page.getByRole('button',{name:'View receipt',exact:true}).click();await ready(page,'#receipt-reader-dialog[open]');
+ check(await page.locator('#receipt-reader-dialog img').evaluate(e=>e.naturalHeight>e.naturalWidth),'Customer can read the same tall paper receipt');await page.keyboard.press('Escape');
+ await click(page,'View later bank activity');await ready(page,'[data-action=attach-sample-receipt]');await click(page,'Use sample receipt');await ready(page,'[data-action=report]');
+ await click(page,'File complaint with receipt');await ready(page,'#report-form');await page.locator('#report-form button[type=submit]').click();await ready(page,'[data-check=receipt_scan]');
+ await page.getByRole('link',{name:'Open operator investigation',exact:true}).click();await click(page,'Scan receipt');await ready(page,'#receipt-review-ack');await page.waitForFunction(()=>!S.busy.staff);
+ await page.locator('#receipt-review-ack').check();await click(page,'Verify with Marketplace');await ready(page,'[data-qr-verdict=REJECTED]');await page.waitForFunction(()=>!S.busy.staff);
+ check(await page.evaluate(()=>S.staffCase.qr_pipeline.marketplace.reason_code==='NO_OVERPAYMENT'),'Valid split payment is rejected as a duplicate claim, not refunded');
+ await click(page,'Record rejected verdict');check(await page.locator('[data-qr-action=approve_refund]').count()===0,'Split-payment browser journey exposes no refund control');
+ await context.close();
+}
+
 try{
  const deadline=Date.now()+20000;
  while(true){try{if((await fetch(base+'/')).ok)break;}catch{} if(Date.now()>deadline)throw Error(serverErrors||'Server did not start');await new Promise(r=>setTimeout(r,100));}
  browser=await chromium.launch({executablePath:process.env.TRACEFIX_CHROME || '/opt/google/chrome/chrome',args:['--no-sandbox']});
  const homeContext=await browser.newContext({viewport:{width:1440,height:1000}}),home=await homeContext.newPage();
  await home.goto(base+'/');await ready(home,'a[href="/qr-demo"]');check(await home.locator('a[href="/qr-demo"]').count()>0,'Homepage directly exposes canonical QR journey');await homeContext.close();
+ await basketEditor();
  const happy=await journey('confirmed','no-preference');
  for(const width of [320,390,768,1024,1440,1920]){
   await happy.page.setViewportSize({width,height:1050});await overflow(happy.page,`QR width ${width}`);

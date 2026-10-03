@@ -72,3 +72,7 @@ The receipt API was exercised with real PNG bytes and download/hash verification
 ## QR + cash coverage
 
 The canonical `/qr-demo` route now persists the customer lifecycle through QR failure, cash payment, receipt attachment, observed bank debit, complaint, operator scan, bounded Marketplace comparison, and three explicit verdict branches. Receipt originals are hashed and immutable; OpenCV annotations are derived visual assistance. The Add money graph remains on its existing variant and contract.
+
+## Receipt workbench update — 4 October 2026
+
+The QR journey now includes an editable 1–20-row basket, optional explicit tax, realistic immutable BDT paper receipt, version-2 OpenCV geometry and clean/annotated previews. Owner review precedes Marketplace verification; changed reviews archive stale pending proposals. Exact overpayment arithmetic handles valid split tender and partial refunds. Originals, generic-upload missing fields, customer privacy, reduced motion and Add money preservation are covered by the expanded QR suites. See [workflow/API contract](QR_CASH_INVESTIGATION.md) and [validation](QR_UI_VALIDATION.md).

@@ -2,9 +2,11 @@
 
 ## QR + cash first-line operator
 
-The canonical `/qr-demo` journey uses a deterministic first-line operator pipeline: OpenCV visual region detection followed by exact-context synthetic Marketplace/payment comparisons. Receipt values come from the preserved human transcript or deterministic fixture wording; OpenCV does not perform OCR, authenticate the paper or prove cash movement. No model prediction grants receipt authority.
+The canonical `/qr-demo` journey uses a deterministic first-line operator pipeline: OpenCV visual region detection, explicit owner field review and exact-context synthetic Marketplace/payment comparisons. Receipt values come from the preserved human transcript or deterministic fixture wording; OpenCV does not perform OCR, authenticate the paper or prove cash movement. No model prediction grants receipt authority.
 
-Matching receipt/order/amount/bank context proposes a simulated refund requiring operator approval. Rejection needs a documented conflict or explicit denial. Missing, unavailable or conflicting source data pauses automation and creates an owned human review. Source checks and verdicts carry evidence versions; new evidence or a new source result invalidates a prior decision. Customer-safe outputs hide fixture profiles, raw queries and internal confidence. See [QR workflow](QR_CASH_INVESTIGATION.md).
+Matching receipt/order/currency/itemization/payment context calculates posted QR plus confirmed cash minus invoice total. Only a positive excess within the QR debit proposes that exact simulated refund, requiring operator approval. A valid split tender is not a paid-twice claim. Rejection needs a documented conflict or explicit denial. Missing, unavailable or conflicting source data pauses automation and creates an owned human review. Source checks and verdicts carry evidence versions; new evidence or a new source result invalidates a prior decision. Customer-safe outputs hide fixture profiles, raw queries and internal confidence. See [QR workflow](QR_CASH_INVESTIGATION.md).
+
+The version-2 scan retains coordinate transforms, clean/annotated derivatives and immutable hashes. An approximately six-second reveal follows detected image coordinates, with skip/replay and reduced motion. A recognized synthetic fixture can supply semantic layout labels; arbitrary uploads require operator field-to-region mapping. The visual score/ink coverage is not calibrated receipt authenticity.
 
 The following assessment engine remains available for the existing case workspaces and older QR JSON complaint flows.
 

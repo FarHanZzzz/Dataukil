@@ -162,7 +162,8 @@ def new_evidence(c,e):
     c['status']='OPEN'
     if c.get('workflow')=='qr_cash':
         pipeline=c.get('qr_pipeline',{})
-        if pipeline.get('verdict'): pipeline['verdict']['status']='STALE'
+        from .qr_workflow import invalidate_downstream
+        invalidate_downstream(c,'New evidence requires another investigation.')
         c.setdefault('qr_events',[]).append(dict(id=uid('qre'),sequence=len(c.get('qr_events',[]))+1,workflow='qr_cash',kind='EVIDENCE_CHANGED',node='annotated_fields',state='uncertain',actor=e.get('supplied_by','customer'),at=now(),version=c['version']+1,evidence_version=c['evidence_version'],evidence_ids=[e['id']],source_identifiers=dict(purchase_id=c['purchase_id']),detail='New evidence invalidated the saved scan and verdict.'))
     for d in c['decisions']:
         d['stale']=True
@@ -427,6 +428,9 @@ def evidence_file(evidence_id:str,request:Request):
 async def correct(case_id:str,request:Request):
     p=await payload(request)
     def act(db,c,s,p):
+        if c.get('workflow')=='qr_cash':
+            if s['actor']!=c['owner']:raise HTTPException(403,'Only the case owner can revise this receipt transcript.')
+            if p.get('evidence_version')!=c['evidence_version']:raise HTTPException(409,'Use the current receipt evidence version.')
         e=next((e for e in c['evidence'] if e['id']==p.get('evidence_id')),None)
         if not e:
             raise HTTPException(404,'Evidence not found.')
@@ -443,8 +447,8 @@ async def correct(case_id:str,request:Request):
         for d in c['decisions']:
             d['stale']=True
         if c.get('workflow')=='qr_cash':
-            if c.get('qr_pipeline',{}).get('verdict'): c['qr_pipeline']['verdict']['status']='STALE'
-            from .qr_workflow import emit
+            from .qr_workflow import emit,invalidate_downstream
+            invalidate_downstream(c,'Receipt transcript corrected.')
             emit(c,s['actor'],'RECEIPT_TRANSCRIPT_CORRECTED','annotated_fields','uncertain',[e['id']],reason)
         notify(c,'An evidence transcript was corrected. The investigation is awaiting updated review.')
     return operation(request,p,case_id,'correct',act)
@@ -567,6 +571,7 @@ async def check(case_id:str,request:Request):
         kind=p.get('kind')
         if kind in ('receipt_scan','marketplace'):
             if c.get('workflow')!='qr_cash': raise HTTPException(409,'This check requires a QR + cash workflow case.')
+            if c.get('qr_pipeline',{}).get('resolution',{}).get('state')=='REFUND_COMPLETED':raise HTTPException(409,'The completed refund and its cited investigation are historical. No further financial check can replace them.')
             if s['actor']!=c['owner']: raise HTTPException(403,'Only the case owner can advance the QR investigation.')
             if p.get('evidence_version')!=c['evidence_version']: raise HTTPException(409,'Use the current evidence version for QR investigation checks.')
         if kind not in ('qr','repayment','merchant','invoice','receipt_scan','marketplace'):
@@ -576,16 +581,25 @@ async def check(case_id:str,request:Request):
         available=db.execute("SELECT value FROM demo WHERE key='repayment_available'").fetchone()['value']=='true'
         if kind == 'receipt_scan':
             existing=c.get('qr_pipeline',{}).get('receipt_scan')
-            if existing and existing.get('evidence_version')==c['evidence_version']:
+            if existing and existing.get('evidence_version')==c['evidence_version'] and existing.get('manifest_version')==2:
                 return
             receipt=next((e for e in reversed(c['evidence']) if e.get('blob') and e['blob']['mime'].startswith('image/') and e.get('kind')=='customer_supplied'),None)
             if not receipt: raise HTTPException(409,'Attach an original receipt image before scanning.')
             from .qr_receipt import annotate
             from .qr_workflow import emit
             emit(c,s['actor'],'RECEIPT_SCAN_STARTED','receipt_scan','active',[receipt['id']])
-            try: scan=annotate(base64.b64decode(receipt['blob']['base64']),current_text(receipt),receipt['blob']['mime'])
+            from .simulation import get_sim
+            sim=get_sim(db,c.get('simulation_id','')) or {}
+            issued=sim.get('issued_receipt',{})
+            template=issued.get('layout') if issued.get('hash')==receipt['original_hash'] else None
+            try: scan=annotate(base64.b64decode(receipt['blob']['base64']),current_text(receipt),receipt['blob']['mime'],template=template)
             except ValueError as e: raise HTTPException(422,str(e))
-            c.setdefault('qr_pipeline',{})['receipt_scan']=dict(evidence_id=receipt['id'],source_evidence_id=receipt['id'],**scan,evidence_version=c['evidence_version'])
+            pipe=c.setdefault('qr_pipeline',{})
+            if existing:pipe.setdefault('receipt_scans',[]).append(existing)
+            from .qr_workflow import invalidate_downstream
+            invalidate_downstream(c,'A replacement visual scan was saved.')
+            pipe['receipt_scan']=dict(evidence_id=receipt['id'],source_evidence_id=receipt['id'],**scan,
+                evidence_version=c['evidence_version'],transcript_revision=receipt['revisions'][-1]['version'])
             for region in scan['regions']: emit(c,s['actor'],'RECEIPT_REGION_ANNOTATED','annotated_fields','completed',[receipt['id']],region['field'])
             c['operator_state']='RECEIPT_SCAN_ANNOTATED'
             emit(c,s['actor'],'RECEIPT_SCAN_ANNOTATED','receipt_scan','completed',[receipt['id']])
@@ -757,12 +771,15 @@ def dossier(case_id:str,request:Request):
                 lines += [f'- [{link["evidence_id"]}] revision {link["transcript_version"]}: {link["label"]}; {link["source_status"]}'+ ('; '+ '; '.join(link['mismatches']) if link['mismatches'] else ''),
                           '> '+link['excerpt'].replace('\n','\n> ')]
     for title,key in [('Missing evidence','tasks'),('Attempted read-only checks','checks'),('Handoff','handoffs'),('Human review (no financial execution)','decisions')]:
-        lines += ['',f'## {title}',json.dumps([{**ch, 'artifact':{k:v for k,v in ch['artifact'].items() if k!='preview_base64'}} if ch.get('artifact') else ch for ch in c[key]] if key=='checks' else c[key],ensure_ascii=False,indent=2)]
+        lines += ['',f'## {title}',json.dumps([{**ch, 'artifact':{k:v for k,v in ch['artifact'].items() if not k.endswith('base64')}} if ch.get('artifact') else ch for ch in c[key]] if key=='checks' else c[key],ensure_ascii=False,indent=2)]
     lines += ['', '## Shared case conversation',json.dumps(c.get('messages',[]),ensure_ascii=False,indent=2)]
     lines += ['', '## Claim and purchase-link corrections',json.dumps(c.get('claim_corrections',[])+c.get('links',[]),ensure_ascii=False,indent=2)]
     if c.get('workflow')=='qr_cash':
-        pipeline=json.loads(json.dumps(c.get('qr_pipeline',{})))
-        if pipeline.get('receipt_scan'): pipeline['receipt_scan'].pop('preview_base64',None)
+        def without_images(value):
+            if isinstance(value,dict):return {k:without_images(v) for k,v in value.items() if not k.endswith('base64')}
+            if isinstance(value,list):return [without_images(v) for v in value]
+            return value
+        pipeline=without_images(c.get('qr_pipeline',{}))
         lines += ['', '## QR + cash visual assistance and synthetic outcome', 'OpenCV regions are visual assistance, not OCR or receipt authentication. Marketplace and refund records are synthetic. Approval is separate from completed refund.', json.dumps(pipeline,ensure_ascii=False,indent=2), '', '## Append-only QR event history', json.dumps(c.get('qr_events',[]),ensure_ascii=False,indent=2)]
     body='\n'.join(lines)
     return PlainTextResponse(body,media_type='text/markdown',headers={'Content-Disposition':f'attachment; filename="{c["reference"]}-v{c["version"]}.md"',

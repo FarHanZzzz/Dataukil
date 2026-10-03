@@ -1,0 +1,56 @@
+/* Receipt workbench: all rules confined to the QR journey. */
+.qr-workspace .qr-primary-stage{position:static}
+.qr-workspace .qr-evidence-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(240px,1fr);gap:20px;align-items:start}
+.qr-workspace .qr-reader{min-width:0;border:1px solid var(--day-line,#d5dfee);border-radius:14px;background:var(--day-panel,#fff);overflow:hidden}
+.qr-workspace .qr-reader-toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:12px;border-bottom:1px solid var(--day-line,#d5dfee);position:static}
+.qr-workspace .qr-reader-tabs,.qr-workspace .qr-reader-tools{display:flex;flex-wrap:wrap;gap:4px}
+.qr-workspace .qr-reader-tabs [aria-pressed=true]{background:#e8efff;color:#245bdb;border-color:#bacdfb}
+.qr-workspace .qr-reader-scroll{max-height:660px;overflow:auto;overscroll-behavior:contain;background:#eeefec;padding:12px;min-width:0}
+.qr-workspace .qr-paper-canvas{position:relative;min-width:0;margin:auto;isolation:isolate}
+.qr-workspace .qr-paper-canvas>img{display:block;width:100%;height:auto;max-width:none;object-fit:initial}
+.qr-workspace .qr-reader .qr-region-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.qr-workspace .qr-reader .qr-region-overlay rect{fill:#245bdb0c;stroke:#245bdb;stroke-width:1.6;vector-effect:non-scaling-stroke}
+.qr-workspace .qr-reader .qr-region-overlay text{fill:#164bb5;font:14px 'JetBrains Mono',monospace;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.qr-workspace .qr-reader .qr-region-overlay .selected rect{fill:#245bdb26;stroke:#003bb6;stroke-width:3}
+.qr-workspace .qr-reader .qr-scan-beam{height:3px;left:0;right:0;animation:none;top:0;background:#245bdb;box-shadow:0 0 14px 3px #245bdb70;z-index:2}
+.qr-workspace .qr-reader [hidden],.qr-workspace .qr-scan-controls [hidden]{display:none!important}
+.qr-workspace .qr-reader-downloads{display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;border-top:1px solid var(--day-line,#d5dfee)}
+.qr-workspace .qr-field-review{display:block;max-height:770px;overflow:auto;overscroll-behavior:contain;padding-right:4px;min-width:0}
+.qr-workspace .qr-review-heading{padding:0 0 16px}
+.qr-workspace .qr-review-heading h4{font-size:20px;margin:8px 0}
+.qr-workspace .qr-review-heading p{font-size:14px;color:var(--day-muted,#60718b);line-height:1.65}
+.qr-workspace .qr-fields .qr-review-field{margin:0 0 8px;padding:12px;border-radius:10px}
+.qr-workspace .qr-review-field.current{outline:2px solid #245bdb;outline-offset:-2px}
+.qr-workspace .qr-field-highlight{border:0;background:transparent;text-align:left;width:100%;padding:0;cursor:pointer;color:inherit;min-height:56px;font:inherit}
+.qr-workspace .qr-field-highlight span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--day-muted,#60718b)}
+.qr-workspace .qr-field-highlight strong{display:block;font-size:14px;line-height:1.5;margin:6px 0;overflow-wrap:anywhere}
+.qr-workspace .qr-field-highlight small{display:block;font-size:11px;line-height:1.5;color:var(--day-muted,#60718b)}
+.qr-workspace .qr-review-field summary{font-size:12px;margin-top:12px;cursor:pointer;color:#245bdb}
+.qr-workspace .qr-review-field select{width:100%;font-size:13px;margin-top:8px}
+.qr-workspace .qr-review-ack{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.65;padding:16px 0;color:var(--day-ink,#162743)}
+.qr-workspace .qr-review-ack input{flex:none;width:20px;height:20px;min-height:20px;accent-color:#245bdb}
+.qr-workspace .qr-scan-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.qr-workspace .qr-receipt-metadata{margin:16px 0}
+.qr-workspace .qr-reader-dialog{width:min(1120px,calc(100vw - 24px));max-width:1120px;max-height:calc(100dvh - 24px);padding:20px;border:1px solid #d5dfee;border-radius:20px;background:#f8faff;color:#162743}
+.qr-workspace .qr-reader-dialog::backdrop{background:#0a1939a0;backdrop-filter:blur(5px)}
+.qr-workspace .qr-reader-dialog>header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
+.qr-workspace .qr-reader-dialog h2{font-size:24px;margin:8px 0}
+.qr-workspace .qr-reader-dialog .qr-reader-scroll{max-height:calc(100dvh - 270px)}
+.qr-workspace .qr-basket{padding:12px;border:1px solid var(--day-line,#d5dfee);border-radius:12px;background:var(--day-panel,#fff)}
+.qr-workspace .qr-basket-item{padding:12px 0;border-bottom:1px solid var(--day-line,#d5dfee);margin-bottom:12px}
+.qr-workspace .qr-basket-prices{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr) 32px;gap:8px;align-items:end}
+.qr-workspace .qr-basket-prices .button{min-width:0;padding:8px;min-height:48px}
+.qr-workspace .qr-basket .field{min-width:0;margin:0 0 8px}
+.qr-workspace .qr-basket input{min-width:0;width:100%}
+.qr-workspace .qr-graph-preview{padding:16px;border:1px solid var(--day-line,#d5dfee);border-radius:12px}
+.qr-workspace .qr-graph-preview>summary{cursor:pointer;color:#245bdb;font-weight:600}
+.qr-workspace .qr-reader :focus-visible,.qr-workspace .qr-review-field :focus-visible{outline:3px solid #245bdb;outline-offset:3px}
+@media(max-width:1200px){.qr-workspace .qr-evidence-layout{grid-template-columns:minmax(0,1fr)}.qr-workspace .qr-field-review{max-height:540px}}
+@media(max-width:520px){.qr-workspace .qr-reader-scroll{padding:6px;max-height:520px}.qr-workspace .qr-reader-toolbar{padding:8px}.qr-workspace .qr-reader-tools .button,.qr-workspace .qr-reader-tabs .button{min-height:40px;font-size:11px;padding:8px}.qr-workspace .qr-field-review{max-height:none;overflow:visible}.qr-workspace .qr-reader-dialog{padding:12px}.qr-workspace .qr-reader-dialog>header{align-items:start}.qr-workspace .qr-reader-dialog h2{font-size:20px}.qr-workspace .qr-evidence-section{padding:10px}}
+@media(prefers-reduced-motion:reduce){.qr-workspace .qr-reader .qr-scan-beam{display:none!important}}
+.qr-workspace .qr-basket>summary{cursor:pointer;list-style:none;padding:4px;color:var(--day-ink)}
+.qr-workspace .qr-basket>summary strong{display:block;font-size:16px}
+.qr-workspace .qr-basket>summary span{display:block;color:var(--day-blue);font-size:13px;margin-top:6px}
+.qr-workspace .qr-basket[open]>.section-heading{margin-top:20px}
+.qr-workspace .qr-basket-line{display:flex;justify-content:space-between;font-size:12px;color:var(--day-muted);gap:8px}
+.qr-workspace .qr-basket-line output{color:var(--day-ink);font-weight:600}

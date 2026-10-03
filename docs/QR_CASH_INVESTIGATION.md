@@ -1,71 +1,107 @@
-# QR + cash investigation
+# QR + cash investigation and receipt workbench
 
-`/qr-demo` is the canonical DataUkil customer-to-operator journey. The homepage links to it directly. The earlier hard-coded homepage story is replaced by a link to the same saved experience.
+`/qr-demo` is the canonical DataUkil customer-to-operator journey. The homepage links directly to this saved experience. All records are synthetic; no real money moves or external Marketplace requests occur.
 
 ## Guided journey
 
-1. **Purchase:** enter the merchant, item, invoice and QR amount. Start a new scenario or explicitly resume a saved journey. Presenter source choices live in expandable setup details.
-2. **QR attempt:** the customer phone displays a synthetic QR and a Pay action. It then shows failure / no confirmation. The phone result is separate from the eventual bank record.
-3. **Cash and receipt:** record cash and receive a purchase-specific watermarked receipt. This is a customer report of cash, not bank or merchant source authority.
-4. **Later bank activity:** explicitly observe the original QR debit. This customer observation remains separate from the independently checked synthetic bank record.
-5. **Evidence and complaint:** use the generated sample or upload a PNG/JPEG, review its transcript and attach it before filing. The complaint atomically promotes the exact cited receipt artifact.
-6. **First-line operator scan:** open the linked case. Scan receipt is the first primary action. The original and derived preview appear together; a beam travels down the page and region boxes appear with field announcements. Reduced motion uses instant staged reveals.
-7. **Marketplace:** after scanning, explicitly query bounded synthetic records for the exact purchase. The board highlights the outbound query, returned order, amount/item, QR, bank and cash comparisons.
-8. **Verdict:** record the saved source result. Unavailable data cannot be rejected. A receipt/transcript/OpenCV preview cannot independently grant financial authority.
-9. **Resolution:** legitimate evidence proposes a refund; the current operator owner approves the request and separately posts the synthetic completed refund. Rejection records an explanation with no refund. Uncertainty pauses automation and saves an owner, receiving queue, missing evidence and next review.
+1. **Purchase:** start a new scenario or explicitly resume a saved purchase. The compact basket opens into editable item cards; merchant, address, tax and QR amount are separate. The default FreshMart Demo basket has nine items totaling BDT 500.00 and zero tax. Prices are synthetic. Presenter-only source profiles remain expandable.
+2. **QR attempt:** the phone displays a synthetic QR and Pay action, then failure/no confirmation. This screen result does not establish the bank posting result.
+3. **Cash and receipt:** save cash paid and issue a realistic purchase-specific paper receipt. Invoice total and cash paid appear independently. Receipt issue time, original PNG, SHA-256, transcript and measured template layout are saved once.
+4. **Later activity:** the customer observes the original QR debit. This remains a customer observation until an independent synthetic source check.
+5. **Complaint evidence:** attach the already-issued sample or another PNG/JPEG, then cite that exact receipt draft when filing the complaint. No receipt is regenerated during attachment.
+6. **Scan:** the operator opens directly to receipt evidence. Scan receipt performs actual OpenCV processing, then reveals saved regions top-to-bottom for approximately six seconds. Skip and Replay scan are presentation-only. Reduced motion displays saved findings immediately.
+7. **Review:** inspect Original, Processed or Annotated; zoom, enlarge, download and select field regions. Acknowledge missing fields and add a review note. Values come from the preserved transcript, not OpenCV text recognition.
+8. **Marketplace:** Verify with Marketplace first saves the current field review, then checks exact-context synthetic order and payment records. The QR board shows the query, returned order, itemization, QR, bank and cash checks.
+9. **Verdict/resolution:** a corroborated overpayment proposes its exact refundable excess. The owner approves a request and separately posts a synthetic completion. Rejection records an explanation without refund. Uncertainty pauses automation and saves an owned human handoff and next review.
 
-No real money moves and no external Marketplace request occurs. Customer status keeps QR screen, reported cash, observed debit, receipt, verdict and refund completion separate.
+The customer sees QR screen result, cash report, observed debit, receipt, verdict and refund completion as separate facts. A receipt, template recognition or OpenCV result never confers source authority.
 
-## Context and navigation
+## Navigation and reader
 
-Bookmarks use `/qr-demo?simulation=<id>&case=<id>&view=customer|operator|both`. Unknown IDs and mismatched simulation/case pairs show recovery instead of selecting another record. Fresh visits show Start new scenario and, when available, Resume saved journey. Browser history changes only the local workspace view/selection; it does not repeat mutations. Shortcuts use the same tab. Open companion view is an explicit new-tab link carrying the same IDs. Modifier clicks retain browser behavior.
+URLs retain `/qr-demo?simulation=<id>&case=<id>&view=customer|operator|both`. Unknown IDs and mismatched associations show recovery rather than silently selecting another record. Fresh visits offer Start new scenario and an explicit saved-journey resume. Default links use the same tab; Open companion view preserves exact context in a second tab. Back/Forward and refresh do not repeat mutations.
 
-The persistent rail and current-stage banner show the journey. On small screens Customer, Evidence, Marketplace and Outcome are available from a native modal navigation drawer. View all steps opens the complete rail. Native dialog focus trapping, Escape, visible focus, status announcements and reduced motion are supported.
+Stage banners and receipt toolbars stay in normal document flow. Mobile navigation and View all steps retain their accessible modal drawers. Customer View receipt and operator View larger open a native dialog with focus trapping, Escape, restored trigger focus and keyboard `+`, `-`, `0` zoom.
 
-## Evidence contract
+The reader uses a clean image plus an SVG in the same preview coordinates. Zoomed-image scrolling stays inside the reader. The mounted evidence task, scan status, beam, zoom, scroll and review controls survive polling during the reveal. Evidence changes select a new reader key and invalidate the old presentation. Replay scan creates no events or source checks.
 
-`POST /api/simulations/{id}/receipt` accepts multipart fields `file`, `transcript`, and current `version`, plus `Idempotency-Key`. Images are PNG/JPEG, at most 2 MiB and 12 megapixels, with both dimensions at least 100px. MIME type must match actual bytes. The transcript is required and at most 4,000 characters.
+## Purchase contract
 
-The persisted draft contains a generated `receipt_evidence_id`, simulation association, immutable bytes, MIME, SHA-256, transcript, actor and timestamp. Superseded drafts remain in the simulation archive. Identical operation retries return the original response; changed content under the same key returns 409. A new upload requires the current simulation version.
+`POST /api/simulations` accepts existing `customer_name`, `merchant`, `qr_amount_minor` and profile fields plus:
 
-`POST /api/simulations/{id}/complaint` takes current `version`, description and `receipt_evidence_id`. It promotes that exact owned draft atomically. JSON complaint compatibility is retained for older walkthroughs, as is `POST /api/cases/{id}/upload` for additional evidence. Files remain unverified customer assertions. `/api/evidence/{id}/file` returns the immutable original under role and ownership checks.
+```json
+{
+  "merchant_address": "Dhaka, Bangladesh",
+  "line_items": [{"description": "Rice, 1 kg", "quantity": 2, "unit_price_minor": 8000}],
+  "tax_minor": 0
+}
+```
 
-The sample contains merchant, item, purchase ID, amount, cash reference, timestamp and the watermark **Synthetic DataUkil Demo**. Values displayed during scanning come from the preserved transcript through a deterministic field parser. They are not extracted by OCR.
+Amounts are integer poisha. Support 1–20 rows, descriptions up to 80 characters, integer quantities 1–99, positive unit prices and nonnegative tax. The server computes line totals, subtotal and invoice total using the existing BDT 1,000,000 total bound. A supplied inconsistent total is rejected. Legacy `item`/`total_minor` requests become one quantity-one row with zero tax. Old saved records retain their original bytes and remain readable.
 
-## OpenCV visual assistance
+The QR amount follows basket edits until explicitly customized; a customized amount is preserved and cannot exceed the invoice. Basket, tax and QR drafts survive refresh without submission. No VAT rate is inferred from the visual US receipt reference.
 
-`opencv-python-headless==4.10.0.84` is pinned. `tracefix/qr_receipt.py` validates and decodes the original, grayscales, normalizes, thresholds, finds the paper contour, corrects perspective and detects visual text regions. It saves a separate annotated image without modifying the input.
+## Immutable evidence contract
 
-The manifest contains source evidence ID, input hash, engine/version, scan status, image dimensions, field bounding boxes, displayed values, value sources, advisory confidence, warnings, processing steps, timestamp and evidence version. Regions needing review are explicitly labelled. This is visual assistance, not OCR, receipt authentication or proof that cash moved.
+`POST /api/simulations/{id}/receipt` retains multipart `file`, `transcript`, current `version` and `Idempotency-Key`. Images must be PNG/JPEG, at most 2 MiB and 12 megapixels, with both dimensions at least 100px. Actual bytes must match MIME type. Transcript text is required and bounded to 4,000 characters.
 
-## Synthetic sources and operator actions
+Drafts retain their exact simulation association, original bytes, MIME, hash, transcript, actor and timestamp. Superseded drafts remain saved. An identical operation retry returns its original response; changed content under the same key returns 409. `POST /api/simulations/{id}/complaint` promotes the exact owned `receipt_evidence_id` atomically. Existing JSON complaints and additional post-complaint uploads remain supported.
 
-The purchase creates a private exact-context Marketplace fixture. Existing `confirmed`, `denied`, `unverified` and `qr_failed` source profiles remain available. Checks compare purchase, merchant, item, invoice/receipt amounts, cash, QR and bank references, timestamp, independent debit/cash confirmation and previous refund state.
+`/api/evidence/{id}/file` downloads the unchanged original under role/ownership checks. The case artifact, draft, customer preview, operator original and downloaded file must have the same hash.
 
-`POST /api/cases/{id}/check` accepts `kind: receipt_scan|marketplace`, current case `version` and `evidence_version`, plus an idempotency key. Only the current staff owner advances the QR pipeline. Marketplace checking requires the current receipt scan. Repeated current scans preserve the saved artifact/event history.
+The supplied receipt image is a **layout reference**, recreated as a fictional BDT receipt. The default renderer uses bundled DejaVu receipt fonts and Noto Bengali fallback, centered merchant/address/date, item and price columns, dashed separators, subtotal/tax, large total, cash details, decorative barcode and a quiet Synthetic DataUkil Demo footer. Text is measured/wrapped and receipt height grows with its items. The illustrative barcode is not decoded and conveys no authenticated identifier.
 
-`POST /api/cases/{id}/qr-action` accepts `action: verdict|approve_refund|complete_refund|handoff`, current case and evidence versions, and an idempotency key. Verdict requests also carry `verdict: LEGITIMATE|REJECTED|UNCERTAIN`; they must follow the saved Marketplace result. Mutations atomically save their state, actor, audit, timestamp, source identifiers, evidence citations, append-only QR events and retry response.
+Generated item transcripts use compact JSON rows, e.g. `Item 1: ["Rice, 1 kg",2,8000,16000]`; structured objects are also accepted by the parser. These are preserved supplied values, not source records. Legacy Merchant/Purchase/Item/Amount/Cash reference/Timestamp colon labels remain readable. Genuine receipts may omit identifiers; the reviewer must acknowledge omissions rather than invent them.
 
-| Branch | Saved behavior |
+## OpenCV manifest version 2
+
+Keep `opencv-python-headless==4.10.0.84`. Processing validates bytes, normalizes EXIF orientation, detects convex paper candidates using area/solidity/edge support, preserves paper proportions during perspective correction, normalizes illumination, thresholds printing and groups connected components into text/column regions. Separator and barcode candidates remain visual classifications. Missing paper contours retain the original alignment with a warning; blank images produce no invented boxes.
+
+The manifest saves:
+
+- Scan ID/version, evidence ID/version, transcript revision, original hash, engine/version, timestamp and warnings.
+- Original/oriented/rectified/preview dimensions, paper quadrilateral, orientation/perspective/preview transforms and inverses.
+- Stable visual region IDs, actual preview bounding boxes, corresponding original polygons, region kind and measured ink coverage.
+- Field associations, displayed transcript values, value source, semantic-label source and review requirements.
+- Independent clean and annotated preview bytes, dimensions and SHA-256 hashes.
+
+Ink coverage is a geometric diagnostic, not calibrated authenticity confidence. Semantic labels are associated automatically only when the original hash matches the server-saved fixture for this exact simulation and its measured template. Other uploads remain generic until operator mapping. A recognized fixture still supplies no financial authority.
+
+Keep legacy manifests readable. Pending legacy cases require an explicit updated scan and review before new Marketplace decisions. Completed refunds remain historical and cannot be rescanned into another financial outcome.
+
+## Saved field review
+
+`POST /api/cases/{id}/qr-action` adds `action: review_receipt`, with current case/evidence versions, exact `scan_id`, `field_regions`, `reviewed_fields`, `missing_fields`, reason and idempotency header. Every mapped region must belong to that scan; every relevant field must be reviewed or explicitly marked missing. Only the current owner can save it.
+
+The saved review contains an ID, actor, time, reason, scan/evidence/transcript versions and field-to-region mapping. It appends `RECEIPT_REVIEW_SAVED`. Selectors support multiple regions and synchronize visual highlights; no freehand boxes are fabricated. Verify with Marketplace remains disabled until acknowledgement and a review note are present. A network failure preserves the review and permits retry.
+
+The existing `/correct` operation remains the wording-correction endpoint. QR corrections require the owner and current evidence version, create a transcript revision and invalidate scan/review/check/verdict freshness. Changed review mappings also invalidate source checks and verdicts. Pending refund proposals/requests are archived as stale, permitting a new grounded verdict; completed refunds are preserved.
+
+## Independent synthetic checks and refund math
+
+A private order snapshot is saved at purchase creation; receipt/transcript edits cannot alter it. A profile-controlled merchant cash record is saved at the cash event. Source profiles remain confirmed, denied, unverified and qr_failed.
+
+`POST /api/cases/{id}/check` keeps `kind: receipt_scan|marketplace`, current case/evidence versions and idempotency. Marketplace requires a current version-2 scan and saved review. Checks compare purchase, merchant, currency, item descriptions/quantities/prices, subtotal, tax, total, cash paid/method/reference, receipt timestamp, linked QR/bank references, posted amount and prior refunds. Linked references are not pretended to be printed receipt fields.
+
+```text
+verified excess = posted QR + independently confirmed cash − invoice total
+```
+
+| Verified situation | Result |
 | --- | --- |
-| Legitimate | Matching context → eligibility/proposal → operator approval/request → separately saved completed refund → customer notification |
-| Rejected | Explicit source denial or conflicting receipt/context → saved reason → customer notification; no refund |
-| Uncertain | Source unavailable, incomplete fields, source conflict, timeout or previous refund ambiguity → pause → human handoff; no new refund |
+| Positive excess no greater than posted QR | LEGITIMATE; propose exactly that excess |
+| No excess, including a valid split tender | REJECTED duplicate claim, reason NO_OVERPAYMENT; the receipt may still be valid |
+| Excess above QR debit | UNCERTAIN; additional cash reconciliation |
+| Explicit source denial, mismatched currency/merchant/items/amount/reference | REJECTED with recorded reason |
+| Missing fields, unavailable/ambiguous/conflicting sources or prior refund ambiguity | UNCERTAIN; no new refund |
 
-Evidence changes invalidate the scan, check and verdict. A changed Marketplace result also invalidates the verdict. Stale approvals cannot be executed. Prior completed refunds remain historical facts and block another credit. Handoff retains the current owner until the receiving investigator accepts through the existing acknowledgement control.
+Existing verdict/approve_refund/complete_refund/handoff actions remain. Customer actions never refund money. Approval is distinct from completion; no refund appears completed before its synthetic event is saved. Handoff retains ownership until receiving acceptance and records queue, missing evidence and next review.
 
-Customer projections include only safe verdict, resolution and handoff fields. They omit raw comparisons, fixture profiles, source catalogs, scan confidence, internal evidence, audit and QR event history.
+Customer projections hide source catalogs, profiles, raw comparisons, scan/review metadata, internal notes and QR event history. Completed refund facts remain visible even when later evidence requires additional review.
 
-## QR board and exports
+## Graph, exports and boundaries
 
-`static/legacy/qr-graph.js` defines a separate Evidence → Marketplace → Payments → Decision → Resolution topology and pure append-only reducer. Unknown remains unknown until a saved event exists. Replay changes the view, never the backend. Selection exposes event provenance and evidence citations; fit, zoom and pan are local camera controls.
+The QR-specific topology, renderer and append-only reducer remain in place. Active glowing edges, filled completed nodes, verdict colors and graph replay continue to use saved events. Receipt reveal frames create no backend events.
 
-QR active edges use 4px blue strokes, glow, directional arrows and animated dashes. Completed nodes have a full blue tinted surface, a check and readable status. Conflicts are red, uncertainty amber and human handoff violet. Reduced motion removes probes while retaining the thick active edge. The subsequent site-wide light-theme request applies white and pale surfaces to both customer and operator panels through `static/light-theme.css`.
+Dossiers retain original hashes, revisions, scan/review geometry, source checks, eligibility arithmetic, verdicts, historical resolutions and QR events, stripping image payloads from all manifests/history. Original and annotated preview downloads are separately named.
 
-The dossier export includes original hashes, transcript revisions, scan metadata, Marketplace results, verdict/resolution/handoff and saved QR events. Preview base64 is excluded from the Markdown export.
-
-The Add money graph module, topology, camera, toolbar and replay remain intact. Its palette now follows the requested site-wide light theme. Citation navigation also repaints Evidence when the cited node is already selected. QR variant styles are isolated under `.qr-workspace` and `.graph--qr`; the shared daylight stylesheet applies the current website theme.
-
-## Verification
-
-Backend coverage is in `tests/test_qr_workflow.py`; browser coverage and screenshots are produced by `scripts/check_qr_ui.mjs`. See [QR validation](QR_UI_VALIDATION.md). Existing workflow, simulation, integration and transfer suites and the Add money browser suite are included in regression checks.
+All reader styles are QR-scoped. The Add money graph assets, topology, camera behavior and controls remain unchanged. See [receipt validation](QR_UI_VALIDATION.md).

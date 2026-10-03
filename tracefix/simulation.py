@@ -42,11 +42,13 @@ def project(sim):
     keys=['id','version','stage','customer_name','merchant','item','purchase_id','qr_reference','total_minor','qr_amount_minor','cash_amount_minor','case_id','created_at','events']
     return {k:sim[k] for k in keys} | dict(
         synthetic=True, workflow='qr_cash', currency='BDT',
+        line_items=sim.get('line_items') or [dict(description=sim['item'],quantity=1,unit_price_minor=sim['total_minor'],line_total_minor=sim['total_minor'])],
+        merchant_address=sim.get('merchant_address',''),subtotal_minor=sim.get('subtotal_minor',sim['total_minor']),tax_minor=sim.get('tax_minor',0),receipt_issued_at=sim.get('receipt_issued_at'),
         qr_status=sim.get('qr_status','NOT_ATTEMPTED'),
         qr_display_result=sim.get('qr_display_result','NOT_ATTEMPTED'),
         customer_observed_debit=bool(sim.get('customer_observed_debit')),
         receipt_draft=({k:sim['receipt_draft'].get(k) for k in ('id','transcript','mime','base64','hash','at')} if sim.get('receipt_draft') else None),
-        issued_receipt=({k:sim['issued_receipt'].get(k) for k in ('mime','base64','transcript')} if sim.get('issued_receipt') else None),
+        issued_receipt=({k:sim['issued_receipt'].get(k) for k in ('mime','base64','transcript','hash','template_version')} if sim.get('issued_receipt') else None),
         customer_state=sim.get('customer_state',sim['stage']),
         receipt_evidence_id=(sim.get('receipt_draft') or {}).get('id'),
         qr_pipeline={},
@@ -95,8 +97,30 @@ async def create_simulation(request:Request):
     p=await payload(request)
     name=text_field(p,'customer_name',80)
     merchant=text_field(p,'merchant',100)
-    item=text_field(p,'item',120)
-    total=positive_int(p.get('total_minor'),'total_minor')
+    rows=p.get('line_items')
+    address=text_field(p,'merchant_address',160,False) or 'Dhaka, Bangladesh'
+    tax=p.get('tax_minor',0)
+    if type(tax) is not int or not 0<=tax<=100000000:raise HTTPException(422,'Tax must be a nonnegative amount in poisha.')
+    if rows is not None:
+        if not isinstance(rows,list) or not 1<=len(rows)<=20:raise HTTPException(422,'Provide 1–20 purchase items.')
+        items=[]
+        for row in rows:
+            if not isinstance(row,dict):raise HTTPException(422,'Each item needs description, quantity and unit price.')
+            description=text_field(row,'description',80)
+            quantity=row.get('quantity')
+            if type(quantity) is not int or not 1<=quantity<=99:raise HTTPException(422,'Quantity must be an integer from 1–99.')
+            price=positive_int(row.get('unit_price_minor'),'unit_price_minor')
+            items.append(dict(description=description,quantity=quantity,unit_price_minor=price,line_total_minor=price*quantity))
+        subtotal=sum(row['line_total_minor'] for row in items)
+        total=positive_int(subtotal+tax,'total_minor')
+        if 'total_minor' in p and (type(p['total_minor']) is not int or p['total_minor']!=total):raise HTTPException(422,'Invoice total does not match the basket and tax.')
+        item=items[0]['description'] if len(items)==1 else f'{len(items)}-item basket'
+    else:
+        item=text_field(p,'item',120)
+        total=positive_int(p.get('total_minor'),'total_minor')
+        if tax:raise HTTPException(422,'Provide line items to include tax.')
+        subtotal=total
+        items=[dict(description=item,quantity=1,unit_price_minor=total,line_total_minor=total)]
     amount=positive_int(p.get('qr_amount_minor'),'qr_amount_minor')
     if amount>total:
         raise HTTPException(422,'The initial QR amount cannot exceed the invoice total.')
@@ -109,7 +133,7 @@ async def create_simulation(request:Request):
         suffix=secrets.token_hex(4).upper()
         sim=dict(id=uid('sim'),workflow='qr_cash',customer_id=s['actor'],customer_name=name,merchant=merchant,item=item,
                  purchase_id='PUR-'+suffix,qr_reference='QR-'+suffix,total_minor=total,qr_amount_minor=amount,
-                 cash_amount_minor=0,case_id=None,version=1,stage='PURCHASE_CREATED',qr_status='NOT_ATTEMPTED',
+                 line_items=items,merchant_address=address,subtotal_minor=subtotal,tax_minor=tax,cash_amount_minor=0,case_id=None,version=1,stage='PURCHASE_CREATED',qr_status='NOT_ATTEMPTED',
                  created_at=now(),profile=profile,source_records={},receipt_draft=None,receipt_drafts=[],customer_state='PURCHASE_CREATED',
                  qr_display_result='NOT_ATTEMPTED',customer_observed_debit=False,qr_pipeline={},
                  events=[dict(at=now(),kind='purchase',text=f'Purchase created at {merchant}.')])
@@ -117,7 +141,7 @@ async def create_simulation(request:Request):
                  'mock_invoice','INV-'+suffix,total,sim['purchase_id'],'purchase_total')
         for event in sim['events']:
             event.update(actor=s['actor'],version=1,evidence_version=0,idempotency_key=key,source_identifiers=dict(simulation_id=sim['id'],purchase_id=sim['purchase_id']))
-        sim['marketplace_record']=dict(order_exists=True,available=profile not in ('unverified',),purchase_id=sim['purchase_id'],merchant=merchant,item=item,amount=f'{total/100:.2f}',cash_reference='CASH-'+sim['purchase_id'],qr_reference=sim['qr_reference'],bank_debit_reference='BANK-'+sim['qr_reference'],timestamp=sim['created_at'],bank_debit_verified=profile!='qr_failed',cash_received=profile=='confirmed',denial=profile=='denied',refunded=False)
+        sim['marketplace_record']=dict(order_exists=True,available=profile not in ('unverified',),purchase_id=sim['purchase_id'],merchant=merchant,item=item,amount=f'{total/100:.2f}',cash_reference='CASH-'+sim['purchase_id'],qr_reference=sim['qr_reference'],bank_debit_reference='BANK-'+sim['qr_reference'],timestamp=sim['created_at'],bank_debit_verified=profile!='qr_failed',qr_posted_amount_minor=amount if profile!='qr_failed' else 0,cash_received=False,cash_amount_minor=None,payment_method='CASH',currency='BDT',line_items=items,subtotal_minor=subtotal,tax_minor=tax,invoice_total_minor=total,denial=profile=='denied',refunded=False)
         save_sim(db,sim)
         result=project(sim);remember(db,s['actor'],'simulation:create',key,digest,result)
         return result
@@ -164,10 +188,15 @@ async def simulation_action(identifier:str,request:Request):
             sim['events'].append(dict(at=now(),kind='qr_attempted',customer_states=['QR_ATTEMPTED','QR_DISPLAY_FAILED_OR_UNCONFIRMED'],text='The payment screen showed a failed result and no confirmation was received.'))
         elif action=='pay_cash' and sim['stage']=='QR_UNCLEAR':
             amount=positive_int(p.get('amount_minor'))
-            sim.update(stage='SECOND_PAID',cash_amount_minor=amount,customer_state='RECEIPT_ISSUED')
-            from .qr_receipt import sample_receipt
-            blob,mime,transcript=sample_receipt(sim)
-            sim['issued_receipt']=dict(mime=mime,base64=base64.b64encode(blob).decode(),transcript=transcript)
+            sim.update(stage='SECOND_PAID',cash_amount_minor=amount,customer_state='RECEIPT_ISSUED',receipt_issued_at=now())
+            from .qr_receipt import render_receipt
+            blob,transcript,layout=render_receipt(sim)
+            sim['issued_receipt']=dict(mime='image/png',base64=base64.b64encode(blob).decode(),transcript=transcript,
+                hash=hashlib.sha256(blob).hexdigest(),template_version=2,layout=layout)
+            if sim.get('marketplace_record'):
+                sim['marketplace_record'].update(cash_received=sim['profile'] in ('confirmed','qr_failed'),
+                    cash_amount_minor=amount if sim['profile'] in ('confirmed','qr_failed') else None,
+                    receipt_timestamp=sim['receipt_issued_at'])
             sim['events'].append(dict(at=now(),kind='cash_reported',customer_states=['CASH_PAID'],text=f'Customer recorded paying BDT {amount/100:.2f} cash at the counter.'))
             sim['events'].append(dict(at=now(),kind='receipt_issued',text='The merchant issued a receipt for the cash payment.'))
             if sim['profile']=='confirmed':
@@ -188,6 +217,7 @@ async def simulation_action(identifier:str,request:Request):
         elif action=='attach_sample_receipt' and sim['stage'] in ('SECOND_PAID','QR_CONFIRMED'):
             if not sim.get('customer_observed_debit'): raise HTTPException(409,'Observe the later bank activity before attaching complaint evidence.')
             from .qr_receipt import sample_receipt
+            if not sim.get('issued_receipt'):raise HTTPException(409,'No original receipt is available for this saved purchase. Upload your receipt instead.')
             blob, mime, transcript = sample_receipt(sim)
             sim['receipt_draft']=dict(id=uid('receipt'),simulation_id=identifier,actor=s['actor'],mime=mime,base64=base64.b64encode(blob).decode(),transcript=transcript,hash=hashlib.sha256(blob).hexdigest(),at=now())
             sim['stage']='RECEIPT_ATTACHED';sim['customer_state']='RECEIPT_ATTACHED'
