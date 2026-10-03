@@ -26,7 +26,7 @@ cd D:\dataukil
 .\run.ps1 -Restart
 ```
 
-The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the server responds. From there, open Payments, Operations or MFS.
+The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the server responds. Its navigation contains Overview, How it works, Payments and Operations. The older Customer, Investigator, Judge and MFS shortcuts have been removed from the header and footer.
 
 | Page | Purpose |
 |---|---|
