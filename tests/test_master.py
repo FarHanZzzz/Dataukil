@@ -338,6 +338,7 @@ def test_owner_change_invalidates_approval_and_requires_restart(master):
     change(master,c['id'],'handoff',dict(destination='staff_2',reason='Receiving team owns the next action.'))
     change(master,c['id'],'acknowledge',{},role='other_staff')
     current=call(master,'/investigations/'+run['id']).json()
+    assert not current['input_fresh']
     assert not current['eligibility']['eligible'] and current['approvals'][0]['status']=='STALE'
     assert change(master,c['id'],'repairs/execute',{'approval_id':approved['approval']['id']},role='other_staff').status_code in (403,409)
     newrun=analyze(master,c['id'])

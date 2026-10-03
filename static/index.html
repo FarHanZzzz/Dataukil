@@ -1,150 +1,145 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#153f35" />
-    <title>TraceFix · A payment story, in your hands</title>
-    <link rel="stylesheet" href="/static/style.css?v=3" />
-    <script src="/static/app.js?v=3" defer></script>
-  </head>
-  <body>
-    <a class="skip" href="#phone-content">Skip to customer app</a>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="TraceFix home"
-        ><span class="brand-mark">t<span>↗</span></span
-        >tracefix<span class="brand-divider"></span
-        ><span class="brand-note">THE INTERACTIVE LAB</span></a
-      >
-      <div class="header-right">
-        <span class="synthetic-label"><i></i>Synthetic environment</span
-        ><button class="button quiet small" data-action="help">
-          How it works <span aria-hidden="true">↗</span>
-        </button>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#01040F">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="TraceFix — a synthetic paid-twice investigation workspace. Keep what is confirmed apart from what is only claimed.">
+<title>TraceFix — Transaction Investigation Workspace</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2301040F'/%3E%3Crect x='6' y='6' width='20' height='20' fill='%230C2C78' stroke='%234DA3FF' stroke-width='2'/%3E%3Crect x='13' y='13' width='6' height='6' fill='%232563FF'/%3E%3C/svg%3E">
+<link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/style.css?v=5">
+<script src="/static/js/backdrop.js?v=5" defer></script>
+<script src="/static/app.js?v=5" defer></script>
+</head>
+<body class="is-home">
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- Icon sprite (stroke icons, 24x24) -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><path d="M6 6h.01"/><path d="M6 18h.01"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24"><rect width="6" height="6" x="16" y="16" rx="1"/><rect width="6" height="6" x="2" y="16" rx="1"/><rect width="6" height="6" x="9" y="2" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+  <symbol id="i-arrow-up-down" viewBox="0 0 24 24"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></symbol>
+  <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-rss" viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+  <symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
+  <symbol id="i-smartphone" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+</svg>
+
+<!-- Fixed atmosphere: WebGL aurora beam, mountain, light streaks, grain, scanlines, vignette -->
+<canvas id="webgl-canvas" class="fx-canvas" aria-hidden="true"></canvas>
+<div class="fx-mountain" aria-hidden="true"><div class="fx-mountain-img"></div><div class="fx-mountain-shade"></div></div>
+<svg class="fx-streaks" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="streak-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8FD3FF" stop-opacity="0"/><stop offset="50%" stop-color="#4DA3FF" stop-opacity="1"/><stop offset="100%" stop-color="#2563FF" stop-opacity="0"/></linearGradient>
+    <linearGradient id="streak-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563FF" stop-opacity="0"/><stop offset="50%" stop-color="#8FD3FF" stop-opacity="1"/><stop offset="100%" stop-color="#4DA3FF" stop-opacity="0"/></linearGradient>
+  </defs>
+  <path d="M 15,-10 C 15,30 85,70 85,110" fill="none" stroke="url(#streak-a)" stroke-opacity="0.12" stroke-width="0.12"/>
+  <path d="M 15,-10 C 15,30 85,70 85,110" pathLength="100" fill="none" stroke="#4DA3FF" stroke-opacity="0.10" stroke-width="0.9" stroke-linecap="round" stroke-dasharray="16 84"><animate attributeName="stroke-dashoffset" from="100" to="0" dur="22s" repeatCount="indefinite"/></path>
+  <path d="M 15,-10 C 15,30 85,70 85,110" pathLength="100" fill="none" stroke="#9AD7FF" stroke-opacity="0.85" stroke-width="0.16" stroke-linecap="round" stroke-dasharray="16 84"><animate attributeName="stroke-dashoffset" from="100" to="0" dur="22s" repeatCount="indefinite"/></path>
+  <path d="M 85,-10 C 85,40 20,60 20,110" fill="none" stroke="url(#streak-b)" stroke-opacity="0.12" stroke-width="0.12"/>
+  <path d="M 85,-10 C 85,40 20,60 20,110" pathLength="100" fill="none" stroke="#3B7BFF" stroke-opacity="0.10" stroke-width="0.9" stroke-linecap="round" stroke-dasharray="22 78"><animate attributeName="stroke-dashoffset" from="100" to="0" dur="30s" repeatCount="indefinite"/></path>
+  <path d="M 85,-10 C 85,40 20,60 20,110" pathLength="100" fill="none" stroke="#6FB4FF" stroke-opacity="0.8" stroke-width="0.16" stroke-linecap="round" stroke-dasharray="22 78"><animate attributeName="stroke-dashoffset" from="100" to="0" dur="30s" repeatCount="indefinite"/></path>
+  <path d="M 50,-10 C 65,30 35,60 50,110" fill="none" stroke="url(#streak-a)" stroke-opacity="0.10" stroke-width="0.1"/>
+  <path d="M 50,-10 C 65,30 35,60 50,110" pathLength="100" fill="none" stroke="#5AA2FF" stroke-opacity="0.09" stroke-width="0.7" stroke-linecap="round" stroke-dasharray="10 90"><animate attributeName="stroke-dashoffset" from="100" to="0" dur="17s" repeatCount="indefinite"/></path>
+  <path d="M 50,-10 C 65,30 35,60 50,110" pathLength="100" fill="none" stroke="#BFE3FF" stroke-opacity="0.8" stroke-width="0.13" stroke-linecap="round" stroke-dasharray="10 90"><animate attributeName="stroke-dashoffset" from="100" to="0" dur="17s" repeatCount="indefinite"/></path>
+</svg>
+<div class="fx fx-noise" aria-hidden="true"></div>
+<div class="fx fx-scan" aria-hidden="true"></div>
+<div class="fx fx-vignette" aria-hidden="true"></div>
+<div class="fx fx-hud fx-hud-bottom" aria-hidden="true"></div>
+<div class="fx fx-hud fx-hud-bottom-deep" aria-hidden="true"></div>
+<div class="fx fx-hud fx-hud-left" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="/" class="logo" data-nav="home" aria-label="TraceFix home">
+      <span class="logo-mark" aria-hidden="true"><i></i></span>
+      <span class="logo-word">TraceFix</span>
+    </a>
+    <nav id="nav-links" class="nav-links" aria-label="Primary">
+      <button type="button" data-nav="home">Overview</button>
+      <button type="button" data-nav="story">How it works</button>
+      <button type="button" data-role="customer">Customer</button>
+      <button type="button" data-role="staff">Investigator</button>
+      <button type="button" data-role="judge">Judge</button>
+      <a class="nav-mfs" href="/mfs">MFS</a>
+      <a href="/customer">Payments</a>
+      <a href="/operations">Operations</a>
+    </nav>
+    <div class="nav-actions">
+      <span class="nav-session" id="nav-session" aria-live="polite">Session_Idle</span>
+      <button type="button" class="btn btn-sm nav-cta" data-nav="story"><span class="btn-label">Walkthrough<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></span></button>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="disclosure"><span class="dot" aria-hidden="true"></span><strong>Synthetic demo</strong><span>Fictional BDT records · read-only mock sources · human review</span></div>
+<div id="feedback" role="status" aria-live="polite"></div>
+
+<main id="main" tabindex="-1"></main>
+
+<footer class="footer">
+  <div class="footer-watermark" aria-hidden="true">tracefix</div>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <h3>One purchase. Every source in view.</h3>
+        <p>Investigate stuck transfers and paid-twice complaints. Source records stay separate from customer statements; every sandbox correction requires an authorized operator.</p>
       </div>
-    </header>
-    <main id="main">
-      <section class="intro">
-        <div>
-          <p class="eyebrow">ONE PURCHASE. EVERY SIDE OF THE STORY.</p>
-          <h1>Experience it. Report it. Resolve it.</h1>
-          <p>
-            Make a payment in the app. Follow the complaint from your phone to
-            an investigator’s desk.
-          </p>
-        </div>
-        <div class="view-switch" role="group" aria-label="Workspace view">
-          <button data-view="both" class="active">Live simulation</button
-          ><button data-view="phone">Customer app</button
-          ><button data-view="desk">Investigator</button>
-        </div>
-      </section>
-      <nav id="journey" class="journey" aria-label="Simulation progress"></nav>
-      <div
-        id="feedback"
-        class="toast"
-        role="status"
-        aria-live="polite"
-        hidden
-      ></div>
-      <div id="workspace" class="workspace view-both">
-        <section class="customer-surface" aria-labelledby="customer-title">
-          <div class="surface-heading">
-            <div>
-              <span class="surface-dot"></span>
-              <h2 id="customer-title">Customer app</h2>
-            </div>
-            <span id="customer-presence" class="surface-caption"
-              >Your side of the counter</span
-            >
-          </div>
-          <div class="phone">
-            <div class="phone-status">
-              <span id="phone-clock">9:41</span
-              ><span class="dynamic-island"></span
-              ><span aria-label="Full signal and battery">▥ ▰</span>
-            </div>
-            <div id="phone-header" class="phone-header"></div>
-            <div id="phone-content" class="phone-content" tabindex="-1">
-              <div class="loading-screen">Connecting your app…</div>
-            </div>
-            <nav
-              id="phone-nav"
-              class="phone-nav"
-              aria-label="Mobile app navigation"
-            ></nav>
-            <span class="home-indicator"></span>
-          </div>
-          <p class="phone-caption">
-            <span class="live-dot"></span>Real interactions. Fictional money.
-          </p>
-        </section>
-        <section
-          class="investigator-surface"
-          aria-labelledby="investigator-title"
-        >
-          <div class="surface-heading">
-            <div>
-              <span class="surface-dot violet"></span>
-              <h2 id="investigator-title">Investigator desk</h2>
-            </div>
-            <span id="sync-state" class="surface-caption"
-              >Updates automatically</span
-            >
-          </div>
-          <div id="desk" class="desk">
-            <div class="loading-screen">Opening the workspace…</div>
-          </div>
-        </section>
-      </div>
-      <details class="lab-controls">
-        <summary>
-          <span>⌘</span> Simulation controls
-          <span class="control-note"
-            >Fictional source behavior &amp; saved journeys</span
-          >
-        </summary>
-        <div id="lab-body"></div>
-      </details>
-      <footer class="site-footer">
-        <span
-          >tracefix
-          <span class="muted">/ Built around the evidence.</span></span
-        ><span
-          >Mock payment records · Local persistence · No real transfers</span
-        >
-      </footer>
-    </main>
-    <dialog id="action-dialog" aria-labelledby="dialog-title">
-      <form id="dialog-form">
-        <div class="dialog-heading">
-          <div>
-            <p class="eyebrow" id="dialog-kicker">CASE ACTION</p>
-            <h2 id="dialog-title"></h2>
-          </div>
-          <button
-            type="button"
-            class="icon-button"
-            data-action="close-dialog"
-            aria-label="Close dialog"
-          >
-            ×
-          </button>
-        </div>
-        <div id="dialog-body"></div>
-        <p id="dialog-error" class="form-error" role="alert"></p>
-        <div class="dialog-footer">
-          <button
-            type="button"
-            class="button secondary"
-            data-action="close-dialog"
-          >
-            Cancel</button
-          ><button id="dialog-submit" type="submit" class="button primary">
-            Save
-          </button>
-        </div>
-      </form>
-    </dialog>
-  </body>
+      <ul class="footer-links" aria-label="Workspace">
+        <li><button type="button" data-nav="home">Overview</button></li>
+        <li><button type="button" data-nav="story">How it works</button></li>
+        <li><button type="button" data-role="customer">Customer portal</button></li>
+      </ul>
+      <ul class="footer-links" aria-label="Roles">
+        <li><button type="button" data-role="staff">Investigator desk</button></li>
+        <li><button type="button" data-role="judge">Judge console</button></li>
+      </ul>
+    </div>
+    <div class="footer-bottom">
+      <p>Demo environment // Track 06</p>
+      <p>Approved sandbox corrections</p>
+    </div>
+  </div>
+</footer>
+
+<dialog id="action-dialog" aria-labelledby="dialog-title">
+  <form id="action-form">
+    <div class="dialog-top"><h2 id="dialog-title"></h2><button type="button" id="close-dialog" class="icon-button" aria-label="Close dialog"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <div id="dialog-body"></div>
+    <p id="dialog-error" class="error" role="alert"></p>
+    <div class="dialog-actions">
+      <button type="button" id="cancel-dialog" class="btn ghost"><span class="btn-label">Cancel</span></button>
+      <button type="submit" id="save-dialog" class="btn"><span class="btn-label">Save</span></button>
+    </div>
+  </form>
+</dialog>
+</body>
 </html>

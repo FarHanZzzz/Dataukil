@@ -26,9 +26,9 @@ def require_staff(request):
 
 
 def require_transaction(db,s,identifier):
+    if s['role'] not in ('customer','staff'):raise HTTPException(403,'Use a customer or operator session.')
     t=payments.load(db,identifier)
     if not t or (s['role']=='customer' and t['customer_id']!=s['actor']):raise HTTPException(404,'Transaction not found.')
-    if s['role']=='judge':raise HTTPException(403,'Use a customer or operator session.')
     return t
 
 
@@ -78,7 +78,7 @@ async def create_transaction(request:Request):
 @router.get('/api/transactions')
 def transaction_list(request:Request):
     s=helpers().session(request)
-    if s['role']=='judge':raise HTTPException(403,'Use a customer or operator session.')
+    if s['role'] not in ('customer','staff'):raise HTTPException(403,'Use a customer or operator session.')
     with store.connect() as db:
         rows=db.execute('SELECT body FROM transactions ORDER BY rowid DESC').fetchall()
         return [payments.project(db,t,staff=s['role']=='staff') for t in (json.loads(r['body']) for r in rows) if s['role']=='staff' or t['customer_id']==s['actor']]
@@ -143,7 +143,8 @@ async def reset_scenario(identifier:str,request:Request):
 def overview(request:Request):
     require_staff(request)
     with store.connect() as db:
-        cs=[json.loads(r['body']) for r in db.execute('SELECT body FROM cases')]
+        from .transfer import FAMILY as transfer_family
+        cs=[c for r in db.execute('SELECT body FROM cases') if (c:=json.loads(r['body'])).get('family')!=transfer_family]
         counts=dict(open=sum(c['status'] not in ('RESOLVED','OUTCOME_RECORDED') for c in cs),
                     investigating=db.execute("SELECT COUNT(*) FROM investigations WHERE status='RUNNING'").fetchone()[0],
                     awaiting_evidence=sum(c['status']=='WAITING_EVIDENCE' for c in cs),
@@ -214,7 +215,7 @@ def investigation_read(identifier:str,request:Request):
         run['events']=investigation.run_events(db,identifier)
         run['phases']=[dict(id=id,title=title,purpose=purpose) for id,title,purpose in investigation.PHASES]
         c=store.get_case(db,run['case_id'])
-        run['input_fresh']=c.get('current_run_id')==identifier and c['evidence_version']==run.get('evidence_version') and c.get('source_version',0)==run.get('source_version',0)
+        run['input_fresh']=c.get('current_run_id')==identifier and c['evidence_version']==run.get('evidence_version') and c.get('source_version',0)==run.get('source_version',0) and c['owner']==run.get('owner_at_start',run['snapshot']['owner'])
         run['eligibility']=investigation.current_eligibility(db,c,run)
         run['approvals']=[json.loads(r['body'])|dict(status=r['status']) for r in db.execute('SELECT body,status FROM approvals WHERE case_id=? ORDER BY rowid',(c['id'],))]
         run['repair_attempts']=[json.loads(r['body']) for r in db.execute('SELECT body FROM repair_attempts WHERE case_id=? ORDER BY rowid',(c['id'],))]

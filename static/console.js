@@ -23,7 +23,7 @@ const S = {
   analysisMode:params.get('mode') || 'live', presentationPaused:false, presentationCursor:0
 };
 const BN = {
- 'Customer dashboard':'গ্রাহক ড্যাশবোর্ড','Operations center':'অপারেশনস কেন্দ্র','QR + cash demo lab':'QR + নগদ ডেমো',
+ 'Customer dashboard':'গ্রাহক ড্যাশবোর্ড','Operations center':'অপারেশনস কেন্দ্র','QR + cash demo lab':'QR + নগদ ডেমো','Add-money walkthrough':'টাকা যোগ করার ডেমো',
  'Synthetic environment':'সিমুলেটেড পরিবেশ','Refresh':'রিফ্রেশ','Your payments, clearly explained.':'আপনার লেনদেনের প্রতিটি ধাপ দেখুন।',
  'Send a bank → upay transfer':'ব্যাংক → উপায় ট্রান্সফার করুন','New synthetic transfer':'নতুন সিমুলেটেড ট্রান্সফার',
  'Demo customer name':'ডেমো গ্রাহকের নাম','Amount (BDT)':'পরিমাণ (টাকা)','Demo scenario':'ডেমো পরিস্থিতি',
@@ -154,7 +154,8 @@ function updateShell() {
   $('#language-wrap').hidden=S.page!=='customer';$('#identity-wrap').hidden=S.page==='customer';
   $('#language').value=S.lang;$('#identity').value=S.role;$('#avatar').textContent=S.page==='customer'?'C':S.role==='staff'?'O1':'O2';
   $('#breadcrumb').textContent=tr(S.page==='customer'?'Customer dashboard':S.page==='operations'?'Operations center':S.page==='studio'?'Operations / AI Investigation Studio':'Operations / Case workspace');
-  $$('.sidebar nav a').forEach(a=>{a.classList.toggle('active',a.dataset.nav===(S.page==='customer'?'customer':'operations'));a.lastChild.textContent=tr(a.dataset.nav==='customer'?'Customer dashboard':a.dataset.nav==='operations'?'Operations center':'QR + cash demo lab');});
+  const navLabels={customer:'Customer dashboard',operations:'Operations center',demo:'QR + cash demo lab',mfs:'Add-money walkthrough'};
+  $$('.sidebar nav a').forEach(a=>{a.classList.toggle('active',a.dataset.nav===(S.page==='customer'?'customer':'operations'));if(navLabels[a.dataset.nav])a.lastChild.textContent=tr(navLabels[a.dataset.nav]);});
   $('#refresh-page').textContent='↻ '+tr('Refresh');$('.top-status').lastChild.textContent=' '+tr('Synthetic environment');
 }
 async function refresh(render=true) {
@@ -198,7 +199,14 @@ function pipeline(t,staff=false) {
   const edges=nodes.slice(1).map((n,i)=>'<path class="edge '+(n.id===activeStage?'active':nodes[i].status==='completed'&&n.status==='completed'?'completed':'')+'" d="M '+(widths[i]+138)+' 54 L '+widths[i+1]+' 54"/>').join('');
   const retry=staff && t.events?.some(e=>e.capability==='retry_observed');
   const html=nodes.map((n,i)=>'<g class="node '+n.status+(n.id===activeStage?' investigating':'')+'" transform="translate('+widths[i]+',18)" tabindex="0" role="button" aria-label="Inspect '+esc(n.title)+'" data-action="pipeline" data-stage="'+n.id+'"><rect width="138" height="71" rx="9"/><text x="12" y="26">'+esc(tr(n.title))+'</text><text class="subtext" x="12" y="48">'+esc(tr(label(n.status)))+'</text></g>').join('');
-  return '<svg class="payment-svg" viewBox="0 0 1106 '+(retry?156:110)+'" role="group" aria-label="Payment processing pipeline">'+edges+html+(retry?'<path class="edge active" d="M 561 92 V 130 H 395 V 92"/><text class="subtext" x="427" y="148">Observed retry · same logical transfer</text>':'')+'</svg><div class="graph-legend">'+['completed','attention','failure','unknown'].map(s=>'<span><i class="legend-dot '+({completed:'green',attention:'amber',failure:'red',unknown:'gray'}[s])+'"></i>'+esc(tr(label(s)))+'</span>').join('')+'</div>';
+  const mobilePositions=nodes.map((_,i)=>({x:((Math.floor(i/2)%2)?1-i%2:i%2)*166+4,y:Math.floor(i/2)*90+10}));
+  const mobileEdges=nodes.slice(1).map((n,i)=>{
+    const a=mobilePositions[i],b=mobilePositions[i+1],horizontal=a.y===b.y;
+    const path=horizontal?'M '+(a.x+(b.x>a.x?154:0))+' '+(a.y+35)+' H '+(b.x+(b.x>a.x?0:154)):'M '+(a.x+77)+' '+(a.y+70)+' V '+b.y;
+    return '<path class="edge '+(nodes[i].status==='completed'&&n.status==='completed'?'completed':'')+'" d="'+path+'"/>';
+  }).join('');
+  const mobileNodes=nodes.map((n,i)=>'<g class="node '+n.status+'" transform="translate('+mobilePositions[i].x+','+mobilePositions[i].y+')" tabindex="0" role="button" aria-label="Inspect '+esc(n.title)+'" data-action="pipeline" data-stage="'+n.id+'"><rect width="154" height="70" rx="9"/><text x="10" y="26">'+esc(tr(n.title))+'</text><text class="subtext" x="10" y="49">'+esc(tr(label(n.status)))+'</text></g>').join('');
+  return '<svg class="payment-svg payment-desktop" viewBox="0 0 1106 '+(retry?156:110)+'" role="group" aria-label="Payment processing pipeline">'+edges+html+(retry?'<path class="edge active" d="M 561 92 V 130 H 395 V 92"/><text class="subtext" x="427" y="148">Observed retry · same logical transfer</text>':'')+'</svg><svg class="payment-svg payment-mobile" viewBox="0 0 324 '+(Math.ceil(nodes.length/2)*90)+'" role="group" aria-label="Payment processing pipeline">'+mobileEdges+mobileNodes+'</svg><div class="graph-legend">'+['completed','attention','failure','unknown'].map(s=>'<span><i class="legend-dot '+({completed:'green',attention:'amber',failure:'red',unknown:'gray'}[s])+'"></i>'+esc(tr(label(s)))+'</span>').join('')+'</div>';
 }
 function transferForm() {
   const scenario=S.drafts.scenario || params.get('scenario') || 'duplicate_payment';

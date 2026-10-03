@@ -121,6 +121,8 @@ def incoming_purchases(request:Request):
 def read_simulation(identifier:str,request:Request):
     from .app import session
     s=session(request)
+    if s['role'] not in ('customer','staff','judge'):
+        raise HTTPException(403,'Use a customer, investigator or judge session.')
     with store.connect() as db:sim=get_sim(db,identifier)
     if s['role']=='customer':owned(s,sim)
     elif not sim:raise HTTPException(404,'Purchase not found.')

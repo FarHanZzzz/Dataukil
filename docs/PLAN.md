@@ -1,5 +1,7 @@
 # Ordered implementation and exit gates
 
+The subsequent [33-section master integration](MASTER_COVERAGE.md) and [current validation](MAIN_SYNC_VALIDATION.md) supersede the original scope and exit counts below. Both newer `main` workspaces and the retained local workflows are integrated, with dynamic persisted events and separate backend financial authority.
+
 The subsequent mobile interaction revamp has its own [plan and contract](MOBILE_SIMULATION.md), [AI context](SIMULATION_AI.md), and [actual validation](MOBILE_VALIDATION.md). The historical six gates below describe the initial prototype; the new simulator adds persisted purchase stages and shared case work.
 
 ## 1. Contract and fixture foundation

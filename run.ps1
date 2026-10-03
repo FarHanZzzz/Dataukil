@@ -4,6 +4,7 @@ param(
     [switch]$Restart,
     [switch]$Reload,
     [switch]$Check,
+    [switch]$NoBrowser,
     [Parameter(ValueFromRemainingArguments=$true)][string[]]$LaunchArguments
 )
 if ($LaunchArguments.Count -gt 0) {
@@ -14,5 +15,5 @@ if ($LaunchArguments.Count -gt 0) {
         throw 'Unknown launcher arguments. Use: .\run.ps1 -Restart (no space between - and Restart). For a different port, use: .\run.ps1 -Port 8001'
     }
 }
-& (Join-Path $PSScriptRoot 'scripts\start.ps1') -Port $Port -Restart:$Restart -Reload:$Reload -Check:$Check
+& (Join-Path $PSScriptRoot 'scripts\start.ps1') -Port $Port -Restart:$Restart -Reload:$Reload -Check:$Check -NoBrowser:$NoBrowser
 exit $LASTEXITCODE

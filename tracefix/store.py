@@ -49,6 +49,8 @@ def initialize():
         CREATE TABLE IF NOT EXISTS ledger(id TEXT PRIMARY KEY, transaction_id TEXT NOT NULL REFERENCES transactions(id), identity TEXT UNIQUE NOT NULL, body TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS schema_versions(version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);
         ''')
+        from .transfer import schema as transfer_schema  # additive tx_* tables for the add-money investigation
+        transfer_schema.ensure(db)
         if not db.execute('SELECT 1 FROM cases LIMIT 1').fetchone():
             for c in seed_cases():
                 db.execute('INSERT INTO cases VALUES (?,?)',(c['id'],json.dumps(c,ensure_ascii=False)))

@@ -3,12 +3,20 @@ param(
     [ValidateRange(1024,65535)][int]$Port = 8000,
     [switch]$Restart,
     [switch]$Reload,
-    [switch]$Check
+    [switch]$Check,
+    [switch]$NoBrowser
 )
 $ErrorActionPreference = 'Stop'
 $tracefixRoot = Split-Path -Parent $PSScriptRoot
 $tracefixPython = Join-Path $tracefixRoot '.venv\Scripts\python.exe'
 Set-Location -LiteralPath $tracefixRoot
+$tracefixHome = "http://127.0.0.1:$Port/"
+function Open-TraceFixHome {
+    if (-not $NoBrowser) {
+        $tracefixOpener = Join-Path $tracefixRoot 'scripts\open_home.py'
+        Start-Process -FilePath $tracefixPython -ArgumentList @("`"$tracefixOpener`"", $tracefixHome) -WindowStyle Hidden
+    }
+}
 if (-not (Test-Path -LiteralPath $tracefixPython -PathType Leaf)) {
     throw "The local Python environment is missing. In $tracefixRoot, run uv venv .venv, then uv pip install --python .venv\Scripts\python.exe -r requirements.lock.txt"
 }
@@ -36,6 +44,7 @@ if ($tracefixListeners.Count -gt 0) {
             Write-Host "TraceFix is already listening on port $Port (PID $tracefixOwnerId)."
             Write-Host "Open http://127.0.0.1:$Port/customer or http://127.0.0.1:$Port/operations"
             Write-Host 'To restart it with current code in this terminal: .\run.ps1 -Restart'
+            Open-TraceFixHome
             exit 0
         }
         Write-Host "Stopping this workspace's TraceFix server (PID $tracefixOwnerId); saved cases and uploads remain on disk."
@@ -52,9 +61,12 @@ if ($Reload) {
     $tracefixArguments += '--reload'
     Write-Host 'Development reload enabled. Reload interrupts active investigations; restart their analysis explicitly.'
 }
+Write-Host "Homepage:   $tracefixHome"
 Write-Host "Customer:   http://127.0.0.1:$Port/customer"
 Write-Host "Operations: http://127.0.0.1:$Port/operations"
-Write-Host "QR/cash:    http://127.0.0.1:$Port/demo"
+Write-Host "QR/cash:    http://127.0.0.1:$Port/qr-demo"
+Write-Host "Add-money:  http://127.0.0.1:$Port/mfs"
 Write-Host 'Press Ctrl+C to stop. Restarting preserves the saved database and uploaded evidence.'
+Open-TraceFixHome
 & $tracefixPython @tracefixArguments
 exit $LASTEXITCODE

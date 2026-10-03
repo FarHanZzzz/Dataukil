@@ -1,5 +1,7 @@
 # Implementation handoff
 
+Current extension (3 October 2026): the [master prompt](MASTER_BUILD_PROMPT.md), [coverage matrix](MASTER_COVERAGE.md) and [main integration validation](MAIN_SYNC_VALIDATION.md) supersede the narrower historical scope below. The homepage opens automatically through `run.ps1`. Bank-to-upay Studio cases, QR/cash cases and the newer add-money workspace share persistent storage while retaining separate financial authority and routes. Sandbox corrections require backend eligibility and operator approval; the Studio also requires a separate execute action.
+
 Status: **implemented and verified as a local synthetic prototype**, as explicitly selected by the user. The final hybrid specification is authoritative. No public deployment or real provider integration was requested.
 
 Running app: http://127.0.0.1:8000. Exact commands: RUNBOOK.md. Persistent database and original uploads are under ignored runtime/. Start does not reset saved cases. The trained head is models/verifier.joblib (57,669 bytes), with metadata, source revision and labels. Downloaded encoder is ignored for size, reproducible with ml/download.py; the head and small artifacts are retained in the project.
@@ -44,4 +46,3 @@ The customer story is now an actual persisted form and payment flow. `tracefix/s
 Customer replies become unverified evidence and invalidate old analysis/decisions. Model inference runs outside the SQLite write transaction; stale input snapshots cannot be committed. A final repayment outcome needs current analysis, a completed source citation and reviewed outstanding requests. Existing records survive restart; no reset-on-refresh or destructive database migration was introduced.
 
 Read [MOBILE_SIMULATION.md](MOBILE_SIMULATION.md), [SIMULATION_AI.md](SIMULATION_AI.md), [MOBILE_VALIDATION.md](MOBILE_VALIDATION.md) and the updated [RUNBOOK.md](RUNBOOK.md). Reproduce actual inference with `scripts/simulation_walkthrough.py`; its output is `artifacts/mobile_walkthrough.json`. Historical handoff details below remain background for the original four seeded examples.
-

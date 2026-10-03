@@ -1,17 +1,19 @@
 # TraceFix — Transaction Investigation & Operations Intelligence
 
-The new [master build prompt](docs/MASTER_BUILD_PROMPT.md) supersedes the earlier paid-twice-only scope. This remains a local **synthetic prototype**: payment and correction records are fictional. The existing paid-twice workspace is preserved while the master integration is implemented.
+The [master build prompt](docs/MASTER_BUILD_PROMPT.md) is the authoritative scope. TraceFix is a local **synthetic prototype**: payment and correction records are fictional. Persistent bank-to-upay transfers, the AI Investigation Studio and approved sandbox repairs now run alongside the retained QR/cash workflow and the add-money walkthrough pulled from `main`.
 
 Implementation progress (3 October 2026, Asia/Dhaka):
+
+Merged verification: **121 tests passed**, followed by **27 passing add-money/integration checks** after the handoff-label fix. Actual trained inference and local Qwen reproduced both flagship endings; see the [validation record](docs/MAIN_SYNC_VALIDATION.md).
 
 | Phase | Status | Result |
 |---|---|---|
 | 1 — Correctness and identity | Implemented; 61 regression checks passed | Stable incident mapping, private internal follow-up, full repayment closure gate, closing SQLite connections, additive tables |
-| 2 — Synthetic transfers and customer dashboard | Implemented; browser validation in progress | Eight persistent bank-to-upay fixtures, saved processing events, owned complaints, balance conservation, English/বাংলা switching |
-| 3 — Operations and reconstruction | Implemented; browser validation in progress | Server-derived queue/cards, expandable payment sources, unknown states retained |
+| 2 — Synthetic transfers and customer dashboard | Implemented; scenario/API checks passed | Eight persistent bank-to-upay fixtures, saved processing events, owned complaints, balance conservation, English/বাংলা switching |
+| 3 — Operations and reconstruction | Implemented; queue/source checks passed | Server-derived queue/cards, expandable payment sources, unknown states retained |
 | 4 — Durable investigation and local AI | Implemented; backend contracts passed | Saved runs/events, trained advisory verifier, local Qwen structured output, blocked proposals and explicit fallback |
-| 5–6 — Studio and controlled outcomes | Implemented; browser validation in progress | Evidence graph, hypotheses, replay, isolated reset, three approved atomic sandbox actions and owned handoff |
-| 7 — Coverage, reports and final verification | In progress | Markdown/JSON exports implemented; final validation and coverage documentation being completed |
+| 5–6 — Studio and controlled outcomes | Implemented; both saved endings verified | Evidence graph, hypotheses, replay, isolated reset, three approved atomic sandbox actions and owned handoff |
+| 7 — Coverage, reports and final verification | Implementation documented; validation recorded | Markdown/JSON exports, [33-section coverage matrix](docs/MASTER_COVERAGE.md) and [integration validation](docs/MAIN_SYNC_VALIDATION.md) |
 
 The website now runs a **mobile wallet simulation** beside a live investigator desk. Enter a purchase and your own amounts, attempt QR, record cash, check the eventual QR outcome, and file a linked complaint. Customer/investigator messages, evidence requests, source checks, assessments and cited outcomes are saved to the same case. Refresh restores progress. Simulation controls provide different fictional source behaviors and a clearly marked repayment stage.
 
@@ -24,11 +26,23 @@ cd D:\dataukil
 .\run.ps1 -Restart
 ```
 
-Open [Customer](http://127.0.0.1:8000/customer), [Operations](http://127.0.0.1:8000/operations), or the retained [QR/cash demo](http://127.0.0.1:8000/demo).
+The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the server responds. From there, open Payments, Operations or MFS.
+
+| Page | Purpose |
+|---|---|
+| `/` | Redesigned homepage; links to all workspaces |
+| `/customer` | Eight bank-to-upay scenarios, complaints, evidence and verified English/বাংলা updates |
+| `/operations` | Persistent queue, overview and case workspace |
+| `/operations/cases/{case_id}/studio` | Dedicated AI investigation, hypotheses, citations, replay and separate approval/execution |
+| `/qr-demo` | Retained interactive QR/cash purchase and complaint simulation |
+| `/mfs` (also `/demo`) | Add-money walkthrough with a saved processing clock |
+| `/customer/payment` and `/admin/queue` | Add-money customer and rules-based investigator pages |
+
+The two payment workspaces have distinct case families and ledgers in the shared SQLite database. Their routes enforce those boundaries. The add-money walkthrough uses its own rules-based investigation; the Studio uses the trained advisory verifier and optional local Qwen.
 
 The workspace already has its environment and trained artifact. The launcher checks application imports and, with `-Restart`, replaces only this workspace's existing TraceFix server. It leaves unrelated applications running. Saved cases and uploads stay in `runtime/`. Press **Ctrl+C** in your terminal to stop. Write `-Restart` as one argument; the launcher also accepts the accidental spelling `- Restart`. Both spellings were verified with `-Check`.
 
-Use `.\run.ps1 -Check` for an installation/port check without starting or stopping a server. For development, use `.\run.ps1 -Restart -Reload`; a reload interrupts active investigations, which require an explicit analysis restart. If another application owns port 8000, choose a free port with `.\run.ps1 -Port 8001`.
+Use `.\run.ps1 -Check` for an installation/port check without starting, stopping or opening a browser. Use `-NoBrowser` to start without opening the homepage. For development, use `.\run.ps1 -Restart -Reload`; a reload interrupts active investigations, which require an explicit analysis restart. If another application owns port 8000, choose a free port with `.\run.ps1 -Port 8001`.
 
 Direct launch, after stopping any older TraceFix server:
 
@@ -57,4 +71,16 @@ Fresh checkout ML preparation:
 
 The encoder is frozen; a logistic regression classifier head is actually trained. First-run grouped synthetic macro F1: **0.827**; separately authored challenge macro F1: **0.471**. All labels are agent-authored and lack independent human review. Rules are the primary advisory path, with actual trained labels separately visible. Revised rules reuse the challenge test; the original results are preserved. These scores are not real-world accuracy claims.
 
+The stalled add-money investigation starts at **`/mfs`** (also linked in the site navigation) and opens the customer and operations pages (`/customer`, `/admin`). It is documented in [docs/ADD_MONEY_INVESTIGATION.md](docs/ADD_MONEY_INVESTIGATION.md).
+
 Start with [the context index](docs/CONTEXT.md), [runbook](docs/RUNBOOK.md), [implementation handoff](docs/HANDOFF.md), and [ML/data context](docs/ML.md). The supplied [final specification](TraceFix_Final_Track6_Hybrid_and_Master_Prompt.md) is preserved. Archive transaction data was not used for evidence-verifier training.
+
+For live Studio proposals, start Ollama with `qwen3:4b-instruct` installed at `http://127.0.0.1:11434`. Valid provider use is labelled **LIVE AI INVESTIGATION**. Unavailable, timed-out or invalid output produces **DEMO INVESTIGATION — SIMULATED AI TRACE** with a saved fallback event. Private reasoning is not displayed. Model output cannot authorize a correction; the backend rechecks evidence, ownership, posting references, amount and freshness at approval and execution.
+
+Reproduce both flagship endings with actual trained inference and optional local Qwen:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\master_walkthrough.py --live
+```
+
+The walkthrough uses a new isolated database, uploads a real synthetic PNG receipt, verifies source-grounded verdicts, balanced corrections, handoff, replay purity and retained history, and exports its results under `artifacts/`. See [coverage and architecture](docs/MASTER_COVERAGE.md), [current validation](docs/MAIN_SYNC_VALIDATION.md) and the [add-money workflow](docs/ADD_MONEY_INVESTIGATION.md).

@@ -6,10 +6,10 @@
 
 ```json
 {
-  "id": "case_b88ae850e765",
-  "reference": "TF-B53D0D2BD180",
-  "incident_id": "incident_c5ed066278bf",
-  "transaction_id": "txn_8f04ee862e64",
+  "id": "case_017e048acb76",
+  "reference": "TF-5A08B4BCB32F",
+  "incident_id": "incident_47cc49dd21ce",
+  "transaction_id": "txn_4a027038b12d",
   "customer_name": "Nadia — fictional QA",
   "reported_amount_minor": 100000,
   "issue_type": "PAID_TWICE",
@@ -27,7 +27,7 @@ Please verify this ৳1,000 transfer and all exact postings.
 
 ```json
 {
-  "transaction_reference": "txn_8f04ee862e64",
+  "transaction_reference": "txn_4a027038b12d",
   "merchant_information": "Fictional recipient wallet",
   "approximate_time": "03 October 2026, Bangladesh time"
 }
@@ -37,9 +37,9 @@ Please verify this ৳1,000 transfer and all exact postings.
 
 ```json
 {
-  "id": "txn_8f04ee862e64",
-  "incident_id": "incident_c5ed066278bf",
-  "case_id": "case_b88ae850e765",
+  "id": "txn_4a027038b12d",
+  "incident_id": "incident_47cc49dd21ce",
+  "case_id": "case_017e048acb76",
   "amount_minor": 100000,
   "currency": "BDT",
   "scale": 2,
@@ -47,8 +47,8 @@ Please verify this ৳1,000 transfer and all exact postings.
   "destination_wallet": "DEMO-UPAY-1-0187",
   "state": "UNCERTAIN",
   "current_stage": "wallet",
-  "initiated_at": "2026-10-03T02:05:18.174548+00:00",
-  "updated_at": "2026-10-03T02:05:18.235013+00:00",
+  "initiated_at": "2026-10-03T02:32:54.735935+00:00",
+  "updated_at": "2026-10-03T02:32:54.844461+00:00",
   "version": 8,
   "step": 6,
   "customer_name": "Nadia — fictional QA",
@@ -60,7 +60,7 @@ Please verify this ৳1,000 transfer and all exact postings.
       "status": "completed",
       "purpose": "Identify the intended amount, source account and destination wallet.",
       "event_ids": [
-        "event_03f623babe2d"
+        "event_a0d71e5710b0"
       ],
       "summary": "Simulated bank-to-upay transfer BDT 1000.00 initiated."
     },
@@ -70,7 +70,7 @@ Please verify this ৳1,000 transfer and all exact postings.
       "status": "completed",
       "purpose": "Accept the request and assign one correlation identity.",
       "event_ids": [
-        "event_46fd0cd213f4"
+        "event_2d100b3645ea"
       ],
       "summary": "Gateway request accepted and exact transaction reference matched."
     },
@@ -80,8 +80,8 @@ Please verify this ৳1,000 transfer and all exact postings.
       "status": "completed",
       "purpose": "Record the bank debit under the exact transfer reference.",
       "event_ids": [
-        "event_dc19937b4b01",
-        "event_c8b5dedc5e2c"
+        "event_b3e4b112f79d",
+        "event_8745610614a5"
       ],
       "summary": "The bank posting inventory for this exact reference is complete as of this recorded check."
     },
@@ -91,7 +91,7 @@ Please verify this ৳1,000 transfer and all exact postings.
       "status": "completed",
       "purpose": "Track queued processing and retry attempts without assuming another payment.",
       "event_ids": [
-        "event_fe25adef558d"
+        "event_9839d4ef2a56"
       ],
       "summary": "Retry request recorded under the same transaction."
     },
@@ -101,7 +101,7 @@ Please verify this ৳1,000 transfer and all exact postings.
       "status": "unknown",
       "purpose": "Check whether the partner returned a verified outcome.",
       "event_ids": [
-        "event_2d3aaa929ef7"
+        "event_d2b7e26b157b"
       ],
       "summary": "Final partner response is not available. This does not establish a failed or duplicate settlement."
     },
@@ -111,7 +111,7 @@ Please verify this ৳1,000 transfer and all exact postings.
       "status": "unknown",
       "purpose": "Reconcile the bank posting with final settlement.",
       "event_ids": [
-        "event_0253386fecf9"
+        "event_040c7909df95"
       ],
       "summary": "Final settlement is not confirmed by the available records."
     },
@@ -121,7 +121,7 @@ Please verify this ৳1,000 transfer and all exact postings.
       "status": "unknown",
       "purpose": "Confirm the intended wallet credit or retain the unresolved outcome.",
       "event_ids": [
-        "event_9051c43150f2"
+        "event_8227ef1f20b2"
       ],
       "summary": "Wallet completion remains unknown; further verification is required."
     }
@@ -135,64 +135,64 @@ Please verify this ৳1,000 transfer and all exact postings.
   },
   "timeline": [
     {
-      "id": "event_03f623babe2d",
-      "timestamp": "2026-10-03T02:05:18.174548+00:00",
+      "id": "event_a0d71e5710b0",
+      "timestamp": "2026-10-03T02:32:54.735935+00:00",
       "stage": "customer",
       "status": "completed",
       "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
       "purpose": "Identify the intended amount, source account and destination wallet."
     },
     {
-      "id": "event_46fd0cd213f4",
-      "timestamp": "2026-10-03T02:05:20.174548+00:00",
+      "id": "event_2d100b3645ea",
+      "timestamp": "2026-10-03T02:32:56.735935+00:00",
       "stage": "gateway",
       "status": "completed",
       "text": "Gateway request accepted and exact transaction reference matched.",
       "purpose": "Accept the request and assign one correlation identity."
     },
     {
-      "id": "event_dc19937b4b01",
-      "timestamp": "2026-10-03T02:05:22.174548+00:00",
+      "id": "event_b3e4b112f79d",
+      "timestamp": "2026-10-03T02:32:58.735935+00:00",
       "stage": "bank",
       "status": "completed",
-      "text": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+      "text": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
       "purpose": "Record the bank debit under the exact transfer reference."
     },
     {
-      "id": "event_fe25adef558d",
-      "timestamp": "2026-10-03T02:05:24.174548+00:00",
+      "id": "event_9839d4ef2a56",
+      "timestamp": "2026-10-03T02:33:00.735935+00:00",
       "stage": "queue",
       "status": "completed",
       "text": "Retry request recorded under the same transaction.",
       "purpose": "Track queued processing and retry attempts without assuming another payment."
     },
     {
-      "id": "event_2d3aaa929ef7",
-      "timestamp": "2026-10-03T02:05:26.174548+00:00",
+      "id": "event_d2b7e26b157b",
+      "timestamp": "2026-10-03T02:33:02.735935+00:00",
       "stage": "response",
       "status": "unknown",
       "text": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
       "purpose": "Check whether the partner returned a verified outcome."
     },
     {
-      "id": "event_0253386fecf9",
-      "timestamp": "2026-10-03T02:05:28.174548+00:00",
+      "id": "event_040c7909df95",
+      "timestamp": "2026-10-03T02:33:04.735935+00:00",
       "stage": "settlement",
       "status": "unknown",
       "text": "Final settlement is not confirmed by the available records.",
       "purpose": "Reconcile the bank posting with final settlement."
     },
     {
-      "id": "event_9051c43150f2",
-      "timestamp": "2026-10-03T02:05:30.174548+00:00",
+      "id": "event_8227ef1f20b2",
+      "timestamp": "2026-10-03T02:33:06.735935+00:00",
       "stage": "wallet",
       "status": "unknown",
       "text": "Wallet completion remains unknown; further verification is required.",
       "purpose": "Confirm the intended wallet credit or retain the unresolved outcome."
     },
     {
-      "id": "event_c8b5dedc5e2c",
-      "timestamp": "2026-10-03T02:05:32.174548+00:00",
+      "id": "event_8745610614a5",
+      "timestamp": "2026-10-03T02:33:08.735935+00:00",
       "stage": "bank",
       "status": "completed",
       "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
@@ -201,24 +201,24 @@ Please verify this ৳1,000 transfer and all exact postings.
   ],
   "events": [
     {
-      "id": "event_03f623babe2d",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_a0d71e5710b0",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 1,
-      "timestamp": "2026-10-03T02:05:18.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.174695+00:00",
+      "timestamp": "2026-10-03T02:32:54.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.736083+00:00",
       "stage": "customer",
       "source": "customer",
       "status": "completed",
       "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
       "purpose": "Identify the intended amount, source account and destination wallet.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
@@ -228,17 +228,17 @@ Please verify this ৳1,000 transfer and all exact postings.
       "error": null,
       "synthetic": true,
       "evidence": {
-        "id": "ev_cddc6cebb84b",
+        "id": "ev_77dd9ff58f96",
         "kind": "mock_pipeline",
         "supplied_by": "mock_adapter",
         "category": "Confirmed System Record",
         "reliability": "Confirmed",
-        "received_at": "2026-10-03T02:05:18.174707+00:00",
-        "event_at": "2026-10-03T02:05:18.174548+00:00",
-        "as_of": "2026-10-03T02:05:18.174548+00:00",
+        "received_at": "2026-10-03T02:32:54.736101+00:00",
+        "event_at": "2026-10-03T02:32:54.735935+00:00",
+        "as_of": "2026-10-03T02:32:54.735935+00:00",
         "scope": "this fictional purchase only",
-        "reference": "txn_8f04ee862e64",
-        "purchase_id": "incident_c5ed066278bf",
+        "reference": "txn_4a027038b12d",
+        "purchase_id": "incident_47cc49dd21ce",
         "amount_minor": 100000,
         "capability": "transfer_intent",
         "verification": "documented synthetic fixture contract",
@@ -250,33 +250,33 @@ Please verify this ৳1,000 transfer and all exact postings.
             "version": 1,
             "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
             "actor": "fixture",
-            "at": "2026-10-03T02:05:18.174707+00:00",
+            "at": "2026-10-03T02:32:54.736101+00:00",
             "reason": "original"
           }
         ],
         "blob": null,
-        "transaction_id": "txn_8f04ee862e64",
-        "event_id": "event_03f623babe2d",
+        "transaction_id": "txn_4a027038b12d",
+        "event_id": "event_a0d71e5710b0",
         "source": "customer",
         "record": {
-          "id": "event_03f623babe2d",
-          "transaction_id": "txn_8f04ee862e64",
-          "incident_id": "incident_c5ed066278bf",
+          "id": "event_a0d71e5710b0",
+          "transaction_id": "txn_4a027038b12d",
+          "incident_id": "incident_47cc49dd21ce",
           "case_id": null,
           "sequence": 1,
-          "timestamp": "2026-10-03T02:05:18.174548+00:00",
-          "recorded_at": "2026-10-03T02:05:18.174695+00:00",
+          "timestamp": "2026-10-03T02:32:54.735935+00:00",
+          "recorded_at": "2026-10-03T02:32:54.736083+00:00",
           "stage": "customer",
           "source": "customer",
           "status": "completed",
           "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
           "purpose": "Identify the intended amount, source account and destination wallet.",
-          "attempt_id": "txn_8f04ee862e64:attempt:1",
-          "correlation_id": "corr_6e2dfda71a33",
+          "attempt_id": "txn_4a027038b12d:attempt:1",
+          "correlation_id": "corr_88523e3c82d9",
           "retry_count": 0,
           "timeout_ms": null,
           "request": {
-            "transaction_id": "txn_8f04ee862e64",
+            "transaction_id": "txn_4a027038b12d",
             "amount_minor": 100000,
             "destination": "DEMO-UPAY-1-0187"
           },
@@ -289,46 +289,46 @@ Please verify this ৳1,000 transfer and all exact postings.
       }
     },
     {
-      "id": "event_46fd0cd213f4",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_2d100b3645ea",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 2,
-      "timestamp": "2026-10-03T02:05:20.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.184115+00:00",
+      "timestamp": "2026-10-03T02:32:56.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.755554+00:00",
       "stage": "gateway",
       "source": "gateway",
       "status": "completed",
       "text": "Gateway request accepted and exact transaction reference matched.",
       "purpose": "Accept the request and assign one correlation identity.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_03f623babe2d"
+        "event_a0d71e5710b0"
       ],
       "error": null,
       "synthetic": true,
       "evidence": {
-        "id": "ev_5ed223a32151",
+        "id": "ev_a627ec494753",
         "kind": "mock_pipeline",
         "supplied_by": "mock_adapter",
         "category": "Confirmed System Record",
         "reliability": "Confirmed",
-        "received_at": "2026-10-03T02:05:18.184128+00:00",
-        "event_at": "2026-10-03T02:05:20.174548+00:00",
-        "as_of": "2026-10-03T02:05:20.174548+00:00",
+        "received_at": "2026-10-03T02:32:54.755600+00:00",
+        "event_at": "2026-10-03T02:32:56.735935+00:00",
+        "as_of": "2026-10-03T02:32:56.735935+00:00",
         "scope": "this fictional purchase only",
-        "reference": "txn_8f04ee862e64",
-        "purchase_id": "incident_c5ed066278bf",
+        "reference": "txn_4a027038b12d",
+        "purchase_id": "incident_47cc49dd21ce",
         "amount_minor": null,
         "capability": "gateway_accepted",
         "verification": "documented synthetic fixture contract",
@@ -340,40 +340,40 @@ Please verify this ৳1,000 transfer and all exact postings.
             "version": 1,
             "text": "Gateway request accepted and exact transaction reference matched.",
             "actor": "fixture",
-            "at": "2026-10-03T02:05:18.184128+00:00",
+            "at": "2026-10-03T02:32:54.755600+00:00",
             "reason": "original"
           }
         ],
         "blob": null,
-        "transaction_id": "txn_8f04ee862e64",
-        "event_id": "event_46fd0cd213f4",
+        "transaction_id": "txn_4a027038b12d",
+        "event_id": "event_2d100b3645ea",
         "source": "gateway",
         "record": {
-          "id": "event_46fd0cd213f4",
-          "transaction_id": "txn_8f04ee862e64",
-          "incident_id": "incident_c5ed066278bf",
+          "id": "event_2d100b3645ea",
+          "transaction_id": "txn_4a027038b12d",
+          "incident_id": "incident_47cc49dd21ce",
           "case_id": null,
           "sequence": 2,
-          "timestamp": "2026-10-03T02:05:20.174548+00:00",
-          "recorded_at": "2026-10-03T02:05:18.184115+00:00",
+          "timestamp": "2026-10-03T02:32:56.735935+00:00",
+          "recorded_at": "2026-10-03T02:32:54.755554+00:00",
           "stage": "gateway",
           "source": "gateway",
           "status": "completed",
           "text": "Gateway request accepted and exact transaction reference matched.",
           "purpose": "Accept the request and assign one correlation identity.",
-          "attempt_id": "txn_8f04ee862e64:attempt:1",
-          "correlation_id": "corr_6e2dfda71a33",
+          "attempt_id": "txn_4a027038b12d:attempt:1",
+          "correlation_id": "corr_88523e3c82d9",
           "retry_count": 0,
           "timeout_ms": null,
           "request": {
-            "transaction_id": "txn_8f04ee862e64",
+            "transaction_id": "txn_4a027038b12d",
             "amount_minor": 100000,
             "destination": "DEMO-UPAY-1-0187"
           },
           "response": null,
           "queue": null,
           "related_event_ids": [
-            "event_03f623babe2d"
+            "event_a0d71e5710b0"
           ],
           "error": null,
           "synthetic": true
@@ -381,118 +381,118 @@ Please verify this ৳1,000 transfer and all exact postings.
       }
     },
     {
-      "id": "event_dc19937b4b01",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_b3e4b112f79d",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 3,
-      "timestamp": "2026-10-03T02:05:22.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.196453+00:00",
+      "timestamp": "2026-10-03T02:32:58.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.772460+00:00",
       "stage": "bank",
       "source": "bank",
       "status": "completed",
-      "text": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+      "text": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
       "purpose": "Record the bank debit under the exact transfer reference.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_46fd0cd213f4"
+        "event_2d100b3645ea"
       ],
       "error": null,
       "synthetic": true,
-      "posting_id": "posting_46c531e68029",
+      "posting_id": "posting_6285711e9b63",
       "evidence": {
-        "id": "ev_374ad08cb90f",
+        "id": "ev_e709c9e1ae8c",
         "kind": "mock_pipeline",
         "supplied_by": "mock_adapter",
         "category": "Confirmed System Record",
         "reliability": "Confirmed",
-        "received_at": "2026-10-03T02:05:18.196471+00:00",
-        "event_at": "2026-10-03T02:05:22.174548+00:00",
-        "as_of": "2026-10-03T02:05:22.174548+00:00",
+        "received_at": "2026-10-03T02:32:54.772477+00:00",
+        "event_at": "2026-10-03T02:32:58.735935+00:00",
+        "as_of": "2026-10-03T02:32:58.735935+00:00",
         "scope": "this fictional purchase only",
-        "reference": "txn_8f04ee862e64",
-        "purchase_id": "incident_c5ed066278bf",
+        "reference": "txn_4a027038b12d",
+        "purchase_id": "incident_47cc49dd21ce",
         "amount_minor": 100000,
         "capability": "bank_debit",
         "verification": "documented synthetic fixture contract",
         "authority": "confirmed within simulated source contract",
-        "original": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
-        "original_hash": "7e3ece3c1ffddf54e2e215ff23672a91f554c7ea8a54703f378a369bd0c25900",
+        "original": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
+        "original_hash": "778c68d5c687533b5ee8f470b215044508cd7a69eeaf6c9dc7d5303e90cf9e08",
         "revisions": [
           {
             "version": 1,
-            "text": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+            "text": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
             "actor": "fixture",
-            "at": "2026-10-03T02:05:18.196471+00:00",
+            "at": "2026-10-03T02:32:54.772477+00:00",
             "reason": "original"
           }
         ],
         "blob": null,
-        "transaction_id": "txn_8f04ee862e64",
-        "event_id": "event_dc19937b4b01",
+        "transaction_id": "txn_4a027038b12d",
+        "event_id": "event_b3e4b112f79d",
         "source": "bank",
         "record": {
-          "id": "event_dc19937b4b01",
-          "transaction_id": "txn_8f04ee862e64",
-          "incident_id": "incident_c5ed066278bf",
+          "id": "event_b3e4b112f79d",
+          "transaction_id": "txn_4a027038b12d",
+          "incident_id": "incident_47cc49dd21ce",
           "case_id": null,
           "sequence": 3,
-          "timestamp": "2026-10-03T02:05:22.174548+00:00",
-          "recorded_at": "2026-10-03T02:05:18.196453+00:00",
+          "timestamp": "2026-10-03T02:32:58.735935+00:00",
+          "recorded_at": "2026-10-03T02:32:54.772460+00:00",
           "stage": "bank",
           "source": "bank",
           "status": "completed",
-          "text": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+          "text": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
           "purpose": "Record the bank debit under the exact transfer reference.",
-          "attempt_id": "txn_8f04ee862e64:attempt:1",
-          "correlation_id": "corr_6e2dfda71a33",
+          "attempt_id": "txn_4a027038b12d:attempt:1",
+          "correlation_id": "corr_88523e3c82d9",
           "retry_count": 0,
           "timeout_ms": null,
           "request": {
-            "transaction_id": "txn_8f04ee862e64",
+            "transaction_id": "txn_4a027038b12d",
             "amount_minor": 100000,
             "destination": "DEMO-UPAY-1-0187"
           },
           "response": null,
           "queue": null,
           "related_event_ids": [
-            "event_46fd0cd213f4"
+            "event_2d100b3645ea"
           ],
           "error": null,
           "synthetic": true,
-          "posting_id": "posting_46c531e68029"
+          "posting_id": "posting_6285711e9b63"
         }
       }
     },
     {
-      "id": "event_fe25adef558d",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_9839d4ef2a56",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 4,
-      "timestamp": "2026-10-03T02:05:24.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.207411+00:00",
+      "timestamp": "2026-10-03T02:33:00.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.790893+00:00",
       "stage": "queue",
       "source": "queue",
       "status": "completed",
       "text": "Retry request recorded under the same transaction.",
       "purpose": "Track queued processing and retry attempts without assuming another payment.",
-      "attempt_id": "txn_8f04ee862e64:attempt:2",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:2",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 1,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
@@ -503,22 +503,22 @@ Please verify this ৳1,000 transfer and all exact postings.
         "held": false
       },
       "related_event_ids": [
-        "event_dc19937b4b01"
+        "event_b3e4b112f79d"
       ],
       "error": null,
       "synthetic": true,
       "evidence": {
-        "id": "ev_3ddc48943322",
+        "id": "ev_43cd1a91e1bc",
         "kind": "mock_pipeline",
         "supplied_by": "mock_adapter",
         "category": "Confirmed System Record",
         "reliability": "Confirmed",
-        "received_at": "2026-10-03T02:05:18.207423+00:00",
-        "event_at": "2026-10-03T02:05:24.174548+00:00",
-        "as_of": "2026-10-03T02:05:24.174548+00:00",
+        "received_at": "2026-10-03T02:32:54.790918+00:00",
+        "event_at": "2026-10-03T02:33:00.735935+00:00",
+        "as_of": "2026-10-03T02:33:00.735935+00:00",
         "scope": "this fictional purchase only",
-        "reference": "txn_8f04ee862e64",
-        "purchase_id": "incident_c5ed066278bf",
+        "reference": "txn_4a027038b12d",
+        "purchase_id": "incident_47cc49dd21ce",
         "amount_minor": null,
         "capability": "retry_observed",
         "verification": "documented synthetic fixture contract",
@@ -530,33 +530,33 @@ Please verify this ৳1,000 transfer and all exact postings.
             "version": 1,
             "text": "Retry request recorded under the same transaction.",
             "actor": "fixture",
-            "at": "2026-10-03T02:05:18.207423+00:00",
+            "at": "2026-10-03T02:32:54.790918+00:00",
             "reason": "original"
           }
         ],
         "blob": null,
-        "transaction_id": "txn_8f04ee862e64",
-        "event_id": "event_fe25adef558d",
+        "transaction_id": "txn_4a027038b12d",
+        "event_id": "event_9839d4ef2a56",
         "source": "queue",
         "record": {
-          "id": "event_fe25adef558d",
-          "transaction_id": "txn_8f04ee862e64",
-          "incident_id": "incident_c5ed066278bf",
+          "id": "event_9839d4ef2a56",
+          "transaction_id": "txn_4a027038b12d",
+          "incident_id": "incident_47cc49dd21ce",
           "case_id": null,
           "sequence": 4,
-          "timestamp": "2026-10-03T02:05:24.174548+00:00",
-          "recorded_at": "2026-10-03T02:05:18.207411+00:00",
+          "timestamp": "2026-10-03T02:33:00.735935+00:00",
+          "recorded_at": "2026-10-03T02:32:54.790893+00:00",
           "stage": "queue",
           "source": "queue",
           "status": "completed",
           "text": "Retry request recorded under the same transaction.",
           "purpose": "Track queued processing and retry attempts without assuming another payment.",
-          "attempt_id": "txn_8f04ee862e64:attempt:2",
-          "correlation_id": "corr_6e2dfda71a33",
+          "attempt_id": "txn_4a027038b12d:attempt:2",
+          "correlation_id": "corr_88523e3c82d9",
           "retry_count": 1,
           "timeout_ms": null,
           "request": {
-            "transaction_id": "txn_8f04ee862e64",
+            "transaction_id": "txn_4a027038b12d",
             "amount_minor": 100000,
             "destination": "DEMO-UPAY-1-0187"
           },
@@ -567,7 +567,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "held": false
           },
           "related_event_ids": [
-            "event_dc19937b4b01"
+            "event_b3e4b112f79d"
           ],
           "error": null,
           "synthetic": true
@@ -575,46 +575,46 @@ Please verify this ৳1,000 transfer and all exact postings.
       }
     },
     {
-      "id": "event_2d3aaa929ef7",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_d2b7e26b157b",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 5,
-      "timestamp": "2026-10-03T02:05:26.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.216786+00:00",
+      "timestamp": "2026-10-03T02:33:02.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.808538+00:00",
       "stage": "response",
       "source": "response",
       "status": "unknown",
       "text": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
       "purpose": "Check whether the partner returned a verified outcome.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": 30000,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_fe25adef558d"
+        "event_9839d4ef2a56"
       ],
       "error": null,
       "synthetic": true,
       "evidence": {
-        "id": "ev_494b4f1dc67a",
+        "id": "ev_7d6dc7b81eb6",
         "kind": "mock_pipeline",
         "supplied_by": "mock_adapter",
         "category": "Confirmed System Record",
         "reliability": "Confirmed",
-        "received_at": "2026-10-03T02:05:18.216801+00:00",
-        "event_at": "2026-10-03T02:05:26.174548+00:00",
-        "as_of": "2026-10-03T02:05:26.174548+00:00",
+        "received_at": "2026-10-03T02:32:54.808556+00:00",
+        "event_at": "2026-10-03T02:33:02.735935+00:00",
+        "as_of": "2026-10-03T02:33:02.735935+00:00",
         "scope": "this fictional purchase only",
-        "reference": "txn_8f04ee862e64",
-        "purchase_id": "incident_c5ed066278bf",
+        "reference": "txn_4a027038b12d",
+        "purchase_id": "incident_47cc49dd21ce",
         "amount_minor": null,
         "capability": "response_missing",
         "verification": "documented synthetic fixture contract",
@@ -626,40 +626,40 @@ Please verify this ৳1,000 transfer and all exact postings.
             "version": 1,
             "text": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
             "actor": "fixture",
-            "at": "2026-10-03T02:05:18.216801+00:00",
+            "at": "2026-10-03T02:32:54.808556+00:00",
             "reason": "original"
           }
         ],
         "blob": null,
-        "transaction_id": "txn_8f04ee862e64",
-        "event_id": "event_2d3aaa929ef7",
+        "transaction_id": "txn_4a027038b12d",
+        "event_id": "event_d2b7e26b157b",
         "source": "response",
         "record": {
-          "id": "event_2d3aaa929ef7",
-          "transaction_id": "txn_8f04ee862e64",
-          "incident_id": "incident_c5ed066278bf",
+          "id": "event_d2b7e26b157b",
+          "transaction_id": "txn_4a027038b12d",
+          "incident_id": "incident_47cc49dd21ce",
           "case_id": null,
           "sequence": 5,
-          "timestamp": "2026-10-03T02:05:26.174548+00:00",
-          "recorded_at": "2026-10-03T02:05:18.216786+00:00",
+          "timestamp": "2026-10-03T02:33:02.735935+00:00",
+          "recorded_at": "2026-10-03T02:32:54.808538+00:00",
           "stage": "response",
           "source": "response",
           "status": "unknown",
           "text": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
           "purpose": "Check whether the partner returned a verified outcome.",
-          "attempt_id": "txn_8f04ee862e64:attempt:1",
-          "correlation_id": "corr_6e2dfda71a33",
+          "attempt_id": "txn_4a027038b12d:attempt:1",
+          "correlation_id": "corr_88523e3c82d9",
           "retry_count": 0,
           "timeout_ms": 30000,
           "request": {
-            "transaction_id": "txn_8f04ee862e64",
+            "transaction_id": "txn_4a027038b12d",
             "amount_minor": 100000,
             "destination": "DEMO-UPAY-1-0187"
           },
           "response": null,
           "queue": null,
           "related_event_ids": [
-            "event_fe25adef558d"
+            "event_9839d4ef2a56"
           ],
           "error": null,
           "synthetic": true
@@ -667,46 +667,46 @@ Please verify this ৳1,000 transfer and all exact postings.
       }
     },
     {
-      "id": "event_0253386fecf9",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_040c7909df95",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 6,
-      "timestamp": "2026-10-03T02:05:28.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.225984+00:00",
+      "timestamp": "2026-10-03T02:33:04.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.826137+00:00",
       "stage": "settlement",
       "source": "settlement",
       "status": "unknown",
       "text": "Final settlement is not confirmed by the available records.",
       "purpose": "Reconcile the bank posting with final settlement.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_2d3aaa929ef7"
+        "event_d2b7e26b157b"
       ],
       "error": null,
       "synthetic": true,
       "evidence": {
-        "id": "ev_756659009c95",
+        "id": "ev_2dc78272037d",
         "kind": "mock_pipeline",
         "supplied_by": "mock_adapter",
         "category": "Confirmed System Record",
         "reliability": "Confirmed",
-        "received_at": "2026-10-03T02:05:18.225996+00:00",
-        "event_at": "2026-10-03T02:05:28.174548+00:00",
-        "as_of": "2026-10-03T02:05:28.174548+00:00",
+        "received_at": "2026-10-03T02:32:54.826166+00:00",
+        "event_at": "2026-10-03T02:33:04.735935+00:00",
+        "as_of": "2026-10-03T02:33:04.735935+00:00",
         "scope": "this fictional purchase only",
-        "reference": "txn_8f04ee862e64",
-        "purchase_id": "incident_c5ed066278bf",
+        "reference": "txn_4a027038b12d",
+        "purchase_id": "incident_47cc49dd21ce",
         "amount_minor": null,
         "capability": "settlement_unknown",
         "verification": "documented synthetic fixture contract",
@@ -718,40 +718,40 @@ Please verify this ৳1,000 transfer and all exact postings.
             "version": 1,
             "text": "Final settlement is not confirmed by the available records.",
             "actor": "fixture",
-            "at": "2026-10-03T02:05:18.225996+00:00",
+            "at": "2026-10-03T02:32:54.826166+00:00",
             "reason": "original"
           }
         ],
         "blob": null,
-        "transaction_id": "txn_8f04ee862e64",
-        "event_id": "event_0253386fecf9",
+        "transaction_id": "txn_4a027038b12d",
+        "event_id": "event_040c7909df95",
         "source": "settlement",
         "record": {
-          "id": "event_0253386fecf9",
-          "transaction_id": "txn_8f04ee862e64",
-          "incident_id": "incident_c5ed066278bf",
+          "id": "event_040c7909df95",
+          "transaction_id": "txn_4a027038b12d",
+          "incident_id": "incident_47cc49dd21ce",
           "case_id": null,
           "sequence": 6,
-          "timestamp": "2026-10-03T02:05:28.174548+00:00",
-          "recorded_at": "2026-10-03T02:05:18.225984+00:00",
+          "timestamp": "2026-10-03T02:33:04.735935+00:00",
+          "recorded_at": "2026-10-03T02:32:54.826137+00:00",
           "stage": "settlement",
           "source": "settlement",
           "status": "unknown",
           "text": "Final settlement is not confirmed by the available records.",
           "purpose": "Reconcile the bank posting with final settlement.",
-          "attempt_id": "txn_8f04ee862e64:attempt:1",
-          "correlation_id": "corr_6e2dfda71a33",
+          "attempt_id": "txn_4a027038b12d:attempt:1",
+          "correlation_id": "corr_88523e3c82d9",
           "retry_count": 0,
           "timeout_ms": null,
           "request": {
-            "transaction_id": "txn_8f04ee862e64",
+            "transaction_id": "txn_4a027038b12d",
             "amount_minor": 100000,
             "destination": "DEMO-UPAY-1-0187"
           },
           "response": null,
           "queue": null,
           "related_event_ids": [
-            "event_2d3aaa929ef7"
+            "event_d2b7e26b157b"
           ],
           "error": null,
           "synthetic": true
@@ -759,46 +759,46 @@ Please verify this ৳1,000 transfer and all exact postings.
       }
     },
     {
-      "id": "event_9051c43150f2",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_8227ef1f20b2",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 7,
-      "timestamp": "2026-10-03T02:05:30.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.234338+00:00",
+      "timestamp": "2026-10-03T02:33:06.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.844119+00:00",
       "stage": "wallet",
       "source": "wallet",
       "status": "unknown",
       "text": "Wallet completion remains unknown; further verification is required.",
       "purpose": "Confirm the intended wallet credit or retain the unresolved outcome.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_0253386fecf9"
+        "event_040c7909df95"
       ],
       "error": null,
       "synthetic": true,
       "evidence": {
-        "id": "ev_5fac3de1cb44",
+        "id": "ev_6edf866c4e95",
         "kind": "mock_pipeline",
         "supplied_by": "mock_adapter",
         "category": "Confirmed System Record",
         "reliability": "Confirmed",
-        "received_at": "2026-10-03T02:05:18.234351+00:00",
-        "event_at": "2026-10-03T02:05:30.174548+00:00",
-        "as_of": "2026-10-03T02:05:30.174548+00:00",
+        "received_at": "2026-10-03T02:32:54.844145+00:00",
+        "event_at": "2026-10-03T02:33:06.735935+00:00",
+        "as_of": "2026-10-03T02:33:06.735935+00:00",
         "scope": "this fictional purchase only",
-        "reference": "txn_8f04ee862e64",
-        "purchase_id": "incident_c5ed066278bf",
+        "reference": "txn_4a027038b12d",
+        "purchase_id": "incident_47cc49dd21ce",
         "amount_minor": 0,
         "capability": "wallet_unknown",
         "verification": "documented synthetic fixture contract",
@@ -810,40 +810,40 @@ Please verify this ৳1,000 transfer and all exact postings.
             "version": 1,
             "text": "Wallet completion remains unknown; further verification is required.",
             "actor": "fixture",
-            "at": "2026-10-03T02:05:18.234351+00:00",
+            "at": "2026-10-03T02:32:54.844145+00:00",
             "reason": "original"
           }
         ],
         "blob": null,
-        "transaction_id": "txn_8f04ee862e64",
-        "event_id": "event_9051c43150f2",
+        "transaction_id": "txn_4a027038b12d",
+        "event_id": "event_8227ef1f20b2",
         "source": "wallet",
         "record": {
-          "id": "event_9051c43150f2",
-          "transaction_id": "txn_8f04ee862e64",
-          "incident_id": "incident_c5ed066278bf",
+          "id": "event_8227ef1f20b2",
+          "transaction_id": "txn_4a027038b12d",
+          "incident_id": "incident_47cc49dd21ce",
           "case_id": null,
           "sequence": 7,
-          "timestamp": "2026-10-03T02:05:30.174548+00:00",
-          "recorded_at": "2026-10-03T02:05:18.234338+00:00",
+          "timestamp": "2026-10-03T02:33:06.735935+00:00",
+          "recorded_at": "2026-10-03T02:32:54.844119+00:00",
           "stage": "wallet",
           "source": "wallet",
           "status": "unknown",
           "text": "Wallet completion remains unknown; further verification is required.",
           "purpose": "Confirm the intended wallet credit or retain the unresolved outcome.",
-          "attempt_id": "txn_8f04ee862e64:attempt:1",
-          "correlation_id": "corr_6e2dfda71a33",
+          "attempt_id": "txn_4a027038b12d:attempt:1",
+          "correlation_id": "corr_88523e3c82d9",
           "retry_count": 0,
           "timeout_ms": null,
           "request": {
-            "transaction_id": "txn_8f04ee862e64",
+            "transaction_id": "txn_4a027038b12d",
             "amount_minor": 100000,
             "destination": "DEMO-UPAY-1-0187"
           },
           "response": null,
           "queue": null,
           "related_event_ids": [
-            "event_0253386fecf9"
+            "event_040c7909df95"
           ],
           "error": null,
           "synthetic": true
@@ -851,46 +851,46 @@ Please verify this ৳1,000 transfer and all exact postings.
       }
     },
     {
-      "id": "event_c8b5dedc5e2c",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_8745610614a5",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 8,
-      "timestamp": "2026-10-03T02:05:32.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.234935+00:00",
+      "timestamp": "2026-10-03T02:33:08.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.844357+00:00",
       "stage": "bank",
       "source": "bank",
       "status": "completed",
       "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
       "purpose": "Record the bank debit under the exact transfer reference.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_9051c43150f2"
+        "event_8227ef1f20b2"
       ],
       "error": null,
       "synthetic": true,
       "evidence": {
-        "id": "ev_485280bd5414",
+        "id": "ev_e07788791696",
         "kind": "mock_pipeline",
         "supplied_by": "mock_adapter",
         "category": "Confirmed System Record",
         "reliability": "Confirmed",
-        "received_at": "2026-10-03T02:05:18.234945+00:00",
-        "event_at": "2026-10-03T02:05:32.174548+00:00",
-        "as_of": "2026-10-03T02:05:32.174548+00:00",
+        "received_at": "2026-10-03T02:32:54.844372+00:00",
+        "event_at": "2026-10-03T02:33:08.735935+00:00",
+        "as_of": "2026-10-03T02:33:08.735935+00:00",
         "scope": "this fictional purchase only",
-        "reference": "txn_8f04ee862e64",
-        "purchase_id": "incident_c5ed066278bf",
+        "reference": "txn_4a027038b12d",
+        "purchase_id": "incident_47cc49dd21ce",
         "amount_minor": null,
         "capability": "bank_inventory_complete",
         "verification": "documented synthetic fixture contract",
@@ -902,40 +902,40 @@ Please verify this ৳1,000 transfer and all exact postings.
             "version": 1,
             "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
             "actor": "fixture",
-            "at": "2026-10-03T02:05:18.234945+00:00",
+            "at": "2026-10-03T02:32:54.844372+00:00",
             "reason": "original"
           }
         ],
         "blob": null,
-        "transaction_id": "txn_8f04ee862e64",
-        "event_id": "event_c8b5dedc5e2c",
+        "transaction_id": "txn_4a027038b12d",
+        "event_id": "event_8745610614a5",
         "source": "bank",
         "record": {
-          "id": "event_c8b5dedc5e2c",
-          "transaction_id": "txn_8f04ee862e64",
-          "incident_id": "incident_c5ed066278bf",
+          "id": "event_8745610614a5",
+          "transaction_id": "txn_4a027038b12d",
+          "incident_id": "incident_47cc49dd21ce",
           "case_id": null,
           "sequence": 8,
-          "timestamp": "2026-10-03T02:05:32.174548+00:00",
-          "recorded_at": "2026-10-03T02:05:18.234935+00:00",
+          "timestamp": "2026-10-03T02:33:08.735935+00:00",
+          "recorded_at": "2026-10-03T02:32:54.844357+00:00",
           "stage": "bank",
           "source": "bank",
           "status": "completed",
           "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
           "purpose": "Record the bank debit under the exact transfer reference.",
-          "attempt_id": "txn_8f04ee862e64:attempt:1",
-          "correlation_id": "corr_6e2dfda71a33",
+          "attempt_id": "txn_4a027038b12d:attempt:1",
+          "correlation_id": "corr_88523e3c82d9",
           "retry_count": 0,
           "timeout_ms": null,
           "request": {
-            "transaction_id": "txn_8f04ee862e64",
+            "transaction_id": "txn_4a027038b12d",
             "amount_minor": 100000,
             "destination": "DEMO-UPAY-1-0187"
           },
           "response": null,
           "queue": null,
           "related_event_ids": [
-            "event_9051c43150f2"
+            "event_8227ef1f20b2"
           ],
           "error": null,
           "synthetic": true
@@ -946,10 +946,10 @@ Please verify this ৳1,000 transfer and all exact postings.
   "ledger": {
     "entries": [
       {
-        "id": "posting_46c531e68029",
-        "transaction_id": "txn_8f04ee862e64",
-        "incident_id": "incident_c5ed066278bf",
-        "at": "2026-10-03T02:05:18.195488+00:00",
+        "id": "posting_6285711e9b63",
+        "transaction_id": "txn_4a027038b12d",
+        "incident_id": "incident_47cc49dd21ce",
+        "at": "2026-10-03T02:32:54.772361+00:00",
         "kind": "BANK_DEBIT",
         "amount_minor": 100000,
         "postings": {
@@ -975,15 +975,15 @@ Please verify this ৳1,000 transfer and all exact postings.
 ```json
 [
   {
-    "id": "ev_427ca269033c",
+    "id": "ev_6e1d9f1226ac",
     "kind": "customer_supplied",
     "category": "Customer Statement",
     "reliability": "User-provided",
     "authority": "supplied / unverified",
     "supplied_by": "customer_1",
     "reference": null,
-    "event_at": "2026-10-03T02:05:18.242610+00:00",
-    "received_at": "2026-10-03T02:05:18.242610+00:00",
+    "event_at": "2026-10-03T02:32:54.862539+00:00",
+    "received_at": "2026-10-03T02:32:54.862539+00:00",
     "scope": "this fictional purchase only",
     "original_hash": "5bdd2e7a9bc67ad5817f224c9d305bdf8d46d0cb2de28d7fa8d53a47cec878a3",
     "revisions": [
@@ -991,28 +991,28 @@ Please verify this ৳1,000 transfer and all exact postings.
         "version": 1,
         "text": "Please verify this ৳1,000 transfer and all exact postings.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.242610+00:00",
+        "at": "2026-10-03T02:32:54.862539+00:00",
         "reason": "original"
       }
     ],
     "transaction_id": null,
     "event_id": null,
-    "purchase_id": "incident_c5ed066278bf",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": null,
     "capability": null,
     "assertion": null,
     "record": null
   },
   {
-    "id": "ev_0a15b3f18a09",
+    "id": "ev_da993675487e",
     "kind": "customer_supplied",
     "category": "Customer Evidence",
     "reliability": "User-provided",
     "authority": "supplied / unverified",
     "supplied_by": "customer",
     "reference": null,
-    "event_at": "2026-10-03T02:05:18.242640+00:00",
-    "received_at": "2026-10-03T02:05:18.242640+00:00",
+    "event_at": "2026-10-03T02:32:54.862604+00:00",
+    "received_at": "2026-10-03T02:32:54.862604+00:00",
     "scope": "this fictional purchase only",
     "original_hash": "3f280e60dfea65ceed7701430da71aa37738cae3927c75cf5300639196371d4f",
     "revisions": [
@@ -1020,28 +1020,28 @@ Please verify this ৳1,000 transfer and all exact postings.
         "version": 1,
         "text": "Customer screenshot wording: payment confirmation unclear.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.242640+00:00",
+        "at": "2026-10-03T02:32:54.862604+00:00",
         "reason": "original"
       }
     ],
     "transaction_id": null,
     "event_id": null,
-    "purchase_id": "incident_c5ed066278bf",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": null,
     "capability": null,
     "assertion": null,
     "record": null
   },
   {
-    "id": "ev_cddc6cebb84b",
+    "id": "ev_77dd9ff58f96",
     "kind": "mock_pipeline",
     "category": "Confirmed System Record",
     "reliability": "Confirmed",
     "authority": "confirmed within simulated source contract",
     "supplied_by": "mock_adapter",
-    "reference": "txn_8f04ee862e64",
-    "event_at": "2026-10-03T02:05:18.174548+00:00",
-    "received_at": "2026-10-03T02:05:18.174707+00:00",
+    "reference": "txn_4a027038b12d",
+    "event_at": "2026-10-03T02:32:54.735935+00:00",
+    "received_at": "2026-10-03T02:32:54.736101+00:00",
     "scope": "this fictional purchase only",
     "original_hash": "5730ed78e93b586c237c10af6ca9a47d4aec3e349b71b941349461f26f9c3d41",
     "revisions": [
@@ -1049,35 +1049,35 @@ Please verify this ৳1,000 transfer and all exact postings.
         "version": 1,
         "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.174707+00:00",
+        "at": "2026-10-03T02:32:54.736101+00:00",
         "reason": "original"
       }
     ],
-    "transaction_id": "txn_8f04ee862e64",
-    "event_id": "event_03f623babe2d",
-    "purchase_id": "incident_c5ed066278bf",
+    "transaction_id": "txn_4a027038b12d",
+    "event_id": "event_a0d71e5710b0",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": 100000,
     "capability": "transfer_intent",
     "assertion": null,
     "record": {
-      "id": "event_03f623babe2d",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_a0d71e5710b0",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 1,
-      "timestamp": "2026-10-03T02:05:18.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.174695+00:00",
+      "timestamp": "2026-10-03T02:32:54.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.736083+00:00",
       "stage": "customer",
       "source": "customer",
       "status": "completed",
       "text": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
       "purpose": "Identify the intended amount, source account and destination wallet.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
@@ -1089,15 +1089,15 @@ Please verify this ৳1,000 transfer and all exact postings.
     }
   },
   {
-    "id": "ev_5ed223a32151",
+    "id": "ev_a627ec494753",
     "kind": "mock_pipeline",
     "category": "Confirmed System Record",
     "reliability": "Confirmed",
     "authority": "confirmed within simulated source contract",
     "supplied_by": "mock_adapter",
-    "reference": "txn_8f04ee862e64",
-    "event_at": "2026-10-03T02:05:20.174548+00:00",
-    "received_at": "2026-10-03T02:05:18.184128+00:00",
+    "reference": "txn_4a027038b12d",
+    "event_at": "2026-10-03T02:32:56.735935+00:00",
+    "received_at": "2026-10-03T02:32:54.755600+00:00",
     "scope": "this fictional purchase only",
     "original_hash": "8f99579eb178d56c9dba85af4fe06cdd02e717c578d52fa9a13725f501c16d3f",
     "revisions": [
@@ -1105,116 +1105,116 @@ Please verify this ৳1,000 transfer and all exact postings.
         "version": 1,
         "text": "Gateway request accepted and exact transaction reference matched.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.184128+00:00",
+        "at": "2026-10-03T02:32:54.755600+00:00",
         "reason": "original"
       }
     ],
-    "transaction_id": "txn_8f04ee862e64",
-    "event_id": "event_46fd0cd213f4",
-    "purchase_id": "incident_c5ed066278bf",
+    "transaction_id": "txn_4a027038b12d",
+    "event_id": "event_2d100b3645ea",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": null,
     "capability": "gateway_accepted",
     "assertion": null,
     "record": {
-      "id": "event_46fd0cd213f4",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_2d100b3645ea",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 2,
-      "timestamp": "2026-10-03T02:05:20.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.184115+00:00",
+      "timestamp": "2026-10-03T02:32:56.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.755554+00:00",
       "stage": "gateway",
       "source": "gateway",
       "status": "completed",
       "text": "Gateway request accepted and exact transaction reference matched.",
       "purpose": "Accept the request and assign one correlation identity.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_03f623babe2d"
+        "event_a0d71e5710b0"
       ],
       "error": null,
       "synthetic": true
     }
   },
   {
-    "id": "ev_374ad08cb90f",
+    "id": "ev_e709c9e1ae8c",
     "kind": "mock_pipeline",
     "category": "Confirmed System Record",
     "reliability": "Confirmed",
     "authority": "confirmed within simulated source contract",
     "supplied_by": "mock_adapter",
-    "reference": "txn_8f04ee862e64",
-    "event_at": "2026-10-03T02:05:22.174548+00:00",
-    "received_at": "2026-10-03T02:05:18.196471+00:00",
+    "reference": "txn_4a027038b12d",
+    "event_at": "2026-10-03T02:32:58.735935+00:00",
+    "received_at": "2026-10-03T02:32:54.772477+00:00",
     "scope": "this fictional purchase only",
-    "original_hash": "7e3ece3c1ffddf54e2e215ff23672a91f554c7ea8a54703f378a369bd0c25900",
+    "original_hash": "778c68d5c687533b5ee8f470b215044508cd7a69eeaf6c9dc7d5303e90cf9e08",
     "revisions": [
       {
         "version": 1,
-        "text": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+        "text": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.196471+00:00",
+        "at": "2026-10-03T02:32:54.772477+00:00",
         "reason": "original"
       }
     ],
-    "transaction_id": "txn_8f04ee862e64",
-    "event_id": "event_dc19937b4b01",
-    "purchase_id": "incident_c5ed066278bf",
+    "transaction_id": "txn_4a027038b12d",
+    "event_id": "event_b3e4b112f79d",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": 100000,
     "capability": "bank_debit",
     "assertion": null,
     "record": {
-      "id": "event_dc19937b4b01",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_b3e4b112f79d",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 3,
-      "timestamp": "2026-10-03T02:05:22.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.196453+00:00",
+      "timestamp": "2026-10-03T02:32:58.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.772460+00:00",
       "stage": "bank",
       "source": "bank",
       "status": "completed",
-      "text": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+      "text": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
       "purpose": "Record the bank debit under the exact transfer reference.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_46fd0cd213f4"
+        "event_2d100b3645ea"
       ],
       "error": null,
       "synthetic": true,
-      "posting_id": "posting_46c531e68029"
+      "posting_id": "posting_6285711e9b63"
     }
   },
   {
-    "id": "ev_485280bd5414",
+    "id": "ev_e07788791696",
     "kind": "mock_pipeline",
     "category": "Confirmed System Record",
     "reliability": "Confirmed",
     "authority": "confirmed within simulated source contract",
     "supplied_by": "mock_adapter",
-    "reference": "txn_8f04ee862e64",
-    "event_at": "2026-10-03T02:05:32.174548+00:00",
-    "received_at": "2026-10-03T02:05:18.234945+00:00",
+    "reference": "txn_4a027038b12d",
+    "event_at": "2026-10-03T02:33:08.735935+00:00",
+    "received_at": "2026-10-03T02:32:54.844372+00:00",
     "scope": "this fictional purchase only",
     "original_hash": "3e09c27ad1430b0a57855a98113f61bc8985f02ceb2fe912d0447bb2915db8ef",
     "revisions": [
@@ -1222,57 +1222,57 @@ Please verify this ৳1,000 transfer and all exact postings.
         "version": 1,
         "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.234945+00:00",
+        "at": "2026-10-03T02:32:54.844372+00:00",
         "reason": "original"
       }
     ],
-    "transaction_id": "txn_8f04ee862e64",
-    "event_id": "event_c8b5dedc5e2c",
-    "purchase_id": "incident_c5ed066278bf",
+    "transaction_id": "txn_4a027038b12d",
+    "event_id": "event_8745610614a5",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": null,
     "capability": "bank_inventory_complete",
     "assertion": null,
     "record": {
-      "id": "event_c8b5dedc5e2c",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_8745610614a5",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 8,
-      "timestamp": "2026-10-03T02:05:32.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.234935+00:00",
+      "timestamp": "2026-10-03T02:33:08.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.844357+00:00",
       "stage": "bank",
       "source": "bank",
       "status": "completed",
       "text": "The bank posting inventory for this exact reference is complete as of this recorded check.",
       "purpose": "Record the bank debit under the exact transfer reference.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_9051c43150f2"
+        "event_8227ef1f20b2"
       ],
       "error": null,
       "synthetic": true
     }
   },
   {
-    "id": "ev_3ddc48943322",
+    "id": "ev_43cd1a91e1bc",
     "kind": "mock_pipeline",
     "category": "Confirmed System Record",
     "reliability": "Confirmed",
     "authority": "confirmed within simulated source contract",
     "supplied_by": "mock_adapter",
-    "reference": "txn_8f04ee862e64",
-    "event_at": "2026-10-03T02:05:24.174548+00:00",
-    "received_at": "2026-10-03T02:05:18.207423+00:00",
+    "reference": "txn_4a027038b12d",
+    "event_at": "2026-10-03T02:33:00.735935+00:00",
+    "received_at": "2026-10-03T02:32:54.790918+00:00",
     "scope": "this fictional purchase only",
     "original_hash": "bb049fd08d43d67118173ae117b594c4da1d3975b90da44154eb676fc7250b99",
     "revisions": [
@@ -1280,35 +1280,35 @@ Please verify this ৳1,000 transfer and all exact postings.
         "version": 1,
         "text": "Retry request recorded under the same transaction.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.207423+00:00",
+        "at": "2026-10-03T02:32:54.790918+00:00",
         "reason": "original"
       }
     ],
-    "transaction_id": "txn_8f04ee862e64",
-    "event_id": "event_fe25adef558d",
-    "purchase_id": "incident_c5ed066278bf",
+    "transaction_id": "txn_4a027038b12d",
+    "event_id": "event_9839d4ef2a56",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": null,
     "capability": "retry_observed",
     "assertion": null,
     "record": {
-      "id": "event_fe25adef558d",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_9839d4ef2a56",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 4,
-      "timestamp": "2026-10-03T02:05:24.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.207411+00:00",
+      "timestamp": "2026-10-03T02:33:00.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.790893+00:00",
       "stage": "queue",
       "source": "queue",
       "status": "completed",
       "text": "Retry request recorded under the same transaction.",
       "purpose": "Track queued processing and retry attempts without assuming another payment.",
-      "attempt_id": "txn_8f04ee862e64:attempt:2",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:2",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 1,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
@@ -1319,22 +1319,22 @@ Please verify this ৳1,000 transfer and all exact postings.
         "held": false
       },
       "related_event_ids": [
-        "event_dc19937b4b01"
+        "event_b3e4b112f79d"
       ],
       "error": null,
       "synthetic": true
     }
   },
   {
-    "id": "ev_494b4f1dc67a",
+    "id": "ev_7d6dc7b81eb6",
     "kind": "mock_pipeline",
     "category": "Confirmed System Record",
     "reliability": "Confirmed",
     "authority": "confirmed within simulated source contract",
     "supplied_by": "mock_adapter",
-    "reference": "txn_8f04ee862e64",
-    "event_at": "2026-10-03T02:05:26.174548+00:00",
-    "received_at": "2026-10-03T02:05:18.216801+00:00",
+    "reference": "txn_4a027038b12d",
+    "event_at": "2026-10-03T02:33:02.735935+00:00",
+    "received_at": "2026-10-03T02:32:54.808556+00:00",
     "scope": "this fictional purchase only",
     "original_hash": "f9cb671674128e49e997e9c9b46d7d02f6fd4e808d13c06e2924b7d687ebd7c5",
     "revisions": [
@@ -1342,57 +1342,57 @@ Please verify this ৳1,000 transfer and all exact postings.
         "version": 1,
         "text": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.216801+00:00",
+        "at": "2026-10-03T02:32:54.808556+00:00",
         "reason": "original"
       }
     ],
-    "transaction_id": "txn_8f04ee862e64",
-    "event_id": "event_2d3aaa929ef7",
-    "purchase_id": "incident_c5ed066278bf",
+    "transaction_id": "txn_4a027038b12d",
+    "event_id": "event_d2b7e26b157b",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": null,
     "capability": "response_missing",
     "assertion": null,
     "record": {
-      "id": "event_2d3aaa929ef7",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_d2b7e26b157b",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 5,
-      "timestamp": "2026-10-03T02:05:26.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.216786+00:00",
+      "timestamp": "2026-10-03T02:33:02.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.808538+00:00",
       "stage": "response",
       "source": "response",
       "status": "unknown",
       "text": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
       "purpose": "Check whether the partner returned a verified outcome.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": 30000,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_fe25adef558d"
+        "event_9839d4ef2a56"
       ],
       "error": null,
       "synthetic": true
     }
   },
   {
-    "id": "ev_756659009c95",
+    "id": "ev_2dc78272037d",
     "kind": "mock_pipeline",
     "category": "Confirmed System Record",
     "reliability": "Confirmed",
     "authority": "confirmed within simulated source contract",
     "supplied_by": "mock_adapter",
-    "reference": "txn_8f04ee862e64",
-    "event_at": "2026-10-03T02:05:28.174548+00:00",
-    "received_at": "2026-10-03T02:05:18.225996+00:00",
+    "reference": "txn_4a027038b12d",
+    "event_at": "2026-10-03T02:33:04.735935+00:00",
+    "received_at": "2026-10-03T02:32:54.826166+00:00",
     "scope": "this fictional purchase only",
     "original_hash": "be7dd8e4ea735064964a6f5a6cdbaaea22c55c6a3db90ed27556a7e9feb30781",
     "revisions": [
@@ -1400,57 +1400,57 @@ Please verify this ৳1,000 transfer and all exact postings.
         "version": 1,
         "text": "Final settlement is not confirmed by the available records.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.225996+00:00",
+        "at": "2026-10-03T02:32:54.826166+00:00",
         "reason": "original"
       }
     ],
-    "transaction_id": "txn_8f04ee862e64",
-    "event_id": "event_0253386fecf9",
-    "purchase_id": "incident_c5ed066278bf",
+    "transaction_id": "txn_4a027038b12d",
+    "event_id": "event_040c7909df95",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": null,
     "capability": "settlement_unknown",
     "assertion": null,
     "record": {
-      "id": "event_0253386fecf9",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_040c7909df95",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 6,
-      "timestamp": "2026-10-03T02:05:28.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.225984+00:00",
+      "timestamp": "2026-10-03T02:33:04.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.826137+00:00",
       "stage": "settlement",
       "source": "settlement",
       "status": "unknown",
       "text": "Final settlement is not confirmed by the available records.",
       "purpose": "Reconcile the bank posting with final settlement.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_2d3aaa929ef7"
+        "event_d2b7e26b157b"
       ],
       "error": null,
       "synthetic": true
     }
   },
   {
-    "id": "ev_5fac3de1cb44",
+    "id": "ev_6edf866c4e95",
     "kind": "mock_pipeline",
     "category": "Confirmed System Record",
     "reliability": "Confirmed",
     "authority": "confirmed within simulated source contract",
     "supplied_by": "mock_adapter",
-    "reference": "txn_8f04ee862e64",
-    "event_at": "2026-10-03T02:05:30.174548+00:00",
-    "received_at": "2026-10-03T02:05:18.234351+00:00",
+    "reference": "txn_4a027038b12d",
+    "event_at": "2026-10-03T02:33:06.735935+00:00",
+    "received_at": "2026-10-03T02:32:54.844145+00:00",
     "scope": "this fictional purchase only",
     "original_hash": "abb4bbc567fbc4535bd2821d358416c873968fc1a8101e85edd104fb63171e2e",
     "revisions": [
@@ -1458,42 +1458,42 @@ Please verify this ৳1,000 transfer and all exact postings.
         "version": 1,
         "text": "Wallet completion remains unknown; further verification is required.",
         "actor": "fixture",
-        "at": "2026-10-03T02:05:18.234351+00:00",
+        "at": "2026-10-03T02:32:54.844145+00:00",
         "reason": "original"
       }
     ],
-    "transaction_id": "txn_8f04ee862e64",
-    "event_id": "event_9051c43150f2",
-    "purchase_id": "incident_c5ed066278bf",
+    "transaction_id": "txn_4a027038b12d",
+    "event_id": "event_8227ef1f20b2",
+    "purchase_id": "incident_47cc49dd21ce",
     "amount_minor": 0,
     "capability": "wallet_unknown",
     "assertion": null,
     "record": {
-      "id": "event_9051c43150f2",
-      "transaction_id": "txn_8f04ee862e64",
-      "incident_id": "incident_c5ed066278bf",
+      "id": "event_8227ef1f20b2",
+      "transaction_id": "txn_4a027038b12d",
+      "incident_id": "incident_47cc49dd21ce",
       "case_id": null,
       "sequence": 7,
-      "timestamp": "2026-10-03T02:05:30.174548+00:00",
-      "recorded_at": "2026-10-03T02:05:18.234338+00:00",
+      "timestamp": "2026-10-03T02:33:06.735935+00:00",
+      "recorded_at": "2026-10-03T02:32:54.844119+00:00",
       "stage": "wallet",
       "source": "wallet",
       "status": "unknown",
       "text": "Wallet completion remains unknown; further verification is required.",
       "purpose": "Confirm the intended wallet credit or retain the unresolved outcome.",
-      "attempt_id": "txn_8f04ee862e64:attempt:1",
-      "correlation_id": "corr_6e2dfda71a33",
+      "attempt_id": "txn_4a027038b12d:attempt:1",
+      "correlation_id": "corr_88523e3c82d9",
       "retry_count": 0,
       "timeout_ms": null,
       "request": {
-        "transaction_id": "txn_8f04ee862e64",
+        "transaction_id": "txn_4a027038b12d",
         "amount_minor": 100000,
         "destination": "DEMO-UPAY-1-0187"
       },
       "response": null,
       "queue": null,
       "related_event_ids": [
-        "event_0253386fecf9"
+        "event_040c7909df95"
       ],
       "error": null,
       "synthetic": true
@@ -1507,9 +1507,9 @@ Please verify this ৳1,000 transfer and all exact postings.
 ```json
 [
   {
-    "id": "analysis_4c1328b25135",
-    "at": "2026-10-03T02:05:19.116626+00:00",
-    "run_id": "run_9e4c08c280c8",
+    "id": "analysis_a0523fbaf677",
+    "at": "2026-10-03T02:32:55.938927+00:00",
+    "run_id": "run_3d2210ff6090",
     "model": {
       "engine": "rules_primary_with_trained_advisory",
       "available": true,
@@ -1578,7 +1578,7 @@ Please verify this ৳1,000 transfer and all exact postings.
         "text": "The bank account was debited.",
         "links": [
           {
-            "evidence_id": "ev_427ca269033c",
+            "evidence_id": "ev_6e1d9f1226ac",
             "excerpt": "Please verify this ৳1,000 transfer and all exact postings.",
             "transcript_version": 1,
             "source_status": "supplied / unverified",
@@ -1590,7 +1590,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_0a15b3f18a09",
+            "evidence_id": "ev_da993675487e",
             "excerpt": "Customer screenshot wording: payment confirmation unclear.",
             "transcript_version": 1,
             "source_status": "supplied / unverified",
@@ -1602,7 +1602,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_cddc6cebb84b",
+            "evidence_id": "ev_77dd9ff58f96",
             "excerpt": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1614,7 +1614,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_5ed223a32151",
+            "evidence_id": "ev_a627ec494753",
             "excerpt": "Gateway request accepted and exact transaction reference matched.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1626,8 +1626,8 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_374ad08cb90f",
-            "excerpt": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+            "evidence_id": "ev_e709c9e1ae8c",
+            "excerpt": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
             "mismatches": [],
@@ -1638,7 +1638,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_485280bd5414",
+            "evidence_id": "ev_e07788791696",
             "excerpt": "The bank posting inventory for this exact reference is complete as of this recorded check.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1650,7 +1650,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_3ddc48943322",
+            "evidence_id": "ev_43cd1a91e1bc",
             "excerpt": "Retry request recorded under the same transaction.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1662,7 +1662,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_494b4f1dc67a",
+            "evidence_id": "ev_7d6dc7b81eb6",
             "excerpt": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1674,7 +1674,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_756659009c95",
+            "evidence_id": "ev_2dc78272037d",
             "excerpt": "Final settlement is not confirmed by the available records.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1686,7 +1686,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_5fac3de1cb44",
+            "evidence_id": "ev_6edf866c4e95",
             "excerpt": "Wallet completion remains unknown; further verification is required.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1704,7 +1704,7 @@ Please verify this ৳1,000 transfer and all exact postings.
         "text": "Two bank debits occurred for the same transfer.",
         "links": [
           {
-            "evidence_id": "ev_427ca269033c",
+            "evidence_id": "ev_6e1d9f1226ac",
             "excerpt": "Please verify this ৳1,000 transfer and all exact postings.",
             "transcript_version": 1,
             "source_status": "supplied / unverified",
@@ -1716,7 +1716,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_0a15b3f18a09",
+            "evidence_id": "ev_da993675487e",
             "excerpt": "Customer screenshot wording: payment confirmation unclear.",
             "transcript_version": 1,
             "source_status": "supplied / unverified",
@@ -1728,7 +1728,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_cddc6cebb84b",
+            "evidence_id": "ev_77dd9ff58f96",
             "excerpt": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1740,7 +1740,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_5ed223a32151",
+            "evidence_id": "ev_a627ec494753",
             "excerpt": "Gateway request accepted and exact transaction reference matched.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1752,8 +1752,8 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_374ad08cb90f",
-            "excerpt": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+            "evidence_id": "ev_e709c9e1ae8c",
+            "excerpt": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
             "mismatches": [],
@@ -1764,7 +1764,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_485280bd5414",
+            "evidence_id": "ev_e07788791696",
             "excerpt": "The bank posting inventory for this exact reference is complete as of this recorded check.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1776,7 +1776,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_3ddc48943322",
+            "evidence_id": "ev_43cd1a91e1bc",
             "excerpt": "Retry request recorded under the same transaction.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1788,7 +1788,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_494b4f1dc67a",
+            "evidence_id": "ev_7d6dc7b81eb6",
             "excerpt": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1800,7 +1800,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_756659009c95",
+            "evidence_id": "ev_2dc78272037d",
             "excerpt": "Final settlement is not confirmed by the available records.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1812,7 +1812,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_5fac3de1cb44",
+            "evidence_id": "ev_6edf866c4e95",
             "excerpt": "Wallet completion remains unknown; further verification is required.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1830,7 +1830,7 @@ Please verify this ৳1,000 transfer and all exact postings.
         "text": "The wallet received the intended transfer.",
         "links": [
           {
-            "evidence_id": "ev_427ca269033c",
+            "evidence_id": "ev_6e1d9f1226ac",
             "excerpt": "Please verify this ৳1,000 transfer and all exact postings.",
             "transcript_version": 1,
             "source_status": "supplied / unverified",
@@ -1842,7 +1842,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_0a15b3f18a09",
+            "evidence_id": "ev_da993675487e",
             "excerpt": "Customer screenshot wording: payment confirmation unclear.",
             "transcript_version": 1,
             "source_status": "supplied / unverified",
@@ -1854,7 +1854,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_cddc6cebb84b",
+            "evidence_id": "ev_77dd9ff58f96",
             "excerpt": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1866,7 +1866,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_5ed223a32151",
+            "evidence_id": "ev_a627ec494753",
             "excerpt": "Gateway request accepted and exact transaction reference matched.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1878,8 +1878,8 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_374ad08cb90f",
-            "excerpt": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+            "evidence_id": "ev_e709c9e1ae8c",
+            "excerpt": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
             "mismatches": [],
@@ -1890,7 +1890,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_485280bd5414",
+            "evidence_id": "ev_e07788791696",
             "excerpt": "The bank posting inventory for this exact reference is complete as of this recorded check.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1902,7 +1902,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_3ddc48943322",
+            "evidence_id": "ev_43cd1a91e1bc",
             "excerpt": "Retry request recorded under the same transaction.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1914,7 +1914,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_494b4f1dc67a",
+            "evidence_id": "ev_7d6dc7b81eb6",
             "excerpt": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1926,7 +1926,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_756659009c95",
+            "evidence_id": "ev_2dc78272037d",
             "excerpt": "Final settlement is not confirmed by the available records.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1938,7 +1938,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_5fac3de1cb44",
+            "evidence_id": "ev_6edf866c4e95",
             "excerpt": "Wallet completion remains unknown; further verification is required.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1956,7 +1956,7 @@ Please verify this ৳1,000 transfer and all exact postings.
         "text": "The extra debit was reversed.",
         "links": [
           {
-            "evidence_id": "ev_427ca269033c",
+            "evidence_id": "ev_6e1d9f1226ac",
             "excerpt": "Please verify this ৳1,000 transfer and all exact postings.",
             "transcript_version": 1,
             "source_status": "supplied / unverified",
@@ -1968,7 +1968,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_0a15b3f18a09",
+            "evidence_id": "ev_da993675487e",
             "excerpt": "Customer screenshot wording: payment confirmation unclear.",
             "transcript_version": 1,
             "source_status": "supplied / unverified",
@@ -1980,7 +1980,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_cddc6cebb84b",
+            "evidence_id": "ev_77dd9ff58f96",
             "excerpt": "Simulated bank-to-upay transfer BDT 1000.00 initiated.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -1992,7 +1992,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_5ed223a32151",
+            "evidence_id": "ev_a627ec494753",
             "excerpt": "Gateway request accepted and exact transaction reference matched.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -2004,8 +2004,8 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_374ad08cb90f",
-            "excerpt": "Bank posting posting_46c531e68029 confirms BDT 1000.00 debited.",
+            "evidence_id": "ev_e709c9e1ae8c",
+            "excerpt": "Bank posting posting_6285711e9b63 confirms BDT 1000.00 debited.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
             "mismatches": [],
@@ -2016,7 +2016,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_485280bd5414",
+            "evidence_id": "ev_e07788791696",
             "excerpt": "The bank posting inventory for this exact reference is complete as of this recorded check.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -2028,7 +2028,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_3ddc48943322",
+            "evidence_id": "ev_43cd1a91e1bc",
             "excerpt": "Retry request recorded under the same transaction.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -2040,7 +2040,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_494b4f1dc67a",
+            "evidence_id": "ev_7d6dc7b81eb6",
             "excerpt": "Final partner response is not available. This does not establish a failed or duplicate settlement.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -2052,7 +2052,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_756659009c95",
+            "evidence_id": "ev_2dc78272037d",
             "excerpt": "Final settlement is not confirmed by the available records.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -2064,7 +2064,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "reason": "Rules selected after stronger challenge result; trained label remains inspectable."
           },
           {
-            "evidence_id": "ev_5fac3de1cb44",
+            "evidence_id": "ev_6edf866c4e95",
             "excerpt": "Wallet completion remains unknown; further verification is required.",
             "transcript_version": 1,
             "source_status": "confirmed within simulated source contract",
@@ -2083,14 +2083,14 @@ Please verify this ৳1,000 transfer and all exact postings.
       "headline": "Final transfer evidence is incomplete",
       "summary": "Final transfer evidence is incomplete. Customer statements and retries alone do not establish another debit.",
       "evidence_ids": [
-        "ev_cddc6cebb84b",
-        "ev_5ed223a32151",
-        "ev_374ad08cb90f",
-        "ev_485280bd5414",
-        "ev_3ddc48943322",
-        "ev_494b4f1dc67a",
-        "ev_756659009c95",
-        "ev_5fac3de1cb44"
+        "ev_77dd9ff58f96",
+        "ev_a627ec494753",
+        "ev_e709c9e1ae8c",
+        "ev_e07788791696",
+        "ev_43cd1a91e1bc",
+        "ev_7d6dc7b81eb6",
+        "ev_2dc78272037d",
+        "ev_6edf866c4e95"
       ],
       "missing": [
         "Obtain the final wallet outcome for the exact transaction.",
@@ -2112,16 +2112,16 @@ Please verify this ৳1,000 transfer and all exact postings.
 ```json
 [
   {
-    "id": "run_9e4c08c280c8",
-    "case_id": "case_b88ae850e765",
-    "incident_id": "incident_c5ed066278bf",
-    "transaction_id": "txn_8f04ee862e64",
+    "id": "run_3d2210ff6090",
+    "case_id": "case_017e048acb76",
+    "incident_id": "incident_47cc49dd21ce",
+    "transaction_id": "txn_4a027038b12d",
     "status": "NEEDS_HUMAN_REVIEW",
     "requested_mode": "demo",
     "mode": "DEMO",
     "mode_label": "DEMO INVESTIGATION — SIMULATED AI TRACE",
-    "started_at": "2026-10-03T02:05:18.256413+00:00",
-    "updated_at": "2026-10-03T02:05:19.318936+00:00",
+    "started_at": "2026-10-03T02:32:54.894476+00:00",
+    "updated_at": "2026-10-03T02:32:56.154619+00:00",
     "actor": "staff_1",
     "owner_at_start": "staff_1",
     "evidence_version": 10,
@@ -2134,7 +2134,7 @@ Please verify this ৳1,000 transfer and all exact postings.
         "description": "A response was unavailable when the path was first checked.",
         "status": "SUPPORTED",
         "supporting_evidence": [
-          "ev_494b4f1dc67a"
+          "ev_7d6dc7b81eb6"
         ],
         "contradicting_evidence": [],
         "unresolved_evidence": [
@@ -2148,8 +2148,8 @@ Please verify this ৳1,000 transfer and all exact postings.
         "status": "CONTRADICTED",
         "supporting_evidence": [],
         "contradicting_evidence": [
-          "ev_374ad08cb90f",
-          "ev_485280bd5414"
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696"
         ],
         "unresolved_evidence": []
       },
@@ -2194,157 +2194,157 @@ Please verify this ৳1,000 transfer and all exact postings.
     "current_finding": "Ownership changed to staff_2.",
     "source_checks": [
       {
-        "id": "check_a1795aa9d182",
+        "id": "check_e94f411b29cd",
         "kind": "customer",
-        "requested_at": "2026-10-03T02:05:18.404228+00:00",
-        "as_of": "2026-10-03T02:05:18.404238+00:00",
+        "requested_at": "2026-10-03T02:32:55.059977+00:00",
+        "as_of": "2026-10-03T02:32:55.059992+00:00",
         "state": "COMPLETED",
         "result": "1 matching source record(s) inspected.",
         "evidence_ids": [
-          "ev_cddc6cebb84b"
+          "ev_77dd9ff58f96"
         ],
         "scope": "Exact transaction and incident only",
         "states": [
           {
             "state": "RUNNING",
-            "at": "2026-10-03T02:05:18.404242+00:00"
+            "at": "2026-10-03T02:32:55.059999+00:00"
           },
           {
             "state": "COMPLETED",
-            "at": "2026-10-03T02:05:18.404246+00:00"
+            "at": "2026-10-03T02:32:55.060003+00:00"
           }
         ]
       },
       {
-        "id": "check_696a94f8311a",
+        "id": "check_177285fcfe48",
         "kind": "gateway",
-        "requested_at": "2026-10-03T02:05:18.404299+00:00",
-        "as_of": "2026-10-03T02:05:18.404302+00:00",
+        "requested_at": "2026-10-03T02:32:55.060146+00:00",
+        "as_of": "2026-10-03T02:32:55.060157+00:00",
         "state": "COMPLETED",
         "result": "1 matching source record(s) inspected.",
         "evidence_ids": [
-          "ev_5ed223a32151"
+          "ev_a627ec494753"
         ],
         "scope": "Exact transaction and incident only",
         "states": [
           {
             "state": "RUNNING",
-            "at": "2026-10-03T02:05:18.404305+00:00"
+            "at": "2026-10-03T02:32:55.060165+00:00"
           },
           {
             "state": "COMPLETED",
-            "at": "2026-10-03T02:05:18.404307+00:00"
+            "at": "2026-10-03T02:32:55.060171+00:00"
           }
         ]
       },
       {
-        "id": "check_bb57fa192ab9",
+        "id": "check_f5bce35b0038",
         "kind": "bank",
-        "requested_at": "2026-10-03T02:05:18.404391+00:00",
-        "as_of": "2026-10-03T02:05:18.404393+00:00",
+        "requested_at": "2026-10-03T02:32:55.060413+00:00",
+        "as_of": "2026-10-03T02:32:55.060421+00:00",
         "state": "COMPLETED",
         "result": "2 matching source record(s) inspected.",
         "evidence_ids": [
-          "ev_374ad08cb90f",
-          "ev_485280bd5414"
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696"
         ],
         "scope": "Exact transaction and incident only",
         "states": [
           {
             "state": "RUNNING",
-            "at": "2026-10-03T02:05:18.404396+00:00"
+            "at": "2026-10-03T02:32:55.060429+00:00"
           },
           {
             "state": "COMPLETED",
-            "at": "2026-10-03T02:05:18.404398+00:00"
+            "at": "2026-10-03T02:32:55.060461+00:00"
           }
         ]
       },
       {
-        "id": "check_2bb0ae444378",
+        "id": "check_5540ce35ec9f",
         "kind": "queue",
-        "requested_at": "2026-10-03T02:05:18.404446+00:00",
-        "as_of": "2026-10-03T02:05:18.404449+00:00",
+        "requested_at": "2026-10-03T02:32:55.060612+00:00",
+        "as_of": "2026-10-03T02:32:55.060619+00:00",
         "state": "COMPLETED",
         "result": "1 matching source record(s) inspected.",
         "evidence_ids": [
-          "ev_3ddc48943322"
+          "ev_43cd1a91e1bc"
         ],
         "scope": "Exact transaction and incident only",
         "states": [
           {
             "state": "RUNNING",
-            "at": "2026-10-03T02:05:18.404451+00:00"
+            "at": "2026-10-03T02:32:55.060626+00:00"
           },
           {
             "state": "COMPLETED",
-            "at": "2026-10-03T02:05:18.404453+00:00"
+            "at": "2026-10-03T02:32:55.060632+00:00"
           }
         ]
       },
       {
-        "id": "check_7b1628b0e5cc",
+        "id": "check_ef2c1c60d02f",
         "kind": "response",
-        "requested_at": "2026-10-03T02:05:18.404498+00:00",
-        "as_of": "2026-10-03T02:05:18.404500+00:00",
+        "requested_at": "2026-10-03T02:32:55.060771+00:00",
+        "as_of": "2026-10-03T02:32:55.060779+00:00",
         "state": "COMPLETED",
         "result": "1 matching source record(s) inspected.",
         "evidence_ids": [
-          "ev_494b4f1dc67a"
+          "ev_7d6dc7b81eb6"
         ],
         "scope": "Exact transaction and incident only",
         "states": [
           {
             "state": "RUNNING",
-            "at": "2026-10-03T02:05:18.404502+00:00"
+            "at": "2026-10-03T02:32:55.060786+00:00"
           },
           {
             "state": "COMPLETED",
-            "at": "2026-10-03T02:05:18.404504+00:00"
+            "at": "2026-10-03T02:32:55.060791+00:00"
           }
         ]
       },
       {
-        "id": "check_d222320a9219",
+        "id": "check_ed43104e5bbf",
         "kind": "settlement",
-        "requested_at": "2026-10-03T02:05:18.404548+00:00",
-        "as_of": "2026-10-03T02:05:18.404550+00:00",
+        "requested_at": "2026-10-03T02:32:55.060929+00:00",
+        "as_of": "2026-10-03T02:32:55.060936+00:00",
         "state": "COMPLETED",
         "result": "1 matching source record(s) inspected.",
         "evidence_ids": [
-          "ev_756659009c95"
+          "ev_2dc78272037d"
         ],
         "scope": "Exact transaction and incident only",
         "states": [
           {
             "state": "RUNNING",
-            "at": "2026-10-03T02:05:18.404553+00:00"
+            "at": "2026-10-03T02:32:55.060944+00:00"
           },
           {
             "state": "COMPLETED",
-            "at": "2026-10-03T02:05:18.404554+00:00"
+            "at": "2026-10-03T02:32:55.060950+00:00"
           }
         ]
       },
       {
-        "id": "check_f855f989f200",
+        "id": "check_7d79dab389dc",
         "kind": "wallet",
-        "requested_at": "2026-10-03T02:05:18.404599+00:00",
-        "as_of": "2026-10-03T02:05:18.404601+00:00",
+        "requested_at": "2026-10-03T02:32:55.061077+00:00",
+        "as_of": "2026-10-03T02:32:55.061082+00:00",
         "state": "COMPLETED",
         "result": "1 matching source record(s) inspected.",
         "evidence_ids": [
-          "ev_5fac3de1cb44"
+          "ev_6edf866c4e95"
         ],
         "scope": "Exact transaction and incident only",
         "states": [
           {
             "state": "RUNNING",
-            "at": "2026-10-03T02:05:18.404603+00:00"
+            "at": "2026-10-03T02:32:55.061089+00:00"
           },
           {
             "state": "COMPLETED",
-            "at": "2026-10-03T02:05:18.404605+00:00"
+            "at": "2026-10-03T02:32:55.061094+00:00"
           }
         ]
       }
@@ -2361,14 +2361,14 @@ Please verify this ৳1,000 transfer and all exact postings.
       "action": "MANUAL_REVIEW",
       "amount_minor": 0,
       "evidence_ids": [
-        "ev_cddc6cebb84b",
-        "ev_5ed223a32151",
-        "ev_374ad08cb90f",
-        "ev_485280bd5414",
-        "ev_3ddc48943322",
-        "ev_494b4f1dc67a",
-        "ev_756659009c95",
-        "ev_5fac3de1cb44"
+        "ev_77dd9ff58f96",
+        "ev_a627ec494753",
+        "ev_e709c9e1ae8c",
+        "ev_e07788791696",
+        "ev_43cd1a91e1bc",
+        "ev_7d6dc7b81eb6",
+        "ev_2dc78272037d",
+        "ev_6edf866c4e95"
       ],
       "reason": "Available evidence does not authorize an automatic correction.",
       "missing": [
@@ -2379,22 +2379,22 @@ Please verify this ৳1,000 transfer and all exact postings.
       "approval_required": true,
       "team": "Partner Operations",
       "next_action": "Verify the missing source records and retain an accountable owner.",
-      "id": "recommendation_4317808ef865",
-      "run_id": "run_9e4c08c280c8",
-      "case_id": "case_b88ae850e765",
-      "incident_id": "incident_c5ed066278bf",
-      "at": "2026-10-03T02:05:19.116574+00:00"
+      "id": "recommendation_6001a67fe9eb",
+      "run_id": "run_3d2210ff6090",
+      "case_id": "case_017e048acb76",
+      "incident_id": "incident_47cc49dd21ce",
+      "at": "2026-10-03T02:32:55.938874+00:00"
     },
-    "completed_at": "2026-10-03T02:05:19.116599+00:00",
+    "completed_at": "2026-10-03T02:32:55.938900+00:00",
     "strength": "Insufficient / incomplete coverage",
     "events": [
       {
         "sequence": 1,
-        "id": "trace_98a2a9d0b49a",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.263877+00:00",
+        "id": "trace_5995bf57334c",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:54.907713+00:00",
         "phase": "initialize",
         "title": "Investigator initialized",
         "purpose": "Identify the case and the operational problem.",
@@ -2411,23 +2411,23 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 2,
-        "id": "trace_869b937da146",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.305965+00:00",
+        "id": "trace_08780b7477ed",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:54.955520+00:00",
         "phase": "context",
         "title": "Case context loaded",
         "purpose": "Separate the customer allegation from confirmed source facts.",
         "action": "Load the saved complaint, owner and evidence",
         "finding": "Customer statement preserved separately from confirmed system records.",
         "evidence_ids": [
-          "ev_427ca269033c",
-          "ev_0a15b3f18a09"
+          "ev_6e1d9f1226ac",
+          "ev_da993675487e"
         ],
         "evidence_revisions": {
-          "ev_427ca269033c": 1,
-          "ev_0a15b3f18a09": 1
+          "ev_6e1d9f1226ac": 1,
+          "ev_da993675487e": 1
         },
         "changed": "Customer statement preserved separately from confirmed system records.",
         "next_step": "Transaction reconstructed",
@@ -2438,11 +2438,11 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 3,
-        "id": "trace_3aa906af3806",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.352950+00:00",
+        "id": "trace_bc35856857b3",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.001480+00:00",
         "phase": "reconstruct",
         "title": "Transaction reconstructed",
         "purpose": "Match attempts, references and correlation identities.",
@@ -2459,11 +2459,11 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 4,
-        "id": "trace_8e4f823fb830",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.396567+00:00",
+        "id": "trace_db69d4b97b18",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.049377+00:00",
         "phase": "retrieve",
         "title": "Relevant records retrieved",
         "purpose": "Obtain the available records and identify missing sources.",
@@ -2480,39 +2480,39 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 5,
-        "id": "trace_8323f04e4fb6",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.414999+00:00",
+        "id": "trace_a263813ff3c1",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.076785+00:00",
         "phase": "retrieve",
         "title": "Relevant records retrieved",
         "purpose": "Obtain the available records and identify missing sources.",
         "action": "Retrieve matching source records",
         "finding": "10 distinct records available; 0 source checks unavailable.",
         "evidence_ids": [
-          "ev_427ca269033c",
-          "ev_0a15b3f18a09",
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_6e1d9f1226ac",
+          "ev_da993675487e",
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_427ca269033c": 1,
-          "ev_0a15b3f18a09": 1,
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_6e1d9f1226ac": 1,
+          "ev_da993675487e": 1,
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "10 distinct records available; 0 source checks unavailable.",
         "next_step": "Processing path followed",
@@ -2523,25 +2523,25 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 6,
-        "id": "trace_6c27614d2145",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.462368+00:00",
+        "id": "trace_5a7f64079117",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.131640+00:00",
         "phase": "follow",
         "title": "Processing path followed",
         "purpose": "Locate the point where the payment became uncertain.",
         "action": "Follow the observed processing path",
         "finding": "Retry request recorded under the same transaction.; Final partner response is not available. This does not establish a failed or duplicate settlement.; Final settlement is not confirmed by the available records.",
         "evidence_ids": [
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95"
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d"
         ],
         "evidence_revisions": {
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1
         },
         "changed": "Retry request recorded under the same transaction.; Final partner response is not available. This does not establish a failed or duplicate settlement.; Final settlement is not confirmed by the available records.",
         "next_step": "Evidence compared",
@@ -2552,39 +2552,39 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 7,
-        "id": "trace_c24fef6d7f97",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.509787+00:00",
+        "id": "trace_aa016dbd919d",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.192547+00:00",
         "phase": "compare",
         "title": "Evidence compared",
         "purpose": "Reconcile debit, settlement and wallet or merchant records.",
         "action": "Run the trained claim/passage verifier",
         "finding": "Comparing wording with the trained advisory verifier and reconciling authoritative amounts independently.",
         "evidence_ids": [
-          "ev_427ca269033c",
-          "ev_0a15b3f18a09",
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_6e1d9f1226ac",
+          "ev_da993675487e",
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_427ca269033c": 1,
-          "ev_0a15b3f18a09": 1,
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_6e1d9f1226ac": 1,
+          "ev_da993675487e": 1,
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "Comparing wording with the trained advisory verifier and reconciling authoritative amounts independently.",
         "next_step": "Claim verified",
@@ -2595,39 +2595,39 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 8,
-        "id": "trace_bfecb89f905b",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.673998+00:00",
+        "id": "trace_d2e3f344c17b",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.440211+00:00",
         "phase": "compare",
         "title": "Evidence compared",
         "purpose": "Reconcile debit, settlement and wallet or merchant records.",
         "action": "Compare postings and assess claim/passage wording",
         "finding": "Checked payments: BDT 1000.00; returned: BDT 0.00. Trained text readings remain advisory.",
         "evidence_ids": [
-          "ev_427ca269033c",
-          "ev_0a15b3f18a09",
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_6e1d9f1226ac",
+          "ev_da993675487e",
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_427ca269033c": 1,
-          "ev_0a15b3f18a09": 1,
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_6e1d9f1226ac": 1,
+          "ev_da993675487e": 1,
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "Checked payments: BDT 1000.00; returned: BDT 0.00. Trained text readings remain advisory.",
         "next_step": "Claim verified",
@@ -2638,39 +2638,39 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 9,
-        "id": "trace_ebb38b7fd520",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.732154+00:00",
+        "id": "trace_f641055b22cc",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.500891+00:00",
         "phase": "verify",
         "title": "Claim verified",
         "purpose": "Establish whether duplicate payment is supported, contradicted or inconclusive.",
         "action": "Verify the reported payment issue",
         "finding": "INCONCLUSIVE. Final transfer evidence is incomplete",
         "evidence_ids": [
-          "ev_427ca269033c",
-          "ev_0a15b3f18a09",
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_6e1d9f1226ac",
+          "ev_da993675487e",
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_427ca269033c": 1,
-          "ev_0a15b3f18a09": 1,
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_6e1d9f1226ac": 1,
+          "ev_da993675487e": 1,
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "INCONCLUSIVE. Final transfer evidence is incomplete",
         "next_step": "Possible causes evaluated",
@@ -2681,21 +2681,21 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 10,
-        "id": "trace_785570c4cccf",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.773547+00:00",
+        "id": "trace_9b4a9ac46bf6",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.550347+00:00",
         "phase": "causes",
         "title": "Possible causes evaluated",
         "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
         "action": "Evaluate Partner response delayed / missing",
         "finding": "SUPPORTED: A response was unavailable when the path was first checked.",
         "evidence_ids": [
-          "ev_494b4f1dc67a"
+          "ev_7d6dc7b81eb6"
         ],
         "evidence_revisions": {
-          "ev_494b4f1dc67a": 1
+          "ev_7d6dc7b81eb6": 1
         },
         "changed": "SUPPORTED: A response was unavailable when the path was first checked.",
         "next_step": "Repair eligibility checked",
@@ -2709,7 +2709,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "description": "A response was unavailable when the path was first checked.",
             "status": "SUPPORTED",
             "supporting_evidence": [
-              "ev_494b4f1dc67a"
+              "ev_7d6dc7b81eb6"
             ],
             "contradicting_evidence": [],
             "unresolved_evidence": [
@@ -2720,23 +2720,23 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 11,
-        "id": "trace_e64d7f7aa39b",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.823252+00:00",
+        "id": "trace_bab91904cb93",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.597585+00:00",
         "phase": "causes",
         "title": "Possible causes evaluated",
         "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
         "action": "Evaluate Retry produced an additional debit",
         "finding": "CONTRADICTED: Two financial postings, rather than two request events, establish the discrepancy.",
         "evidence_ids": [
-          "ev_374ad08cb90f",
-          "ev_485280bd5414"
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696"
         ],
         "evidence_revisions": {
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1
         },
         "changed": "CONTRADICTED: Two financial postings, rather than two request events, establish the discrepancy.",
         "next_step": "Repair eligibility checked",
@@ -2750,7 +2750,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "description": "A response was unavailable when the path was first checked.",
             "status": "SUPPORTED",
             "supporting_evidence": [
-              "ev_494b4f1dc67a"
+              "ev_7d6dc7b81eb6"
             ],
             "contradicting_evidence": [],
             "unresolved_evidence": [
@@ -2764,8 +2764,8 @@ Please verify this ৳1,000 transfer and all exact postings.
             "status": "CONTRADICTED",
             "supporting_evidence": [],
             "contradicting_evidence": [
-              "ev_374ad08cb90f",
-              "ev_485280bd5414"
+              "ev_e709c9e1ae8c",
+              "ev_e07788791696"
             ],
             "unresolved_evidence": []
           }
@@ -2773,11 +2773,11 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 12,
-        "id": "trace_235140c14099",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.867235+00:00",
+        "id": "trace_feb3721cbfd5",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.645299+00:00",
         "phase": "causes",
         "title": "Possible causes evaluated",
         "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
@@ -2797,7 +2797,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "description": "A response was unavailable when the path was first checked.",
             "status": "SUPPORTED",
             "supporting_evidence": [
-              "ev_494b4f1dc67a"
+              "ev_7d6dc7b81eb6"
             ],
             "contradicting_evidence": [],
             "unresolved_evidence": [
@@ -2811,8 +2811,8 @@ Please verify this ৳1,000 transfer and all exact postings.
             "status": "CONTRADICTED",
             "supporting_evidence": [],
             "contradicting_evidence": [
-              "ev_374ad08cb90f",
-              "ev_485280bd5414"
+              "ev_e709c9e1ae8c",
+              "ev_e07788791696"
             ],
             "unresolved_evidence": []
           },
@@ -2832,11 +2832,11 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 13,
-        "id": "trace_3ad543a63634",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.913750+00:00",
+        "id": "trace_d439f2720e04",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.706828+00:00",
         "phase": "causes",
         "title": "Possible causes evaluated",
         "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
@@ -2856,7 +2856,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "description": "A response was unavailable when the path was first checked.",
             "status": "SUPPORTED",
             "supporting_evidence": [
-              "ev_494b4f1dc67a"
+              "ev_7d6dc7b81eb6"
             ],
             "contradicting_evidence": [],
             "unresolved_evidence": [
@@ -2870,8 +2870,8 @@ Please verify this ৳1,000 transfer and all exact postings.
             "status": "CONTRADICTED",
             "supporting_evidence": [],
             "contradicting_evidence": [
-              "ev_374ad08cb90f",
-              "ev_485280bd5414"
+              "ev_e709c9e1ae8c",
+              "ev_e07788791696"
             ],
             "unresolved_evidence": []
           },
@@ -2902,11 +2902,11 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 14,
-        "id": "trace_25b02a3e1514",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:18.963970+00:00",
+        "id": "trace_15bc6123780a",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.752165+00:00",
         "phase": "causes",
         "title": "Possible causes evaluated",
         "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
@@ -2926,7 +2926,7 @@ Please verify this ৳1,000 transfer and all exact postings.
             "description": "A response was unavailable when the path was first checked.",
             "status": "SUPPORTED",
             "supporting_evidence": [
-              "ev_494b4f1dc67a"
+              "ev_7d6dc7b81eb6"
             ],
             "contradicting_evidence": [],
             "unresolved_evidence": [
@@ -2940,8 +2940,8 @@ Please verify this ৳1,000 transfer and all exact postings.
             "status": "CONTRADICTED",
             "supporting_evidence": [],
             "contradicting_evidence": [
-              "ev_374ad08cb90f",
-              "ev_485280bd5414"
+              "ev_e709c9e1ae8c",
+              "ev_e07788791696"
             ],
             "unresolved_evidence": []
           },
@@ -2984,39 +2984,39 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 15,
-        "id": "trace_61d0577dd488",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:19.008779+00:00",
+        "id": "trace_487b87e13842",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.806108+00:00",
         "phase": "causes",
         "title": "Possible causes evaluated",
         "purpose": "Update hypotheses from supporting, contradicting and unresolved evidence.",
         "action": "Use deterministic evidence assessment",
         "finding": "Demo mode explicitly selected.",
         "evidence_ids": [
-          "ev_427ca269033c",
-          "ev_0a15b3f18a09",
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_6e1d9f1226ac",
+          "ev_da993675487e",
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_427ca269033c": 1,
-          "ev_0a15b3f18a09": 1,
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_6e1d9f1226ac": 1,
+          "ev_da993675487e": 1,
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "Mode explicitly changed to demo investigation.",
         "next_step": "Check backend eligibility.",
@@ -3027,35 +3027,35 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 16,
-        "id": "trace_37db423d87d6",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:19.016934+00:00",
+        "id": "trace_f5ef481c4b85",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.820835+00:00",
         "phase": "eligibility",
         "title": "Repair eligibility checked",
         "purpose": "Determine whether a supported action is authorized by backend rules.",
         "action": "Check backend eligibility and permissions",
         "finding": "Repair Not Authorized: Available evidence does not authorize an automatic correction.",
         "evidence_ids": [
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "Repair Not Authorized: Available evidence does not authorize an automatic correction.",
         "next_step": "Recommendation generated",
@@ -3066,35 +3066,35 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 17,
-        "id": "trace_276277c85c48",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:19.069561+00:00",
+        "id": "trace_613f2db7c70b",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.877231+00:00",
         "phase": "recommend",
         "title": "Recommendation generated",
         "purpose": "Present an evidence-cited proposal and its constraints.",
         "action": "Generate a cited operator recommendation",
         "finding": "MANUAL REVIEW. Verify the missing source records and retain an accountable owner.",
         "evidence_ids": [
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "MANUAL REVIEW. Verify the missing source records and retain an accountable owner.",
         "next_step": "Operator decision required",
@@ -3105,35 +3105,35 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 18,
-        "id": "trace_d6c667069903",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:19.118753+00:00",
+        "id": "trace_a05862e0e45e",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:55.940572+00:00",
         "phase": "decision",
         "title": "Operator decision required",
         "purpose": "Require approval or an owned handoff; investigation completion is not resolution.",
         "action": "Require an operator decision",
         "finding": "Investigation finished. The payment is resolved only after a verified outcome or correction.",
         "evidence_ids": [
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "Human review or evidence follow-up required.",
         "next_step": "Approve, reject, record review or hand off.",
@@ -3144,35 +3144,35 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 19,
-        "id": "trace_3d5159c5a1bf",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:19.285754+00:00",
+        "id": "trace_2569ee2b506f",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:56.100125+00:00",
         "phase": "decision",
         "title": "Operator decision required",
         "purpose": "Require approval or an owned handoff; investigation completion is not resolution.",
         "action": "Request an owned handoff",
         "finding": "Partner Operations: Final response, wallet outcome and settlement evidence are incomplete.",
         "evidence_ids": [
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "Operator action saved in case history.",
         "next_step": "Current owner remains accountable until staff_2 acknowledges. Retrieve exact final partner and wallet confirmation.",
@@ -3183,35 +3183,35 @@ Please verify this ৳1,000 transfer and all exact postings.
       },
       {
         "sequence": 20,
-        "id": "trace_576f5f2f77bc",
-        "run_id": "run_9e4c08c280c8",
-        "case_id": "case_b88ae850e765",
-        "incident_id": "incident_c5ed066278bf",
-        "timestamp": "2026-10-03T02:05:19.318276+00:00",
+        "id": "trace_353fe0c88786",
+        "run_id": "run_3d2210ff6090",
+        "case_id": "case_017e048acb76",
+        "incident_id": "incident_47cc49dd21ce",
+        "timestamp": "2026-10-03T02:32:56.154472+00:00",
         "phase": "decision",
         "title": "Operator decision required",
         "purpose": "Require approval or an owned handoff; investigation completion is not resolution.",
         "action": "Acknowledge the handoff",
         "finding": "Ownership changed to staff_2.",
         "evidence_ids": [
-          "ev_cddc6cebb84b",
-          "ev_5ed223a32151",
-          "ev_374ad08cb90f",
-          "ev_485280bd5414",
-          "ev_3ddc48943322",
-          "ev_494b4f1dc67a",
-          "ev_756659009c95",
-          "ev_5fac3de1cb44"
+          "ev_77dd9ff58f96",
+          "ev_a627ec494753",
+          "ev_e709c9e1ae8c",
+          "ev_e07788791696",
+          "ev_43cd1a91e1bc",
+          "ev_7d6dc7b81eb6",
+          "ev_2dc78272037d",
+          "ev_6edf866c4e95"
         ],
         "evidence_revisions": {
-          "ev_cddc6cebb84b": 1,
-          "ev_5ed223a32151": 1,
-          "ev_374ad08cb90f": 1,
-          "ev_485280bd5414": 1,
-          "ev_3ddc48943322": 1,
-          "ev_494b4f1dc67a": 1,
-          "ev_756659009c95": 1,
-          "ev_5fac3de1cb44": 1
+          "ev_77dd9ff58f96": 1,
+          "ev_a627ec494753": 1,
+          "ev_e709c9e1ae8c": 1,
+          "ev_e07788791696": 1,
+          "ev_43cd1a91e1bc": 1,
+          "ev_7d6dc7b81eb6": 1,
+          "ev_2dc78272037d": 1,
+          "ev_6edf866c4e95": 1
         },
         "changed": "Operator action saved in case history.",
         "next_step": "Retrieve exact final partner and wallet confirmation.",
@@ -3257,14 +3257,14 @@ Please verify this ৳1,000 transfer and all exact postings.
   "bank_inventory_complete": true,
   "remaining_unsettled_minor": 100000,
   "evidence_ids": [
-    "ev_cddc6cebb84b",
-    "ev_5ed223a32151",
-    "ev_374ad08cb90f",
-    "ev_485280bd5414",
-    "ev_3ddc48943322",
-    "ev_494b4f1dc67a",
-    "ev_756659009c95",
-    "ev_5fac3de1cb44"
+    "ev_77dd9ff58f96",
+    "ev_a627ec494753",
+    "ev_e709c9e1ae8c",
+    "ev_e07788791696",
+    "ev_43cd1a91e1bc",
+    "ev_7d6dc7b81eb6",
+    "ev_2dc78272037d",
+    "ev_6edf866c4e95"
   ]
 }
 ```
@@ -3279,7 +3279,7 @@ Please verify this ৳1,000 transfer and all exact postings.
     "description": "A response was unavailable when the path was first checked.",
     "status": "SUPPORTED",
     "supporting_evidence": [
-      "ev_494b4f1dc67a"
+      "ev_7d6dc7b81eb6"
     ],
     "contradicting_evidence": [],
     "unresolved_evidence": [
@@ -3293,8 +3293,8 @@ Please verify this ৳1,000 transfer and all exact postings.
     "status": "CONTRADICTED",
     "supporting_evidence": [],
     "contradicting_evidence": [
-      "ev_374ad08cb90f",
-      "ev_485280bd5414"
+      "ev_e709c9e1ae8c",
+      "ev_e07788791696"
     ],
     "unresolved_evidence": []
   },
@@ -3349,14 +3349,14 @@ INCONCLUSIVE
   "action": "MANUAL_REVIEW",
   "amount_minor": 0,
   "evidence_ids": [
-    "ev_cddc6cebb84b",
-    "ev_5ed223a32151",
-    "ev_374ad08cb90f",
-    "ev_485280bd5414",
-    "ev_3ddc48943322",
-    "ev_494b4f1dc67a",
-    "ev_756659009c95",
-    "ev_5fac3de1cb44"
+    "ev_77dd9ff58f96",
+    "ev_a627ec494753",
+    "ev_e709c9e1ae8c",
+    "ev_e07788791696",
+    "ev_43cd1a91e1bc",
+    "ev_7d6dc7b81eb6",
+    "ev_2dc78272037d",
+    "ev_6edf866c4e95"
   ],
   "reason": "Available evidence does not authorize an automatic correction.",
   "missing": [
@@ -3367,11 +3367,11 @@ INCONCLUSIVE
   "approval_required": true,
   "team": "Partner Operations",
   "next_action": "Verify the missing source records and retain an accountable owner.",
-  "id": "recommendation_4317808ef865",
-  "run_id": "run_9e4c08c280c8",
-  "case_id": "case_b88ae850e765",
-  "incident_id": "incident_c5ed066278bf",
-  "at": "2026-10-03T02:05:19.116574+00:00"
+  "id": "recommendation_6001a67fe9eb",
+  "run_id": "run_3d2210ff6090",
+  "case_id": "case_017e048acb76",
+  "incident_id": "incident_47cc49dd21ce",
+  "at": "2026-10-03T02:32:55.938874+00:00"
 }
 ```
 
@@ -3405,7 +3405,7 @@ INCONCLUSIVE
   "remaining_unsettled_minor": 100000,
   "outstanding_requests": [],
   "owner": "staff_2",
-  "next_review": "2026-10-03T06:05:18.242601+00:00"
+  "next_review": "2026-10-03T06:32:54.862522+00:00"
 }
 ```
 
@@ -3420,16 +3420,16 @@ INCONCLUSIVE
 ```json
 [
   {
-    "id": "handoff_e84161a7dda8",
+    "id": "handoff_527a9fec0eef",
     "origin": "staff_1",
     "destination": "staff_2",
     "reason": "Final response, wallet outcome and settlement evidence are incomplete.",
-    "at": "2026-10-03T02:05:19.285151+00:00",
+    "at": "2026-10-03T02:32:56.098949+00:00",
     "status": "ACKNOWLEDGED",
     "team": "Partner Operations",
     "priority": "HIGH",
     "next_action": "Retrieve exact final partner and wallet confirmation.",
-    "acknowledged_at": "2026-10-03T02:05:19.317866+00:00"
+    "acknowledged_at": "2026-10-03T02:32:56.153675+00:00"
   }
 ]
 ```
@@ -3439,22 +3439,22 @@ INCONCLUSIVE
 ```json
 [
   {
-    "at": "2026-10-03T02:05:18.242652+00:00",
+    "at": "2026-10-03T02:32:54.862627+00:00",
     "text": "Your transfer complaint is saved under one incident. An operator will verify the payment records.",
     "text_bn": "আপনার মামলার নতুন আপডেট সংরক্ষণ করা হয়েছে। তদন্তকারী বিস্তারিত পর্যালোচনা করবেন।"
   },
   {
-    "at": "2026-10-03T02:05:19.117117+00:00",
+    "at": "2026-10-03T02:32:55.939586+00:00",
     "text": "Final transfer evidence is incomplete",
     "text_bn": "ট্রান্সফারের চূড়ান্ত তথ্য অসম্পূর্ণ। আরও যাচাই প্রয়োজন।"
   },
   {
-    "at": "2026-10-03T02:05:19.285172+00:00",
+    "at": "2026-10-03T02:32:56.098975+00:00",
     "text": "Further review was requested. Your current investigator retains responsibility until the handoff is accepted.",
     "text_bn": "আপনার মামলার নতুন আপডেট সংরক্ষণ করা হয়েছে। তদন্তকারী বিস্তারিত পর্যালোচনা করবেন।"
   },
   {
-    "at": "2026-10-03T02:05:19.317900+00:00",
+    "at": "2026-10-03T02:32:56.153718+00:00",
     "text": "The handoff was accepted by your new investigator.",
     "text_bn": "আপনার মামলার নতুন আপডেট সংরক্ষণ করা হয়েছে। তদন্তকারী বিস্তারিত পর্যালোচনা করবেন।"
   }
@@ -3467,55 +3467,55 @@ INCONCLUSIVE
 [
   {
     "id": 10,
-    "case_id": "case_b88ae850e765",
+    "case_id": "case_017e048acb76",
     "actor": "customer_1",
     "action": "transfer_complaint",
-    "at": "2026-10-03T02:05:18.243433+00:00",
+    "at": "2026-10-03T02:32:54.862872+00:00",
     "version": 1,
     "detail": ""
   },
   {
     "id": 11,
-    "case_id": "case_b88ae850e765",
+    "case_id": "case_017e048acb76",
     "actor": "staff_1",
     "action": "investigation_started",
-    "at": "2026-10-03T02:05:18.257418+00:00",
+    "at": "2026-10-03T02:32:54.894999+00:00",
     "version": 2,
-    "detail": "run_9e4c08c280c8"
+    "detail": "run_3d2210ff6090"
   },
   {
     "id": 12,
-    "case_id": "case_b88ae850e765",
+    "case_id": "case_017e048acb76",
     "actor": "investigator",
     "action": "records_retrieved",
-    "at": "2026-10-03T02:05:18.405518+00:00",
+    "at": "2026-10-03T02:32:55.062029+00:00",
     "version": 3,
-    "detail": "[\"check_a1795aa9d182\", \"check_696a94f8311a\", \"check_bb57fa192ab9\", \"check_2bb0ae444378\", \"check_7b1628b0e5cc\", \"check_d222320a9219\", \"check_f855f989f200\"]"
+    "detail": "[\"check_e94f411b29cd\", \"check_177285fcfe48\", \"check_f5bce35b0038\", \"check_5540ce35ec9f\", \"check_ef2c1c60d02f\", \"check_ed43104e5bbf\", \"check_7d79dab389dc\"]"
   },
   {
     "id": 13,
-    "case_id": "case_b88ae850e765",
+    "case_id": "case_017e048acb76",
     "actor": "investigator",
     "action": "investigation_completed",
-    "at": "2026-10-03T02:05:19.119464+00:00",
+    "at": "2026-10-03T02:32:55.941351+00:00",
     "version": 4,
-    "detail": "run_9e4c08c280c8"
+    "detail": "run_3d2210ff6090"
   },
   {
     "id": 14,
-    "case_id": "case_b88ae850e765",
+    "case_id": "case_017e048acb76",
     "actor": "staff_1",
     "action": "handoff",
-    "at": "2026-10-03T02:05:19.289167+00:00",
+    "at": "2026-10-03T02:32:56.101742+00:00",
     "version": 5,
     "detail": ""
   },
   {
     "id": 15,
-    "case_id": "case_b88ae850e765",
+    "case_id": "case_017e048acb76",
     "actor": "staff_2",
     "action": "acknowledge",
-    "at": "2026-10-03T02:05:19.320520+00:00",
+    "at": "2026-10-03T02:32:56.157088+00:00",
     "version": 6,
     "detail": ""
   }

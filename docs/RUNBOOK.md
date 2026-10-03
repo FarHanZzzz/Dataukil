@@ -7,11 +7,11 @@ cd D:\dataukil
 .\run.ps1 -Restart
 ```
 
-Open http://127.0.0.1:8000/customer or http://127.0.0.1:8000/operations. The launcher checks imports and `-Restart` replaces only this workspace's existing TraceFix server. Saved cases and uploads remain on disk. **Ctrl+C** stops it.
+The launcher opens http://127.0.0.1:8000/ automatically after the server responds. Payments opens `/customer`; Operations opens `/operations`; MFS opens `/mfs`. The launcher checks imports and `-Restart` replaces only this workspace's existing TraceFix server. Saved cases and uploads remain on disk. **Ctrl+C** stops it. `-NoBrowser` suppresses automatic opening.
 
 Use `.\run.ps1 -Check` to check imports and port status without launching. `.\run.ps1 -Restart -Reload` enables development reload; an interrupted investigation needs an explicit restart. An unrelated application on port 8000 is left alone; choose another port with `.\run.ps1 -Port 8001`. The same switches work with `scripts/start.ps1`.
 
-The retained QR/cash simulation is at `/demo`. At `/customer`, create a synthetic bank-to-upay transfer, run its stages and report the issue. Open its case from Operations and click **Analyze Case** to enter the Studio. **Verified duplicate** supports a separately approved sandbox reversal. **Missing response** blocks repair and requires an owned handoff.
+The retained QR/cash simulation is at `/qr-demo`. `/demo` redirects to the add-money `/mfs` walkthrough from `main`; its customer and investigator pages are `/customer/payment` and `/admin/queue`. At `/customer`, create a synthetic bank-to-upay transfer, run its stages and report the issue. Open its case from Operations and click **Analyze Case** to enter the Studio. **Verified duplicate** supports a separately approved sandbox reversal. **Missing response** blocks repair and requires an owned handoff.
 
 ## Run the mobile app simulation
 
