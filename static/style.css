@@ -92,6 +92,7 @@ body:not(.is-home) .fx-mountain{display:none}
 .nav-links button:hover,.nav-links button[aria-current=page]{color:var(--blue)}
 .nav-links button[aria-current=page]::after{transform:scaleX(1)}
 .nav-actions{display:flex;align-items:center;gap:16px}
+.nav-single .nav-cta{display:inline-flex;text-decoration:none}
 .nav-session{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .nav-session::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--faint);opacity:.6}
 .nav-session.live{color:var(--blue-l)}

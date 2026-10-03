@@ -26,7 +26,7 @@ cd D:\dataukil
 .\run.ps1 -Restart
 ```
 
-The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the server responds. Its navigation contains Overview, How it works, Payments and Operations. The older Customer, Investigator, Judge and MFS shortcuts have been removed from the header and footer.
+The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the server responds. The header has one **Walkthrough** button, which navigates directly to `/customer` on desktop and mobile. The other header and footer navigation shortcuts have been removed.
 
 | Page | Purpose |
 |---|---|

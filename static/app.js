@@ -57,14 +57,16 @@ async function api(path, options = {}) {
 function updateNav() {
   const s = state.session;
   const el = document.querySelector('#nav-session');
-  el.textContent = s ? who(s.actor) : 'Session_Idle';
-  el.classList.toggle('live', !!s);
+  if (el) {
+    el.textContent = s ? who(s.actor) : 'Session_Idle';
+    el.classList.toggle('live', !!s);
+  }
   const current = state.page === 'home' ? '[data-nav="home"]' : state.page === 'story' ? '[data-nav="story"]' :
     s && ['list', 'case', 'intake', 'judge'].includes(state.page) ? `[data-role="${s.role}"]` : null;
   document.querySelectorAll('.nav-links button').forEach(b => b.removeAttribute('aria-current'));
   if (current) document.querySelector('.nav-links ' + current)?.setAttribute('aria-current', 'page');
 }
-function closeNav() { navEl.classList.remove('open'); document.querySelector('#nav-toggle').setAttribute('aria-expanded', 'false'); }
+function closeNav() { navEl.classList.remove('open'); document.querySelector('#nav-toggle')?.setAttribute('aria-expanded', 'false'); }
 function setSession(s) { state.session = s; updateNav(); }
 
 /* Renders a view. `scroll:false` keeps the reader's place when a view refreshes in place. */

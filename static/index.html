@@ -10,9 +10,9 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2301040F'/%3E%3Crect x='6' y='6' width='20' height='20' fill='%230C2C78' stroke='%234DA3FF' stroke-width='2'/%3E%3Crect x='13' y='13' width='6' height='6' fill='%232563FF'/%3E%3C/svg%3E">
 <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/style.css?v=6">
+<link rel="stylesheet" href="/static/style.css?v=7">
 <script src="/static/js/backdrop.js?v=5" defer></script>
-<script src="/static/app.js?v=6" defer></script>
+<script src="/static/app.js?v=7" defer></script>
 </head>
 <body class="is-home">
 <a class="skip" href="#main">Skip to content</a>
@@ -76,23 +76,15 @@
 <div class="fx fx-hud fx-hud-bottom-deep" aria-hidden="true"></div>
 <div class="fx fx-hud fx-hud-left" aria-hidden="true"></div>
 
-<header class="nav">
+<header class="nav nav-single">
   <div class="nav-inner">
     <a href="/" class="logo" data-nav="home" aria-label="TraceFix home">
       <span class="logo-mark" aria-hidden="true"><i></i></span>
       <span class="logo-word">TraceFix</span>
     </a>
-    <nav id="nav-links" class="nav-links" aria-label="Primary">
-      <button type="button" data-nav="home">Overview</button>
-      <button type="button" data-nav="story">How it works</button>
-      <a href="/customer">Payments</a>
-      <a href="/operations">Operations</a>
+    <nav id="nav-links" class="nav-actions" aria-label="Primary">
+      <a href="/customer" class="btn btn-sm nav-cta"><span class="btn-label">Walkthrough<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></span></a>
     </nav>
-    <div class="nav-actions">
-      <span class="nav-session" id="nav-session" aria-live="polite">Session_Idle</span>
-      <button type="button" class="btn btn-sm nav-cta" data-nav="story"><span class="btn-label">Walkthrough<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></span></button>
-      <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
-    </div>
   </div>
 </header>
 
@@ -109,14 +101,6 @@
         <h3>One purchase. Every source in view.</h3>
         <p>Investigate stuck transfers and paid-twice complaints. Source records stay separate from customer statements; every sandbox correction requires an authorized operator.</p>
       </div>
-      <ul class="footer-links" aria-label="Workspace">
-        <li><button type="button" data-nav="home">Overview</button></li>
-        <li><button type="button" data-nav="story">How it works</button></li>
-        <li><a href="/customer">Payments</a></li>
-      </ul>
-      <ul class="footer-links" aria-label="Operations">
-        <li><a href="/operations">Operations</a></li>
-      </ul>
     </div>
     <div class="footer-bottom">
       <p>Demo environment // Track 06</p>
