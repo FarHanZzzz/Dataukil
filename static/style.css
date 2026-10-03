@@ -678,8 +678,9 @@ dialog::backdrop{background:rgba(1,4,15,.78);-webkit-backdrop-filter:blur(4px);b
   .reveal{opacity:1;transform:none;filter:none}
 }
 
-/* Link to the standalone MFS add-money page (a separate document, not part of this single-page app). */
-.nav-links a.nav-mfs{position:relative;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);padding:8px 0;transition:color .2s;text-decoration:none}
-.nav-links a.nav-mfs:hover,.nav-links a.nav-mfs:focus-visible{color:var(--blue)}
-.nav-links a.nav-mfs::before{content:"";display:inline-block;width:6px;height:6px;margin-right:8px;border-radius:50%;background:var(--blue);box-shadow:0 0 8px var(--blue);vertical-align:1px}
-@media (max-width:900px){.nav-links a.nav-mfs{padding:16px 0;border-bottom:1px solid var(--line);font-size:13px}}
+/* Standalone workspace links use the same navigation treatment as the page controls. */
+.nav-links>a{position:relative;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);padding:8px 0;transition:color .2s;text-decoration:none}
+.nav-links>a:hover,.nav-links>a:focus-visible{color:var(--blue)}
+.footer-links a{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);transition:color .2s;text-align:left;text-decoration:none}
+.footer-links a:hover,.footer-links a:focus-visible{color:var(--blue)}
+@media (max-width:900px){.nav-links>a{padding:16px 0;border-bottom:1px solid var(--line);font-size:13px}}
