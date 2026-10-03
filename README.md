@@ -71,7 +71,7 @@ Fresh checkout ML preparation:
 
 The encoder is frozen; a logistic regression classifier head is actually trained. First-run grouped synthetic macro F1: **0.827**; separately authored challenge macro F1: **0.471**. All labels are agent-authored and lack independent human review. Rules are the primary advisory path, with actual trained labels separately visible. Revised rules reuse the challenge test; the original results are preserved. These scores are not real-world accuracy claims.
 
-The separate add-money investigation remains available at `/mfs`, with `/customer/payment` and `/admin/queue` pages, as documented in [docs/ADD_MONEY_INVESTIGATION.md](docs/ADD_MONEY_INVESTIGATION.md). Its Add-money walkthrough shortcuts have been removed from the homepage and dashboard sidebar at the user's request.
+The separate add-money investigation remains available at `/mfs`, with `/customer/payment` and `/admin/queue` pages, as documented in [docs/ADD_MONEY_INVESTIGATION.md](docs/ADD_MONEY_INVESTIGATION.md).
 
 Start with [the context index](docs/CONTEXT.md), [runbook](docs/RUNBOOK.md), [implementation handoff](docs/HANDOFF.md), and [ML/data context](docs/ML.md). The supplied [final specification](TraceFix_Final_Track6_Hybrid_and_Master_Prompt.md) is preserved. Archive transaction data was not used for evidence-verifier training.
 

@@ -23,7 +23,7 @@ const S = {
   analysisMode:params.get('mode') || 'live', presentationPaused:false, presentationCursor:0
 };
 const BN = {
- 'Customer dashboard':'গ্রাহক ড্যাশবোর্ড','Operations center':'অপারেশনস কেন্দ্র','QR + cash demo lab':'QR + নগদ ডেমো',
+ 'Customer dashboard':'গ্রাহক ড্যাশবোর্ড','Operations center':'অপারেশনস কেন্দ্র','QR + cash demo lab':'QR + নগদ ডেমো','Add-money walkthrough':'টাকা যোগ করার ডেমো',
  'Synthetic environment':'সিমুলেটেড পরিবেশ','Refresh':'রিফ্রেশ','Your payments, clearly explained.':'আপনার লেনদেনের প্রতিটি ধাপ দেখুন।',
  'Send a bank → upay transfer':'ব্যাংক → উপায় ট্রান্সফার করুন','New synthetic transfer':'নতুন সিমুলেটেড ট্রান্সফার',
  'Demo customer name':'ডেমো গ্রাহকের নাম','Amount (BDT)':'পরিমাণ (টাকা)','Demo scenario':'ডেমো পরিস্থিতি',
@@ -154,7 +154,7 @@ function updateShell() {
   $('#language-wrap').hidden=S.page!=='customer';$('#identity-wrap').hidden=S.page==='customer';
   $('#language').value=S.lang;$('#identity').value=S.role;$('#avatar').textContent=S.page==='customer'?'C':S.role==='staff'?'O1':'O2';
   $('#breadcrumb').textContent=tr(S.page==='customer'?'Customer dashboard':S.page==='operations'?'Operations center':S.page==='studio'?'Operations / AI Investigation Studio':'Operations / Case workspace');
-  const navLabels={customer:'Customer dashboard',operations:'Operations center',demo:'QR + cash demo lab'};
+  const navLabels={customer:'Customer dashboard',operations:'Operations center',demo:'QR + cash demo lab',mfs:'Add-money walkthrough'};
   $$('.sidebar nav a').forEach(a=>{a.classList.toggle('active',a.dataset.nav===(S.page==='customer'?'customer':'operations'));if(navLabels[a.dataset.nav])a.lastChild.textContent=tr(navLabels[a.dataset.nav]);});
   $('#refresh-page').textContent='↻ '+tr('Refresh');$('.top-status').lastChild.textContent=' '+tr('Synthetic environment');
 }
@@ -226,11 +226,24 @@ function customerPayment() {
     '<div class="amount-display">'+money(t.amount_minor)+'</div>'+
     '<div class="info-grid"><div><small>FROM</small><strong>'+esc(t.source_account)+'</strong></div><div><small>TO UPAY</small><strong>'+esc(t.destination_wallet)+'</strong></div><div><small>STARTED</small><strong>'+date(t.initiated_at)+'</strong></div></div>'+
     pipeline(t)+
-    '<div class="stage-callout"><small>'+esc(tr('Why this stage?'))+' / '+esc(tr(current?.title || 'Customer'))+'</small><p>'+esc(customerText(current?.purpose))+'</p><strong>'+esc(tr('What was found'))+'</strong><p>'+esc(customerText(last?.text))+'</p><small>'+esc(tr('What happens next'))+'</small><p>'+esc(tr(next))+'</p></div>'+
+    paymentStage(t,current,last,next)+
     '<div class="heading-actions">'+(t.can_advance?(S.auto?button('pause-auto','Pause simulation'):button('auto-payment',t.step===6?'Check late confirmation':'Run payment stages','primary'))+button('advance','Advance one stage','secondary','',S.auto):'')+
     (t.step>=2?button('complaint',t.case_id?'Track your case':'Report an issue','secondary'):'')+'</div>'+
     '<div class="info-grid"><div><small>'+esc(tr('Bank balance'))+'</small><strong>'+money(t.balances.BANK)+'</strong></div><div><small>'+esc(tr('Wallet balance'))+'</small><strong>'+money(t.balances.WALLET)+'</strong></div><div><small>'+esc(tr('Synthetic balances'))+'</small><strong>BDT · Sandbox</strong></div></div>'+
     '<details class="record-details"><summary>'+esc(tr('Saved payment timeline'))+' ('+t.timeline.length+')</summary><ul class="timeline">'+t.timeline.map(e=>'<li><time>'+date(e.timestamp)+'</time><p>'+esc(customerText(e.text))+'</p></li>').join('')+'</ul></details>';
+}
+function paymentStage(t,current,last,next) {
+  const running=S.auto && t.can_advance;
+  const finished=['SUCCEEDED','CORRECTED'].includes(t.state);
+  const mode=running?'running':finished?'complete':t.can_advance?'paused':'attention';
+  const stateText=running?'Simulation running':finished?'Confirmed outcome':t.can_advance?'Simulation paused':'Awaiting verification';
+  const stages=t.pipeline.map((n,i)=>'<span class="stage-tick '+esc(n.status)+(n.id===t.current_stage?' current':'')+'" title="'+esc(tr(n.title)+': '+tr(label(n.status)))+'"><span>'+(n.status==='completed'?'✓':i+1)+'</span></span>').join('');
+  return '<section class="stage-callout stage-'+mode+'" aria-label="'+esc(tr('Payment stage activity'))+'">'+
+    '<div class="stage-head"><span class="stage-live"><i></i>'+esc(tr(stateText))+'</span><span>'+esc(tr('Stage'))+' '+(t.step+1)+' / '+t.pipeline.length+'</span></div>'+
+    '<div class="stage-motion" aria-hidden="true"><span class="stage-endpoint">▤</span><span class="stage-wire"><i></i></span><span class="stage-core">'+(finished?'✓':running?'↗':'◈')+'</span><span class="stage-wire"><i></i></span><span class="stage-endpoint">▣</span></div>'+
+    '<h3>'+esc(tr(current?.title || 'Customer'))+'</h3><div class="stage-track" aria-label="'+esc(tr('Saved stage progress'))+'">'+stages+'</div>'+
+    '<div class="stage-explanation"><div><small>'+esc(tr('Why this stage?'))+'</small><p>'+esc(customerText(current?.purpose))+'</p></div><div><small>'+esc(tr('What was found'))+'</small><p>'+esc(customerText(last?.text))+'</p></div><div><small>'+esc(tr('What happens next'))+'</small><p>'+esc(tr(next))+'</p></div></div>'+
+    '<div class="stage-receipt"><span>↳ '+t.timeline.length+' '+esc(tr('Saved events'))+'</span><time>'+date(last?.timestamp)+'</time></div></section>';
 }
 function conversation(c,customer=false) {
   return '<div class="conversation">'+(c.messages || []).map(m=>'<div class="message '+((customer&&m.role==='customer')||(!customer&&m.actor===(S.role==='staff'?'staff_1':'staff_2'))?'mine':'')+'"><small>'+esc(m.role==='customer'?'Customer':label(m.actor))+'</small><p>'+esc(m.text)+'</p><time>'+date(m.at)+'</time></div>').join('')+'</div><form data-form="message" class="composer"><textarea name="message" rows="2" placeholder="'+esc(tr('Message your operator…'))+'" required maxlength="4000">'+esc(S.drafts.message || '')+'</textarea><button class="button primary" type="submit">'+esc(tr('Send'))+'</button></form>';

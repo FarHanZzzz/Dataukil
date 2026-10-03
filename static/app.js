@@ -214,7 +214,7 @@ function renderHome() {
       <div class="hero-pre">Investigation sequence activated</div>
       <h1 id="hero-title">One purchase.<br>Every source<br>in view.</h1>
       <p class="hero-lede">Paid twice or stuck waiting for a transfer? TraceFix reconstructs bank, wallet, QR, cash and receipt records. Follow the saved investigation, review its evidence, then approve an eligible sandbox repair or assign an owned follow-up.</p>
-      <div class="hero-cta"><a class="btn" href="/customer">Start a payment ${icon('arrow-right')}</a><a class="btn ghost" href="/operations">Open AI investigation desk</a></div>
+      <div class="hero-cta"><a class="btn" href="/customer">Start a payment ${icon('arrow-right')}</a><a class="btn ghost" href="/operations">Open AI investigation desk</a><a class="btn ghost" href="/mfs">Add-money walkthrough</a></div>
     </div>
     <div class="hero-pod">
       <div class="pod-glow"></div><div class="pod-ring a"></div><div class="pod-ring b"></div>
