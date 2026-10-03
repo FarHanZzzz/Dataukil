@@ -152,6 +152,20 @@ def home():
     return FileResponse(ROOT/'static'/'index.html')
 
 
+# The add-money investigation lives on its own standalone pages (never inside the legacy single-page app).
+PAY_PAGES=ROOT/'static'/'pay'
+
+
+@app.get('/customer')
+def customer_root():
+    return RedirectResponse('/customer/payment')
+
+
+@app.get('/customer/{rest:path}')
+def customer_page(rest:str):
+    return FileResponse(PAY_PAGES/'customer.html')
+
+
 @app.post('/api/session')
 async def start_session(request:Request,response:Response):
     p=await payload(request)
