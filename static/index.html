@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#01040F">
 <meta name="color-scheme" content="dark">
-<meta name="description" content="TraceFix — a synthetic paid-twice investigation workspace. Keep what is confirmed apart from what is only claimed.">
-<title>TraceFix — Transaction Investigation Workspace</title>
+<meta name="description" content="DataUkil — a synthetic paid-twice investigation workspace. Keep what is confirmed apart from what is only claimed.">
+<title>DataUkil — Transaction Investigation Workspace</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2301040F'/%3E%3Crect x='6' y='6' width='20' height='20' fill='%230C2C78' stroke='%234DA3FF' stroke-width='2'/%3E%3Crect x='13' y='13' width='6' height='6' fill='%232563FF'/%3E%3C/svg%3E">
 <link rel="preload" href="/static/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/style.css?v=7">
+<link rel="stylesheet" href="/static/style.css?v=9">
+<link rel="stylesheet" href="/static/pay/css/palette.css?v=2">
 <script src="/static/js/backdrop.js?v=5" defer></script>
 <script src="/static/app.js?v=8" defer></script>
 </head>
@@ -78,12 +79,14 @@
 
 <header class="nav nav-single">
   <div class="nav-inner">
-    <a href="/" class="logo" data-nav="home" aria-label="TraceFix home">
+    <a href="/" class="logo" data-nav="home" aria-label="DataUkil home">
       <span class="logo-mark" aria-hidden="true"><i></i></span>
-      <span class="logo-word">TraceFix</span>
+      <span class="logo-word">DataUkil</span>
     </a>
-    <nav id="nav-links" class="nav-actions" aria-label="Primary">
-      <a href="/customer" class="btn btn-sm nav-cta"><span class="btn-label">Walkthrough<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></span></a>
+    <nav id="nav-links" class="nav-actions home-workspace-nav" aria-label="Primary">
+      <a href="/mfs" class="home-add-link">Add money<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      <a href="/qr-demo">QR + cash</a>
+      <details class="home-workspaces"><summary>Workspaces<svg class="icon" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary><div><a href="/customer">Transfer dashboard</a><a href="/operations">Transfer operations</a></div></details>
     </nav>
   </div>
 </header>
@@ -94,7 +97,7 @@
 <main id="main" tabindex="-1"><noscript><a href="/operations">Operations</a></noscript></main>
 
 <footer class="footer">
-  <div class="footer-watermark" aria-hidden="true">tracefix</div>
+  <div class="footer-watermark" aria-hidden="true">DataUkil</div>
   <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-brand">

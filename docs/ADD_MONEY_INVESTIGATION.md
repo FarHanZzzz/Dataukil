@@ -1,20 +1,40 @@
-# Add-money investigation (standalone pages)
+# DataUkil / Add money
 
-A bank-funded wallet top-up that stalls, and the staff investigation that follows it. It lives on its own pages and
-shares no markup, script or stylesheet with the existing workspace.
+A bank-funded wallet top-up and the investigation that follows an unconfirmed transfer. The homepage gives it its own header and hero actions and a dedicated feature before the statistics and QR content. Its page family remains independent of the QR lab, transfer dashboard and AI Studio.
 
 | Page | Path | Purpose |
 |---|---|---|
 | Customer | `/customer/payment`, `/customer/payment/{id}`, `/customer/cases/{id}` | Submit a top-up, follow progress, report an issue |
 | Operations | `/admin/queue`, `/admin/cases/{payment or case id}`, `/admin/cases/{id}/report` | Trace graph, evidence, hypotheses, plan, replay, report |
-| MFS (start here) | `/mfs` | The whole walkthrough on one page: five steps that track the run, scenario choice, run reset, processing clock, and buttons that open the other two pages |
+| Add money (start here) | `/mfs` | Five-stage guide, scenario setup, exact-run resume, recent journeys and expandable presentation controls |
 
-`/mfs` is also linked from the main site navigation, and the operations page has an **MFS** button back to it. `/demo`
-redirects to `/mfs`.
+`/demo` redirects to `/mfs`. The board retains its existing **MFS** return control on desktop to preserve the original layout; its accessible label identifies the Add money walkthrough and its link carries the saved run.
 
-Open `/mfs` first, choose a scenario and follow the five steps. Each step highlights as the run reaches it
-(customer adds money, credit stays unconfirmed, staff investigate, decide and report) and its button opens the matching
-page in a separate tab. Each tab holds its own scoped session in `sessionStorage`, so the tabs never overwrite each other.
+Open `/mfs` first and explicitly choose one of four scenarios. An automatically created empty backend run does not count as a selection. **Start walkthrough** creates the run and opens the customer form in the same tab. Technical premises and expected endings are expandable presenter details.
+
+| Walkthrough stage | Main action |
+|---|---|
+| 1. Choose a scenario | Choose the simulated situation and start the journey |
+| 2. Add money | Enter an amount, select a bank, review and confirm |
+| 3. Track the transfer | Read the saved processing or unconfirmed payment status |
+| 4. Investigate | Follow the existing board's source checks |
+| 5. Outcome and report | Review the saved decision, confirmed credit or owned follow-up |
+
+The guide shows completed, current and upcoming stages. Mobile shows the current stage plus **View all steps**. Walkthrough progress is separate from the four financial stages labeled **Transfer progress** and never confirms wallet credit by itself.
+
+**Continue walkthrough** derives its destination from saved progress: processing opens the existing payment, incidents open its investigation, a decision opens the board's existing approval controls, and an outcome opens its report when a case exists. Completed Add money steps also return to the existing payment instead of creating another one. **Open companion investigation view** explicitly opens a second tab for a side-by-side presentation.
+
+Navigation between the main site, walkthrough, customer and staff documents uses document navigation. Navigation within a page family retains browser history. Modifier clicks, new tabs, downloads and anchors retain native behavior. Known run ids travel through status, board, report and return links; unrelated recent payments never inherit a session's current run. `/mfs?run=…` selects exactly that run, with explicit recovery if it is missing from the API's twelve recent runs. Replacement journeys refresh the presenter session. Archived records remain readable and active-run controls are disabled. A fresh direct form bookmark opens the guide to check availability before enabling a submission. Staff bookmarks verify availability independently, without changing the active staff token; customer pages never request staff or presenter projections. The server remains authoritative for submissions, evidence and corrections.
+
+Customer amount/bank drafts and the review step survive refresh in tab-scoped storage without submitting. Pending submissions retain their idempotency key through uncertain responses and retries. Complaint drafts persist while live status updates reuse their textarea and restore focus. Status pages lead with the current status, amount/accounts and next action before transfer progress, investigation and updates. An owned handoff remains visibly different from confirmed wallet credit.
+
+The homepage Add money entry, walkthrough, customer pages and report use the landing page's navy and electric-blue theme through scoped tokens in `static/pay/css/palette.css` and presentation rules in `static/pay/css/landing.css`. Deep navy (`#01040F`) provides the canvas and layered navy (`#040D2A`) provides card surfaces. Electric blue (`#4DA3FF`) identifies primary actions and selections; pale blue (`#8FD3FF`) identifies information and processing; green (`#7FE3C3`) identifies confirmed success; amber (`#F4C26B`) identifies uncertainty; red (`#FF8A94`) identifies errors. Status text and icons accompany these colors. Processing and an owned follow-up never inherit the confirmed-credit treatment.
+
+Plus Jakarta Sans, Geist and JetBrains Mono provide headings, interface text and references respectively. The walkthrough echoes the landing page's chrome display type, mountain atmosphere, luminous button edges and precise panel framing. Shared card, control and icon radii, borders, focus indicators and muted text keep the surrounding pages consistent. Reports use a cool paper surface (`#F3F7FD`) with dark ink inside matching dark navigation, an explicit outcome summary, return links and Markdown/HTML exports. Wide tables scroll within their own keyboard-accessible regions. The namespaced palette does not override the desktop investigation board's existing tokens.
+
+The entry page offers four large scenario cards with short descriptions, optional **Presenter notes**, a selected-story message and one **Start walkthrough** button. Mobile keeps that button in a visible selection bar after a choice. Saved journeys show their current task before new scenario setup. **Explore investigation demo** and the entire illustrated **Open investigation workspace** card provide prominent same-tab access: they open the chosen run's payment when available, its queue otherwise, or a saved recent investigation on a fresh visit. The preview is decorative and makes no financial claim; it never submits a payment. Customer status includes a prominent **Open investigator demo view** action with an explanation of the workspace.
+
+The desktop investigation graph module and stylesheet remain unchanged. At widths up to 1040px, **Queue** opens a modal drawer and **Board**, **Details** and **Activity** expose the existing canvas, inspector and log. Selecting a node opens Details with the original Evidence/Hypotheses/Plan tabs. The primary investigation control remains visible; **More** holds secondary actions. Canvas controls wrap without changing their behavior.
 
 ## Running
 
@@ -81,3 +101,11 @@ legacy tables are not modified by this feature.
 ```bash
 PYTHONPATH=. .venv/bin/python -m pytest tests/test_transfer.py tests/test_workflow.py -q
 ```
+
+Browser acceptance checks use an isolated temporary database and drive the existing simulated clock explicitly:
+
+```bash
+PLAYWRIGHT_MODULE=/path/to/playwright-core TRACEFIX_CHROME=/path/to/chrome node scripts/check_add_money_ui.mjs
+```
+
+With Playwright installed normally, omit `PLAYWRIGHT_MODULE`. `TRACEFIX_KEEP_UI_ARTIFACTS=1` retains the temporary database and assertion record; failures also retain a browser trace. Checks cover all four financial endings, uncertain HTTP responses and repeated confirmation, draft/review persistence, live complaint focus, same-tab/companion and modifier navigation, Back/Forward with a delayed response, exact/archived/unavailable runs, exports, replay, zoom/pan, citations, keyboard focus and widths 320, 390, 768, 1024, 1440 and 1920px. See [the UI validation record](ADD_MONEY_UI_VALIDATION.md).

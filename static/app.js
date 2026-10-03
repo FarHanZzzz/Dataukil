@@ -1,5 +1,5 @@
 'use strict';
-/* TraceFix front end. Vanilla SPA rendered into #main.
+/* DataUkil front end. Vanilla SPA rendered into #main.
    Business logic and API calls are unchanged from the previous UI; this file owns the
    Nexus-styled views (landing, walkthrough, customer portal, investigator desk, judge console). */
 
@@ -158,7 +158,7 @@ const FAQ = {
     ['What does the customer see?', 'A clear saved status: what is confirmed, what is still open, and who reviews next. No jargon and no model scores.']
   ] },
   safety: { label: 'Safety', items: [
-    ['Can TraceFix move money?', 'No. It is built for investigation only. Refunds and repayments stay with the provider, and a repayment request is never shown as returned money.'],
+    ['Can DataUkil move money?', 'No. It is built for investigation only. Refunds and repayments stay with the provider, and a repayment request is never shown as returned money.'],
     ['Who makes the final call?', 'A human investigator records the decision with cited sources. Handoffs keep the current owner until the receiving investigator accepts.'],
     ['How does it connect to providers?', 'Through read-only source adapters: exact-reference lookups for payments, invoices and merchant acknowledgements. The demo ships with all three.'],
     ['Is every action traceable?', 'Yes. Every change is versioned and idempotent, sources keep their provenance, and the full audit history exports in the case dossier.']
@@ -213,8 +213,8 @@ function renderHome() {
         <div class="barcode" aria-hidden="true">${[1, 2, 0, 3, 1].map(w => `<i class="w${w}"></i>`).join('')}</div></div>
       <div class="hero-pre">Investigation sequence activated</div>
       <h1 id="hero-title">One purchase.<br>Every source<br>in view.</h1>
-      <p class="hero-lede">Paid twice or stuck waiting for a transfer? TraceFix reconstructs bank, wallet, QR, cash and receipt records. Follow the saved investigation, review its evidence, then approve an eligible sandbox repair or assign an owned follow-up.</p>
-      <div class="hero-cta"><a class="btn" href="/customer">Start a payment ${icon('arrow-right')}</a><a class="btn ghost" href="/operations">Open AI investigation desk</a><a class="btn ghost" href="/mfs">Add-money walkthrough</a></div>
+      <p class="hero-lede">Paid twice or stuck waiting for a transfer? DataUkil reconstructs bank, wallet, QR, cash and receipt records. Follow the saved investigation, review its evidence, then approve an eligible sandbox repair or assign an owned follow-up.</p>
+      <div class="hero-cta"><a class="btn home-add-cta" href="/mfs">Explore Add money ${icon('arrow-right')}</a><a class="btn ghost" href="/qr-demo">Explore QR + cash</a></div>
     </div>
     <div class="hero-pod">
       <div class="pod-glow"></div><div class="pod-ring a"></div><div class="pod-ring b"></div>
@@ -224,11 +224,25 @@ function renderHome() {
     </div>
   </section>
 
+  <section class="home-add-money" aria-labelledby="add-money-title">
+    <div class="home-add-copy"><span class="home-add-eyebrow">A dedicated bank-to-wallet journey</span>
+      <h2 id="add-money-title">Add money.<br><span>Understand every step.</span></h2>
+      <p>Your bank approves. Your wallet waits. DataUkil connects the request, the records, and an accountable next action in one guided experience.</p>
+      <a class="btn home-add-cta" href="/mfs">Start Add money walkthrough ${icon('arrow-right')}</a>
+      <small>Synthetic partners · Fictional BDT · Saved progress</small>
+    </div>
+    <div class="home-add-visual" aria-label="Bank to wallet, investigation, and outcome">
+      <div class="home-add-visual-head"><span>CONNECTED BY EVIDENCE</span><span>● Traceable</span></div>
+      <div class="home-add-route">${[['banknote','01','Bank'],['smartphone','02','Wallet'],['search','03','Investigation'],['file-text','04','Outcome']].map(([i,n,t]) => `<div><span class="home-add-node">${icon(i)}</span><small>${n}</small><strong>${t}</strong></div>`).join('')}</div>
+      <div class="home-add-outcome">${icon('shield-check')}<div><strong>Clarity, even when a transfer stalls.</strong><span>Confirmed facts. An owned next step. A cited report.</span></div></div>
+    </div>
+  </section>
+
   <section class="band mt-48" aria-labelledby="stats-title">
     <div class="band-inner center">
       <div class="sec-head center reveal"><span class="tag">Sys_Brief</span>
         <h2 id="stats-title">Millions pay by mobile. When it goes wrong, nobody sees the full picture.</h2>
-        <p>TraceFix puts QR, cash, receipts and merchant records into one investigation, in Bangla and English.</p></div>
+        <p>DataUkil puts QR, cash, receipts and merchant records into one investigation, in Bangla and English.</p></div>
       <div class="fact-row">
         <div class="reveal"><p class="fact-num">699,605</p><p class="fact-cap">MFS disputes logged in 2025<br><small>Bangladesh Bank</small></p></div>
         <div class="reveal"><div class="partner-strip"><img src="/static/img/upay-logo-dark.png" alt="UPAY" width="54" height="54"><span>${icon('globe')}250M MFS accounts</span><span>${icon('network')}2.0M agents</span></div></div>
@@ -277,7 +291,7 @@ function renderHome() {
       </div>
       <div class="dossier-card-wrap reveal"><div class="id-card" aria-label="Sample dossier card for case TF-260003">
         <div class="id-card-top"><span>Case_ID<br>TF-260003</span>${icon('rss', 'icon-lg')}</div>
-        <h3>TraceFix</h3>
+        <h3>DataUkil</h3>
         <div class="lv"><p>Status</p><p>Open · cash unverified</p></div>
         <div class="barcode" aria-hidden="true">${[1, 2, 0, 3, 1, 2, 0, 1, 4, 1, 2, 0].map(w => `<i class="w${w}"></i>`).join('')}</div>
         <div class="id-card-foot"><span>Investigator 1</span><i></i></div>
@@ -372,7 +386,7 @@ function aiHelpMap(c) {
     ['Impact', cash ? 'Cash stays unverified. Ask the merchant.' : 'Impact appears after the live read']
   ];
   return `<section class="ai-map panel" aria-label="Where the AI helps"><div class="ai-map-head"><span>Where the AI helps</span><h2>One claim. One passage. One reading.</h2><p>It does not decide money movement. It does not replace the investigator.</p></div><div class="ai-flow">${flow.map(([k, v], i) => `<article><span>0${i + 1} · ${esc(k)}</span><p>${esc(v)}</p></article>${i < 3 ? `<div class="ai-arrow" aria-hidden="true">${icon('arrow-right', 'icon-lg')}</div>` : ''}`).join('')}</div>
-  <div class="impact-row"><article><span>Without this reading</span><h2>Easy to close too early</h2><p>Someone sees a completed QR later and treats the case as done. Or they treat a Bangla receipt as proof that cash moved.</p></article><article><span>With TraceFix</span><h2>The second payment stays a question</h2><p>${cash ? `The model said: ${say(cash.trained)} The desk shows: ${say(cash.used)} The source stays ${cash.source}. The next step is still a human request.` : 'Run the model on TF-260003. The live answer will fill this panel.'}</p></article></div></section>`;
+  <div class="impact-row"><article><span>Without this reading</span><h2>Easy to close too early</h2><p>Someone sees a completed QR later and treats the case as done. Or they treat a Bangla receipt as proof that cash moved.</p></article><article><span>With DataUkil</span><h2>The second payment stays a question</h2><p>${cash ? `The model said: ${say(cash.trained)} The desk shows: ${say(cash.used)} The source stays ${cash.source}. The next step is still a human request.` : 'Run the model on TF-260003. The live answer will fill this panel.'}</p></article></div></section>`;
 }
 function renderStory() {
   state.page = 'story';
@@ -385,7 +399,7 @@ function renderStory() {
     ['Model', 'Reads a claim against a passage. Says support, contradiction, or not enough.']
   ].map(([name, job], i) => `<article class="cast-card panel glow-card"><span>Role 0${i + 1}</span><h2>${name}</h2><p>${job}</p></article>`).join('')}</div><p class="help">Nothing here moves money. The QR code, the shop, and the case are synthetic.</p>`;
   if (s.step === 1) body = `${lifeScene(null, { highlight: 'pay' })}<div class="stage">${phone(s.paid ? `<div class="pay-top"><strong>Rafi Store</strong><span>upay · fictional</span></div><div class="pay-amount">৳500</div><p class="pay-status">Processing</p><p>The shop app has not said success or failure.</p><div class="note warning">Do not treat this screen as a failed payment, and do not pay again only because the response disappeared.</div>` : `<div class="pay-top"><strong>Rafi Store</strong><span>Show this code</span></div><img class="qr" src="/static/qr-demo-003.svg" alt="QR code encoding the fictional payment reference QR-DEMO-003" width="148" height="148"><p class="qr-ref">QR-DEMO-003</p><p>One purchase · PUR-103 · ৳500</p>${btn('Pay ৳500', { id: 'phone-pay' })}`)}<div class="stage-copy"><p>${s.paid ? 'The customer is stuck on an unclear result. The next step is their report, not a second QR payment.' : 'Press Pay on the phone. The next arrow continues only after that payment screen turns unclear.'}</p></div></div>`;
-  if (s.step === 2) body = `${lifeScene(null, { highlight: 'cash' })}<div class="stage">${phone(`<div class="pay-top"><strong>TraceFix</strong><span>Customer</span></div><p class="phone-kicker">Report paying twice</p><label>QR reference</label><div class="fake-input">QR-DEMO-003</div><p class="phone-ok">Your payment · PUR-103 · ৳500</p><label>Second payment</label><div class="fake-input">Cash · ৳500</div><label>What happened</label><div class="fake-text">আমি QR এর পরে একই কেনাকাটার জন্য নগদ টাকা দিয়েছি।</div><div class="phone-saved">Saved as TF-260003 · Investigator 1 owns the review</div>`)}<div class="stage-copy"><p>The phone is showing the complaint already stored for Customer 1. Filing it does not refund anyone.</p>${btn('Open this complaint as the customer', { id: 'open-story-customer', cls: 'ghost', after: 'arrow-right' })}</div></div>`;
+  if (s.step === 2) body = `${lifeScene(null, { highlight: 'cash' })}<div class="stage">${phone(`<div class="pay-top"><strong>DataUkil</strong><span>Customer</span></div><p class="phone-kicker">Report paying twice</p><label>QR reference</label><div class="fake-input">QR-DEMO-003</div><p class="phone-ok">Your payment · PUR-103 · ৳500</p><label>Second payment</label><div class="fake-input">Cash · ৳500</div><label>What happened</label><div class="fake-text">আমি QR এর পরে একই কেনাকাটার জন্য নগদ টাকা দিয়েছি।</div><div class="phone-saved">Saved as TF-260003 · Investigator 1 owns the review</div>`)}<div class="stage-copy"><p>The phone is showing the complaint already stored for Customer 1. Filing it does not refund anyone.</p>${btn('Open this complaint as the customer', { id: 'open-story-customer', cls: 'ghost', after: 'arrow-right' })}</div></div>`;
   if (s.step === 3) body = `${lifeScene(s.ai, { highlight: 'impact' })}<div class="split-facts"><article class="panel glow-card"><span>From the QR record</span><h2>৳500 posted</h2><p>Simulated provider record for QR-DEMO-003 and purchase PUR-103. This confirms that QR payment only.</p>${badge('Confirmed in the mock source')}</article><article class="panel glow-card"><span>From the customer</span><h2>৳500 cash claimed</h2><p>আমি QR এর পরে একই কেনাকাটার জন্য নগদ টাকা দিয়েছি। A receipt transcript exists. The upload does not make the cash confirmed.</p>${badge('Reported, not confirmed', 'warning')}</article></div><p class="help">The investigator keeps those two facts apart, then asks the model to read the wording.</p>`;
   if (s.step === 4) {
     if (s.running) body = `${lifeScene(null, { highlight: 'ai' })}<p class="note">The trained model is reading the saved passages for TF-260003. The first read can take several seconds.</p>`;
@@ -397,7 +411,7 @@ function renderStory() {
     else if (s.customerError) body = `<p class="error">${esc(s.customerError)}</p>${btn('Try the customer view again', { id: 'retry-customer' })}`;
     else if (s.customer) {
       const c = s.customer;
-      body = `${lifeScene(s.ai, { highlight: 'impact' })}<div class="stage">${phone(`<div class="pay-top"><strong>TraceFix</strong><span>${esc(c.reference)}</span></div><p class="phone-kicker">Saved status</p><p><strong>Confirmed</strong></p><ul>${c.confirmed_facts.map(f => `<li>${esc(f)}</li>`).join('') || '<li>Nothing financial is confirmed yet.</li>'}</ul><p><strong>Still open</strong></p><ul>${c.unresolved.map(f => `<li>${esc(f)}</li>`).join('') || '<li>Waiting for investigator review.</li>'}</ul><div class="phone-saved">${esc(c.next_step)}</div>`)}<div class="stage-copy"><p>This is the only view the customer gets. A review time is an investigation step, not a promise that money will return.</p>${btn('Continue in the customer portal', { id: 'open-story-customer', after: 'arrow-right' })}</div></div>`;
+      body = `${lifeScene(s.ai, { highlight: 'impact' })}<div class="stage">${phone(`<div class="pay-top"><strong>DataUkil</strong><span>${esc(c.reference)}</span></div><p class="phone-kicker">Saved status</p><p><strong>Confirmed</strong></p><ul>${c.confirmed_facts.map(f => `<li>${esc(f)}</li>`).join('') || '<li>Nothing financial is confirmed yet.</li>'}</ul><p><strong>Still open</strong></p><ul>${c.unresolved.map(f => `<li>${esc(f)}</li>`).join('') || '<li>Waiting for investigator review.</li>'}</ul><div class="phone-saved">${esc(c.next_step)}</div>`)}<div class="stage-copy"><p>This is the only view the customer gets. A review time is an investigation step, not a promise that money will return.</p>${btn('Continue in the customer portal', { id: 'open-story-customer', after: 'arrow-right' })}</div></div>`;
     } else body = '<p class="note">Loading the customer’s saved status.</p>';
   }
   const nextLabel = s.step === 1 && !s.paid ? 'Pay on the phone first' : s.step === 5 ? 'Open the customer case' : 'Next step';
@@ -591,7 +605,11 @@ document.addEventListener('click', async ev => {
 });
 document.addEventListener('change', async e => { if (e.target.id === 'switch-session') await switchRole(e.target.value); });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeNav();
+  if (e.key === 'Escape') {
+    const workspaces = document.querySelector('.home-workspaces[open]');
+    if (workspaces) { workspaces.open = false; workspaces.querySelector('summary').focus(); }
+    closeNav();
+  }
   // Arrow-key navigation inside the FAQ question list (vertical tablist).
   if (e.target.matches?.('.q') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
     e.preventDefault();

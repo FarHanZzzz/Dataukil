@@ -422,7 +422,7 @@ def report(case_id:str,request:Request,format:str='md'):
                   case_history=[dict(r) for r in db.execute('SELECT * FROM audit WHERE case_id=? ORDER BY id',(case_id,))])
     if format=='json':body=json.dumps(data,ensure_ascii=False,indent=2);media='application/json'
     else:
-        body='# TraceFix investigation report\n\n**Synthetic payment and sandbox correction records only.**\n'
+        body='# DataUkil investigation report\n\n**Synthetic payment and sandbox correction records only.**\n'
         sections=[(key.replace('_',' ').title(),value) for key,value in data.items() if key!='synthetic']
         for title,value in sections:
             body+='\n## '+title+'\n\n'+(value if isinstance(value,str) else '```json\n'+json.dumps(value,ensure_ascii=False,indent=2)+'\n```')+'\n'

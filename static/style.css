@@ -1,5 +1,5 @@
 /* ==========================================================================
-   TraceFix — "Nexus" visual system (ported from DIU UI/ui.html)
+   DataUkil — "Nexus" visual system (ported from DIU UI/ui.html)
    Deep-space blue, WebGL aurora beam, chrome-gradient display type, HUD framing,
    sci-fi buttons with edge bars, flashlight glow panels.
    CSP-safe: no inline styles, no CDNs. Everything is self-hosted under /static.
@@ -685,3 +685,36 @@ dialog::backdrop{background:rgba(1,4,15,.78);-webkit-backdrop-filter:blur(4px);b
 .footer-links a{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);transition:color .2s;text-align:left;text-decoration:none}
 .footer-links a:hover,.footer-links a:focus-visible{color:var(--blue)}
 @media (max-width:900px){.nav-links>a{padding:16px 0;border-bottom:1px solid var(--line);font-size:13px}}
+
+/* Independent add-money entry, using the landing page's shared visual theme. */
+.home-workspace-nav{display:flex;align-items:center;gap:8px;font-family:var(--font-body,'Geist',sans-serif);font-size:12px;text-transform:none;letter-spacing:0}
+.home-workspace-nav>a,.home-workspaces>summary{display:flex;align-items:center;gap:6px;padding:10px 12px;text-decoration:none;color:var(--am-text-secondary);border-radius:9px;font-weight:600;list-style:none;cursor:pointer;white-space:nowrap}
+.home-workspace-nav .home-add-link{background:var(--am-accent-soft);color:var(--am-accent);border:1px solid var(--am-accent-border)}.home-workspace-nav>a:hover,.home-workspaces>summary:hover{background:var(--am-panel);color:var(--am-text)}
+.home-workspaces{position:relative;margin:0;border:0;background:transparent}.home-workspaces>*{margin:0!important}.home-workspaces>summary::after{display:none}.home-workspaces>div{position:absolute;top:44px;right:0;display:grid;gap:4px;padding:8px;background:var(--am-panel);border:1px solid var(--am-border);border-radius:12px;min-width:210px;box-shadow:0 16px 40px #0009}
+.home-workspaces a{padding:12px;color:var(--am-text);text-decoration:none;border-radius:8px}.home-workspaces a:hover{background:var(--am-hover)}
+.home-add-money{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:64px;max-width:1200px;margin:32px auto 64px;padding:48px;background:var(--am-glow),var(--am-panel);border:1px solid var(--am-border);border-radius:var(--am-radius-card);position:relative;box-shadow:var(--am-shadow);font-family:var(--am-font);color:var(--am-text)}
+.home-add-copy{display:grid;gap:24px;justify-items:start}.home-add-eyebrow{font-size:11px;color:var(--am-accent);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.home-add-money h2{font-size:clamp(30px,3.5vw,48px);font-weight:700;line-height:1.12;text-transform:none;letter-spacing:-.045em;color:var(--am-text)}.home-add-money h2 span{color:var(--am-accent)}
+.home-add-copy p{font-size:16px;line-height:1.75;color:var(--am-text-secondary);max-width:46ch}.home-add-copy>small{color:var(--am-text-muted);font-size:11px}
+.home-add-cta.btn{background:var(--am-accent);color:var(--am-accent-ink);border:1px solid var(--am-accent);border-radius:var(--am-radius-control);font-family:var(--am-font);font-size:15px;text-transform:none;letter-spacing:0;min-height:48px;box-shadow:0 1px 0 rgba(234,243,240,.25) inset;text-shadow:none}.home-add-cta.btn:hover{background:var(--am-accent-hover);color:var(--am-accent-ink);box-shadow:0 4px 20px rgba(158,230,193,.10)}
+.home-add-cta.btn::before,.home-add-cta.btn::after{display:none}
+.home-add-cta.btn:focus-visible,.home-add-money :focus-visible,.home-workspace-nav :focus-visible{outline-color:var(--am-info)}
+.home-add-money ::selection{background:var(--am-selection);color:inherit}
+.home-add-visual{background:var(--am-inset);border:1px solid var(--am-border);border-radius:var(--am-radius-control);padding:24px;min-width:0}
+.home-add-visual-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--am-text-muted)}.home-add-visual-head>span:last-child{color:var(--am-accent)}
+.home-add-route{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:40px 0}
+.home-add-route::before{content:'';position:absolute;left:8%;right:8%;top:65px;height:1px;background:var(--am-accent-border)}.home-add-route>div{display:grid;justify-items:start;gap:8px;position:relative;min-width:0}
+.home-add-node{display:grid;place-items:center;width:50px;height:50px;border:1px solid var(--am-accent-border);border-radius:var(--am-radius-icon);background:var(--am-accent-soft);color:var(--am-accent);margin-bottom:8px}.home-add-route small{font-size:10px;color:var(--am-text-muted);font-family:var(--am-mono)}.home-add-route strong{font-size:11px;color:var(--am-text);text-transform:none;letter-spacing:0}
+.home-add-outcome{display:flex;align-items:center;gap:12px;padding-top:20px;border-top:1px solid var(--am-border);color:var(--am-accent)}.home-add-outcome strong{font-size:12px;color:var(--am-text);font-weight:500}.home-add-outcome span{display:block;color:var(--am-text-muted);font-size:11px;line-height:1.6;margin-top:4px}
+@media(max-width:800px){.home-add-money{margin:24px 16px 48px;padding:28px;grid-template-columns:minmax(0,1fr);gap:32px}.nav-single{height:auto}.nav-single .nav-inner{flex-wrap:wrap;gap:12px;height:auto;min-height:72px;padding-top:12px;padding-bottom:12px}.home-workspace-nav{gap:0}.home-workspace-nav>a,.home-workspaces>summary{padding:10px 8px;font-size:11px}}
+@media(max-width:500px){.nav-single .nav-inner{padding-left:16px;padding-right:16px}.home-workspace-nav{width:100%;justify-content:space-between}.home-add-money{padding:24px 20px}.home-add-visual{padding:20px 16px}.home-add-route{gap:8px}.home-add-route strong{font-size:10px}.home-add-node{width:42px;height:42px}.home-add-route::before{top:61px}.home-add-copy .btn{white-space:normal}.disclosure{margin-top:110px}}
+@media(max-width:500px){.hero h1{font-size:clamp(32px,11vw,48px);max-width:100%;overflow-wrap:anywhere}}
+@media(max-width:500px){body:has(.nav-single){padding-top:112px}}
+
+/* Add money belongs to the same navy / electric-blue landing experience. */
+.home-add-money{border-top:2px solid var(--am-accent-border)}
+.home-add-money h2{font-weight:500;text-transform:uppercase;letter-spacing:.01em}
+.home-add-cta.btn{background:linear-gradient(90deg,rgba(77,163,255,0),rgba(77,163,255,.16),rgba(77,163,255,0)),rgba(16,38,94,.55);color:#fff;border:1px solid var(--am-accent-border);border-radius:4px;box-shadow:inset 0 2px 10px rgba(0,0,0,.4);font-size:13px;letter-spacing:.04em}
+.home-add-cta.btn::before,.home-add-cta.btn::after{display:block;width:3px;background:var(--am-accent)}
+.home-add-cta.btn:hover{background:var(--am-hover);color:#fff;border-color:var(--am-info);box-shadow:0 0 24px rgba(77,163,255,.12)}
+.home-add-cta.btn:hover::before,.home-add-cta.btn:hover::after{width:3px;background:var(--am-info)}

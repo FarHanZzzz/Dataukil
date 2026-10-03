@@ -3,20 +3,15 @@
 import { get, post, LiveStream, sessionInfo, ApiError } from './api.js';
 import { h, clear, fill, link, navigate, taka, hms, dayTime, uuid, toast, debounce } from './util.js';
 import { icon } from './icons.js';
+import { withRun, rememberPayment, paymentRun, archivedRun, knownRun, siteHeader, flowStrip } from './guide.js';
 
 const BANKS_FALLBACK = [];
 
-function chrome(active, ...content) {
-  const info = sessionInfo();
-  return h('div', { class: 'cust-shell' },
-    h('header', { class: 'cust-head' },
-      h('div', { class: 'cust-head-in' },
-        link('/customer/payment', { class: 'cust-brand', 'aria-label': 'Wallet home' }, h('span', { class: 'cust-mark' }, icon('wallet', 18)), h('span', { text: 'Wallet' })),
-        h('nav', { class: 'cust-nav', 'aria-label': 'Primary' },
-          link('/customer/payment', { class: active === 'add' ? 'is-active' : '', 'aria-current': active === 'add' ? 'page' : null }, 'Add money')),
-        h('div', { class: 'cust-head-end' },
-          h('span', { class: 'cust-user' }, icon('user', 16), h('span', { text: info.label || 'Customer' }))))),
-    h('main', { class: 'cust-main', id: 'main' }, ...content));
+function chrome(step, context, ...content) {
+  return h('div', { class: 'cust-shell' }, siteHeader(context.run),
+    h('div', { class: 'am-customer-guide' }, flowStrip(step, context)),
+    h('main', { class: 'cust-main', id: 'main' }, ...content),
+    h('footer', { class: 'am-footer' }, h('span', { text: 'DataUkil / Add money' }), h('span', { text: 'Synthetic demo · Fictional accounts and BDT.' })));
 }
 
 // ---------------------------------------------------------------------------------------------- form
@@ -36,10 +31,24 @@ function intentKey(fingerprint) {
 async function mountForm(app, runId) {
   const cfg = await get('/config');
   const banks = cfg.banks || BANKS_FALLBACK;
-  const state = { amount: '1000', bank: banks[0] && banks[0].code, step: 'edit', busy: false };
+  runId = sessionInfo().runId;
+  if (!knownRun(runId) || knownRun(runId) === 'unavailable') {
+    app.append(chrome(0, { run: runId }, h('section', { class: 'pay-card' }, h('h1', { text: 'Open your Add money journey' }), h('p', { text: 'Choose a scenario or open the saved journey before creating a request. Your draft stays saved while you check its availability.' }), link(withRun('/mfs', new URLSearchParams(location.search).get('run')), { class: 'btn btn--primary' }, 'Open walkthrough'))));
+    return () => {};
+  }
+  if (archivedRun(runId)) {
+    app.append(chrome(1, { run: runId }, h('section', { class: 'pay-card' }, h('h1', { text: 'This journey is archived' }), h('p', { text: 'Its saved payments remain readable. Start a new journey before adding money.' }), link(withRun('/mfs', runId), { class: 'btn btn--primary' }, 'View saved journey'))));
+    return () => {};
+  }
+  const draftKey = 'tf.pay.draft.' + runId;
+  let draft = {};
+  try { draft = JSON.parse(sessionStorage.getItem(draftKey) || '{}') || {}; } catch { /* empty draft */ }
+  const state = { amount: typeof draft.amount === 'string' ? draft.amount : '1000', bank: banks.some(b => b.code === draft.bank) ? draft.bank : banks[0]?.code, step: draft.step === 'review' ? 'review' : 'edit', busy: false };
+  const save = () => { try { sessionStorage.setItem(draftKey, JSON.stringify({ amount: state.amount, bank: state.bank, step: state.step })); } catch { /* optional persistence */ } };
+  const context = { run: runId };
   const body = h('div', { class: 'pay-flow' });
   const recent = h('section', { class: 'activity', 'aria-labelledby': 'act-h' });
-  app.append(chrome('add', body, recent));
+  app.append(chrome(1, context, body, recent));
 
   const minor = () => {
     const v = String(state.amount).replace(/,/g, '').trim();
@@ -71,30 +80,32 @@ async function mountForm(app, runId) {
     }));
     const $$chips = () => chips.forEach((c, i) => c.classList.toggle('is-on', String([500, 1000, 2000, 5000][i]) === String(state.amount)));
     const sumEl = h('p', { class: 'pay-summary', 'aria-live': 'polite' });
-    const go = h('button', { class: 'btn btn--primary btn--block', type: 'submit' }, 'Review');
+    const go = h('button', { class: 'btn btn--primary btn--block', type: 'submit' }, 'Review request', icon('arrowRight', 18));
     function summary() {
+      save();
       $$chips();
       const m = minor();
       const b = bankOf();
       err.hidden = m !== null || !String(state.amount).trim();
-      err.textContent = m === null && String(state.amount).trim() ? `Enter an amount from \u09F31 to \u09F3${(cfg.max_minor / 100).toLocaleString('en-US')}.` : '';
+      err.textContent = m === null && String(state.amount).trim() ? `Enter an amount from ${taka(cfg.min_minor)} to \u09F3${(cfg.max_minor / 100).toLocaleString('en-US')}.` : '';
       sumEl.textContent = m !== null && b ? `${taka(m)} will move from ${b.name} ${b.mask} to your wallet.` : '';
-      go.disabled = m === null;
+      go.disabled = m === null || !b;
     }
     const radios = banks.map((b) => h('label', { class: 'bank-row' + (b.code === state.bank ? ' is-on' : '') },
-      h('input', { type: 'radio', name: 'bank', value: b.code, checked: b.code === state.bank, onchange: () => { state.bank = b.code; edit(); } }),
+      h('input', { type: 'radio', name: 'bank', value: b.code, checked: b.code === state.bank, onchange: () => { state.bank = b.code; body.querySelectorAll('.bank-row').forEach(row => row.classList.toggle('is-on', row.querySelector('input').value === b.code)); summary(); } }),
       h('span', { class: 'bank-ic' }, icon('bank', 18)),
       h('span', { class: 'bank-txt' }, h('strong', { text: b.name }), h('small', { class: 'mono', text: b.mask + ' · Linked account' })),
       h('span', { class: 'bank-dot', 'aria-hidden': 'true' })));
-    body.append(h('form', { class: 'pay-card', novalidate: true, onsubmit: (e) => { e.preventDefault(); if (minor() !== null) { state.step = 'review'; review(); } } },
+    body.append(h('form', { class: 'pay-card', novalidate: true, onsubmit: (e) => { e.preventDefault(); if (minor() !== null && bankOf()) { state.step = 'review'; save(); review(); } } },
+      h('p', { class: 'am-kicker', text: 'Your bank. Your wallet.' }),
       h('h1', { class: 'pay-title', text: 'Add money' }),
-      h('p', { class: 'pay-lead', text: 'Move money from a linked bank account into your wallet.' }),
+      h('p', { class: 'pay-lead', text: 'Choose an amount and a linked bank. You’ll review everything before confirming.' }),
       h('section', { class: 'pay-sec' },
         h('label', { class: 'sec-label', for: 'amount', text: 'Amount' }),
         h('div', { class: 'amount-wrap' }, h('span', { class: 'amount-cur', 'aria-hidden': 'true', text: '\u09F3' }), amountInput),
         err, h('div', { class: 'chips' }, chips)),
-      h('fieldset', { class: 'pay-sec' }, h('legend', { class: 'sec-label', text: 'From' }), h('div', { class: 'bank-list' }, radios)),
-      h('section', { class: 'pay-sec' }, h('span', { class: 'sec-label', text: 'To' }),
+      h('fieldset', { class: 'pay-sec' }, h('legend', { class: 'sec-label', text: 'From your linked bank' }), h('div', { class: 'bank-list' }, radios)),
+      h('section', { class: 'pay-sec' }, h('span', { class: 'sec-label', text: 'To your wallet' }),
         h('div', { class: 'dest-row' }, h('span', { class: 'bank-ic bank-ic--wallet' }, icon('wallet', 18)),
           h('span', { class: 'bank-txt' }, h('strong', { text: cfg.wallet.name }), h('small', { class: 'mono', text: cfg.wallet.mask + ' · Your wallet' })))),
       sumEl, go));
@@ -108,9 +119,9 @@ async function mountForm(app, runId) {
     const b = bankOf();
     const status = h('p', { class: 'pay-note', role: 'status' });
     const confirm = h('button', { class: 'btn btn--primary btn--block', type: 'button', text: `Confirm and add ${taka(m)}` });
-    const back = h('button', { class: 'btn btn--ghost btn--block', type: 'button', text: 'Edit details', onclick: () => { state.step = 'edit'; edit(); } });
+    const back = h('button', { class: 'btn btn--ghost btn--block', type: 'button', text: 'Edit details', onclick: () => { state.step = 'edit'; save(); edit(); } });
     confirm.addEventListener('click', async () => {
-      if (state.busy) return;
+      if (state.busy || knownRun(runId) !== 'active') return;
       state.busy = true;
       confirm.disabled = back.disabled = true;
       confirm.textContent = 'Sending your request';
@@ -119,12 +130,15 @@ async function mountForm(app, runId) {
         const fp = `${m}|${state.bank}|${runId || ''}`;
         const snap = await post('/payments', { amount_minor: m, bank_code: state.bank, run_id: sessionInfo().runId }, intentKey(fp));
         sessionStorage.removeItem('tf.pay.intent');
-        navigate('/customer/payment/' + snap.payment.id + (runId ? '?run=' + encodeURIComponent(runId) : ''));
+        rememberPayment(snap.payment.id, runId);
+        sessionStorage.removeItem(draftKey);
+        navigate(withRun('/customer/payment/' + snap.payment.id, runId));
       } catch (e) {
         state.busy = false;
         confirm.disabled = back.disabled = false;
         confirm.textContent = `Confirm and add ${taka(m)}`;
         status.textContent = e instanceof ApiError ? e.detail : 'We could not confirm the request result. Check recent activity before creating another transfer; retrying this unchanged request uses the same reference.';
+        if (e.status === 404) { confirm.disabled = true; status.append(' ', link(withRun('/mfs', runId), {}, 'Return to your journey')); }
       }
     });
     body.append(h('div', { class: 'pay-card' },
@@ -145,14 +159,20 @@ async function mountForm(app, runId) {
     if (!list.length) return;
     recent.append(h('h2', { id: 'act-h', class: 'act-title', text: 'Recent activity' }),
       h('ul', { class: 'act-list' }, list.map((p) => h('li', {},
-        link('/customer/payment/' + p.id, { class: 'act-row' },
+        link(withRun('/customer/payment/' + p.id, paymentRun(p.id)), { class: 'act-row' },
           h('span', { class: 'act-main' }, h('strong', { text: 'Add money' }), h('small', { class: 'mono', text: p.reference + ' · ' + dayTime(p.created_at) })),
           h('span', { class: 'act-amt' }, h('strong', { text: taka(p.amount_minor) }), statusPill(p.status)))))));
   }
 
-  edit();
+  if (state.step === 'review' && minor() !== null && bankOf()) review(); else { state.step = 'edit'; edit(); }
   loadRecent();
-  return () => {};
+  const availabilityChanged = e => {
+    if (e.key !== 'tf.pay.runState.' + runId || e.newValue === 'active') return;
+    body.querySelectorAll('button,input').forEach(control => { control.disabled = true; });
+    body.prepend(h('p', { class: 'am-archive-note', role: 'alert' }, 'This journey is no longer active. Your draft remains saved. ', link(withRun('/mfs', runId), {}, 'Return to the walkthrough')));
+  };
+  window.addEventListener('storage', availabilityChanged);
+  return () => window.removeEventListener('storage', availabilityChanged);
 }
 
 function statusPill(status) {
@@ -162,15 +182,23 @@ function statusPill(status) {
 }
 
 // ---------------------------------------------------------------------------------------------- progress & case
-async function mountProgress(app, id, mode) {
+async function mountProgress(app, id, mode, runId) {
   const endpoint = mode === 'case' ? `/customer/cases/${id}` : `/payments/${id}`;
   let snap = await get(endpoint);
   const paymentId = snap.payment.id;
   const root = h('div', { class: 'status-page' });
-  app.append(chrome('add', root));
+  runId = runId || paymentRun(paymentId);
+  rememberPayment(paymentId, runId);
+  const guideHost = h('div', { class: 'am-customer-guide' });
+  const shell = chrome(2, { run: runId, payment: paymentId, caseId: snap.case?.id }, root);
+  shell.querySelector('.am-customer-guide').replaceWith(guideHost);
+  app.append(shell);
 
   // persistent report box so typing is never lost to a re-render
+  const noteKey = 'tf.pay.note.' + paymentId;
   const note = h('textarea', { class: 'note-input', id: 'report-note', rows: 3, maxlength: 1000, placeholder: 'Add anything that may help (optional)', 'aria-label': 'Note for the investigator' });
+  try { note.value = sessionStorage.getItem(noteKey) || ''; } catch { /* empty note */ }
+  note.addEventListener('input', () => { try { sessionStorage.setItem(noteKey, note.value); } catch { /* optional persistence */ } });
   const reportBtn = h('button', { class: 'btn btn--secondary', type: 'button', text: 'Report an issue' });
   const reportMsg = h('p', { class: 'pay-note', role: 'status' });
   let reportKey = uuid();
@@ -180,6 +208,7 @@ async function mountProgress(app, id, mode) {
     try {
       snap = await post(`/payments/${paymentId}/report`, { note: note.value }, reportKey);
       reportMsg.textContent = '';
+      sessionStorage.removeItem(noteKey);
       render();
     } catch (e) {
       reportBtn.disabled = false;
@@ -208,9 +237,12 @@ async function mountProgress(app, id, mode) {
     const done = p.status === 'COMPLETED';
     const unc = p.status === 'UNCERTAIN';
     const lead = mode === 'case' && snap.case ? caseLead(snap) : snap.lead;
+    fill(guideHost, flowStrip(done ? 4 : snap.case ? 3 : 2, { run: runId, payment: paymentId, caseId: snap.case?.id }));
+    const focused = document.activeElement;
+    const selection = focused === note ? [note.selectionStart, note.selectionEnd] : null;
     fill(root,
-      h('div', { class: 'crumbs' }, link(mode === 'case' ? '/customer/payment/' + paymentId : '/customer/payment', { class: 'back' }, icon('arrowLeft', 16), mode === 'case' ? 'Back to payment' : 'Add money')),
-      h('section', { class: 'status-hero tone-' + (done ? 'ok' : unc ? 'warn' : 'wait') },
+      h('div', { class: 'crumbs' }, link(withRun(mode === 'case' ? '/customer/payment/' + paymentId : '/mfs', runId), { class: 'back' }, icon('arrowLeft', 16), mode === 'case' ? 'Back to payment' : 'Back to walkthrough')),
+      h('section', { class: 'status-hero tone-' + (done ? 'ok' : unc ? 'warn' : 'wait'), role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' },
         h('span', { class: 'status-ic', 'aria-hidden': 'true' }, done ? icon('check', 26) : unc ? icon('clock', 26) : h('span', { class: 'spin' })),
         h('div', {}, h('h1', { class: 'status-title', text: mode === 'case' && snap.case ? 'Investigation ' + snap.case.reference : snap.headline }),
           h('p', { class: 'status-lead', text: lead }))),
@@ -218,12 +250,12 @@ async function mountProgress(app, id, mode) {
         h('p', { class: 'amount-big' }, h('span', { class: 'cur', text: '\u09F3' }), h('span', { text: taka(p.amount_minor, false) })),
         h('p', { class: 'route' }, h('span', { text: p.bank_label }), icon('arrowRight', 15), h('span', { text: p.wallet_label })),
         h('p', { class: 'mono ref', text: 'Reference ' + p.reference + ' · Started ' + dayTime(p.created_at) })),
+      snap.next_step ? h('section', { class: 'next-box' }, icon('activity', 18), h('div', {}, h('strong', { text: 'What happens next' }), h('p', { text: snap.next_step }))) : null,
       mode === 'case' ? null : h('section', { class: 'stepper-sec', 'aria-labelledby': 'prog-h' },
-        h('h2', { id: 'prog-h', class: 'sec-h', text: 'Progress' }),
+        h('h2', { id: 'prog-h', class: 'sec-h', text: 'Transfer progress' }),
         h('ol', { class: 'stepper' }, snap.stages.map((s) => h('li', { class: 'step is-' + s.state },
           h('span', { class: 'step-dot' }, stageIcon(s)), h('span', { class: 'step-label', text: s.label }),
           h('span', { class: 'step-state', text: { done: 'Done', uncertain: 'Not confirmed yet', current: 'In progress', pending: 'Waiting' }[s.state] }))))),
-      snap.next_step ? h('section', { class: 'next-box' }, icon('activity', 18), h('div', {}, h('strong', { text: 'What happens next' }), h('p', { text: snap.next_step }))) : null,
       snap.case ? caseBlock(snap, mode) : null,
       snap.facts.length ? h('section', { class: 'facts-sec' }, h('h2', { class: 'sec-h', text: 'What we know' }),
         h('ul', { class: 'facts' }, snap.facts.map((f) => h('li', {}, icon('check', 15), h('span', { text: f }))))) : null,
@@ -237,23 +269,27 @@ async function mountProgress(app, id, mode) {
             h('time', { class: 'mono', text: hms(t.at) }), h('span', { text: t.text }));
         }))),
       conn);
+    if (selection && root.contains(note)) { note.focus({ preventScroll: true }); note.setSelectionRange(...selection); }
     firstRender = false;
   }
 
   function caseLead(s) {
-    return s.case.resolved ? 'The investigation is complete.' : 'An investigator owns this case and is reviewing the saved payment records.';
+    return s.payment.status === 'COMPLETED' ? 'The wallet credit is confirmed.' : 'Your investigator owns the next step. Your wallet credit remains unconfirmed.';
   }
 
   function caseBlock(s, m) {
     const c = s.case;
     return h('section', { class: 'case-box' },
       h('div', { class: 'case-top' }, h('span', { class: 'case-ic' }, icon('search', 18)),
-        h('div', {}, h('strong', { text: 'Investigation ' + c.reference }), h('small', { text: c.resolved ? 'Resolved' : 'In progress' }))),
+        h('div', {}, h('strong', { text: 'Investigation ' + c.reference }), h('small', { text: snap.payment.status === 'COMPLETED' ? 'Credit confirmed' : 'Owned case · credit unconfirmed' }))),
       h('dl', { class: 'case-list' },
         h('div', {}, h('dt', { text: 'Owner' }), h('dd', { text: c.owner })),
         c.next_review ? h('div', {}, h('dt', { text: 'Next review' }), h('dd', { text: dayTime(c.next_review) })) : null,
         h('div', {}, h('dt', { text: 'Next step' }), h('dd', { text: c.next_step }))),
-      m === 'case' ? null : link('/customer/cases/' + c.id, { class: 'btn btn--secondary' }, 'Follow the investigation', icon('arrowRight', 16)));
+      m === 'case' ? null : link(withRun('/customer/cases/' + c.id, runId), { class: 'btn btn--secondary' }, 'Follow the investigation', icon('arrowRight', 16)),
+      h('div', { class: 'am-investigation-entry' }, h('div', {}, h('span', { class: 'am-kicker', text: 'Explore the investigator workspace' }),
+        h('p', { text: 'Open the full board to follow source checks, evidence, and the next decision for this transfer.' })),
+        link(withRun('/admin/cases/' + paymentId, runId), { class: 'btn btn--primary' }, icon('search', 18), 'Open investigator demo view', icon('arrowRight', 18))));
   }
 
   render();
@@ -287,17 +323,17 @@ async function mountProgress(app, id, mode) {
 export async function mount(app, path, runId) {
   const parts = path.split('/').filter(Boolean); // customer / payment / :id
   const [, section, id] = parts;
-  document.title = 'Add money · Wallet';
+  document.title = 'Add money · DataUkil';
   try {
-    if (section === 'payment' && id) return await mountProgress(app, id, 'payment');
-    if (section === 'cases' && id) return await mountProgress(app, id, 'case');
+    if (section === 'payment' && id) return await mountProgress(app, id, 'payment', runId);
+    if (section === 'cases' && id) return await mountProgress(app, id, 'case', runId);
     return await mountForm(app, runId);
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
-      app.append(chrome('add', h('div', { class: 'status-page' },
+      app.append(chrome(1, { run: runId }, h('div', { class: 'status-page' },
         h('h1', { class: 'status-title', text: 'We could not find that payment' }),
         h('p', { class: 'status-lead', text: 'It may belong to a different customer or no longer exist.' }),
-        link('/customer/payment', { class: 'btn btn--primary' }, 'Add money'))));
+        link(withRun('/mfs', runId), { class: 'btn btn--primary' }, 'Back to walkthrough'))));
       return () => {};
     }
     throw e;

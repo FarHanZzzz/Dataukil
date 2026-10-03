@@ -1,6 +1,6 @@
 # One-page factual pitch
 
-TraceFix helps a customer and investigator assemble a possible paid-twice complaint for one merchant purchase. The difficult distinction is between a completed QR payment, an alleged cash payment, their purchase relationship, and any actual repayment.
+DataUkil helps a customer and investigator assemble a possible paid-twice complaint for one merchant purchase. The difficult distinction is between a completed QR payment, an alleged cash payment, their purchase relationship, and any actual repayment.
 
 The local prototype accepts Bangla/Banglish/English complaints, preserves evidence and corrections, records an owner and follow-up, runs read-only mock source checks, keeps handoff responsibility until acknowledgement, and exports a cited dossier. Every financial observation is scoped to an explicit fictional source contract. QR completion alone does not close the investigation. A repayment request is not returned money.
 

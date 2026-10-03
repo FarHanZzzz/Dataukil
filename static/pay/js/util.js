@@ -125,14 +125,29 @@ export function toast(message, tone = 'info', ms = 4200) {
   }, ms);
 }
 
+export function surfaceFor(path) {
+  if (path === '/mfs' || path === '/mfs/') return 'mfs';
+  if (/^\/customer\/(payment|cases)(\/|$)/.test(path)) return 'customer';
+  if (/^\/admin\/(queue|cases)(\/|$)/.test(path)) return 'admin';
+  return null;
+}
+
 export function navigate(path, replace = false) {
-  history[replace ? 'replaceState' : 'pushState']({}, '', path);
+  const url = new URL(path, location.href);
+  if (url.origin !== location.origin || surfaceFor(url.pathname) !== document.body.dataset.surface) {
+    location[replace ? 'replace' : 'assign'](url.href);
+    return;
+  }
+  history[replace ? 'replaceState' : 'pushState']({}, '', url.href);
   window.dispatchEvent(new Event('tf:navigate'));
 }
 
 export function link(href, attrs, ...kids) {
   return h('a', { href, ...attrs, onclick: (e) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0 ||
+        (attrs?.target && attrs.target !== '_self') || attrs?.download !== undefined || href.startsWith('#')) return;
+    const url = new URL(href, location.href);
+    if (url.origin !== location.origin || surfaceFor(url.pathname) !== document.body.dataset.surface) return;
     e.preventDefault();
     navigate(href);
   } }, ...kids);

@@ -39,7 +39,7 @@ async def lifespan(app):
         await stop_ticker(ticker)
 
 
-app=FastAPI(title='TraceFix synthetic investigation workspace',lifespan=lifespan)
+app=FastAPI(title='DataUkil synthetic investigation workspace',lifespan=lifespan)
 app.mount('/static',StaticFiles(directory=ROOT/'static'),name='static')
 app.include_router(transfer_router)
 
@@ -686,7 +686,7 @@ def dossier(case_id:str,request:Request):
     with store.connect() as db:
         c=store.get_case(db,case_id);authorize(s,c,staff=True)
     f=facts(c)
-    lines=[f'# TraceFix dossier — {c["reference"]}','', '**SYNTHETIC DEMO. No financial action or liability determination.**','',
+    lines=[f'# DataUkil dossier — {c["reference"]}','', '**SYNTHETIC DEMO. No financial action or liability determination.**','',
            f'Case version: {c["version"]}; evidence version: {c["evidence_version"]}; analysis current: {fresh(c)}.',
            f'Owner: {c["owner"]}; next review: {c["next_review"]}; status: {c["status"]}.',
            f'Customer-reported amount: BDT {c["reported_amount_minor"]/100:.2f}; payment reference: •••'+(c['qr_reference'] or '')[-3:],

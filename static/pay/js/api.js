@@ -68,6 +68,22 @@ export async function api(method, path, body, { key, retry = true } = {}) {
 export const get = (path) => api('GET', path);
 export const post = (path, body, key) => api('POST', path, body ?? {}, { key });
 
+// Staff may already read all demo payments. Use a separate presenter token solely for run availability;
+// never switch the active staff token or give customer pages presenter/staff projections.
+export async function staffRunState(runId) {
+  if (auth.role !== 'staff') throw new ApiError(403, 'Run availability is a staff demo control.');
+  let s = null;
+  try { s = JSON.parse(sessionStorage.getItem(KEY('presenter')) || 'null'); } catch { /* new scoped session */ }
+  if (!s || s.run_id !== runId) s = await issue('presenter', runId);
+  let r = await fetch(base + '/runs', { headers: { Authorization: 'Bearer ' + s.token } });
+  if (r.status === 401) {
+    s = await issue('presenter', runId);
+    r = await fetch(base + '/runs', { headers: { Authorization: 'Bearer ' + s.token } });
+  }
+  if (!r.ok) throw new ApiError(r.status, 'Could not verify whether this journey is active.');
+  return (await r.json()).find(run => run.id === runId)?.status || 'unavailable';
+}
+
 export async function download(path, filename) {
   const r = await fetch(base + path, { headers: { Authorization: 'Bearer ' + auth.token } });
   if (!r.ok) throw new ApiError(r.status, 'Download failed');

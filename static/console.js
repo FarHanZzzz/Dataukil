@@ -1,4 +1,4 @@
-/* TraceFix: every visible finding comes from a saved API record. */
+/* DataUkil: every visible finding comes from a saved API record. */
 'use strict';
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
@@ -266,7 +266,7 @@ function customerCase() {
     '<details class="record-details"><summary>'+esc(tr('Verified update history'))+'</summary><ul class="timeline">'+c.notifications.slice().reverse().map(n=>'<li><time>'+date(n.at)+'</time><p>'+esc(S.lang==='bn'?n.text_bn:n.text)+'</p></li>').join('')+'</ul></details>';
 }
 function customerPage() {
-  return '<section class="customer-hero"><div><p class="eyebrow">TRACEFIX / CUSTOMER WORKSPACE</p><h1>'+esc(tr('Your payments, clearly explained.'))+'</h1><p>'+esc(tr('Send a synthetic bank-to-upay transfer, follow its processing stages and track the evidence behind every case update.'))+'</p></div><div class="hero-mark">↗</div></section>'+
+  return '<section class="customer-hero"><div><p class="eyebrow">DataUkil / CUSTOMER WORKSPACE</p><h1>'+esc(tr('Your payments, clearly explained.'))+'</h1><p>'+esc(tr('Send a synthetic bank-to-upay transfer, follow its processing stages and track the evidence behind every case update.'))+'</p></div><div class="hero-mark">↗</div></section>'+
     '<div class="grid-two"><div class="stack"><section class="card">'+customerPayment()+'</section><section class="card">'+customerCase()+'</section></div><div class="stack">'+
     card('New synthetic transfer',transferForm())+
     card('Saved transfers',S.transactions.length?S.transactions.slice(0,10).map(t=>'<button class="list-button '+(S.tx?.id===t.id?'selected':'')+'" data-action="select-transfer" data-id="'+t.id+'"><div><strong>'+money(t.amount_minor)+' · Bank → upay</strong><small>'+esc(short(t.id))+' · '+date(t.initiated_at)+'</small></div>'+badge(t.state)+'</button>').join(''):empty('No saved transfers','Your payment stages survive refresh.'))+

@@ -1,22 +1,22 @@
-# TraceFix page narration scripts
+# DataUkil page narration scripts
 
 Copy one narration block at a time into ElevenLabs. Page labels and production notes are not spoken.
 
-**Suggested voice direction:** warm, clear, confident, and conversational. Use a steady pace, with a short pause between sentences. Keep the delivery reassuring when describing uncertainty. Every balance, account, payment, and repair shown in TraceFix is synthetic.
+**Suggested voice direction:** warm, clear, confident, and conversational. Use a steady pace, with a short pause between sentences. Keep the delivery reassuring when describing uncertainty. Every balance, account, payment, and repair shown in DataUkil is synthetic.
 
 ## 1. Homepage — `/`
 
 One purchase. Every source in view.
 
-TraceFix brings payment records, customer reports, and supporting evidence into one clear investigation. Follow a bank-to-wallet transfer, explore a QR and cash payment, or open the add-money walkthrough. See how an operator checks the facts, explains what is still unknown, and chooses a safe next step. This is a local demonstration using fictional accounts and simulated money. No real payment is made.
+DataUkil brings payment records, customer reports, and supporting evidence into one clear investigation. Follow a bank-to-wallet transfer, explore a QR and cash payment, or open the add-money walkthrough. See how an operator checks the facts, explains what is still unknown, and chooses a safe next step. This is a local demonstration using fictional accounts and simulated money. No real payment is made.
 
 ## 2. Customer dashboard — `/customer`
 
-Welcome to the TraceFix customer dashboard. Start a fictional bank-to-upay transfer, choose a scenario, and watch each processing stage as it is recorded. If something looks wrong, report a stuck transfer or a possible duplicate payment. You can follow your case, review verified updates, share evidence, and message the assigned operator. The English and Bangla interface keeps each update clear. All balances and transfers in this demonstration are synthetic.
+Welcome to the DataUkil customer dashboard. Start a fictional bank-to-upay transfer, choose a scenario, and watch each processing stage as it is recorded. If something looks wrong, report a stuck transfer or a possible duplicate payment. You can follow your case, review verified updates, share evidence, and message the assigned operator. The English and Bangla interface keeps each update clear. All balances and transfers in this demonstration are synthetic.
 
 ## 3. Operations center — `/operations`
 
-This is the TraceFix operations center. The overview shows open cases, active investigations, evidence requests, eligible repairs, handoffs, and completed outcomes. Search or filter the inbox to find a case, then review its transaction, amount, current owner, and latest event. Select a case to inspect its payment path and saved evidence. These figures come from the local demonstration database, and every payment record is fictional.
+This is the DataUkil operations center. The overview shows open cases, active investigations, evidence requests, eligible repairs, handoffs, and completed outcomes. Search or filter the inbox to find a case, then review its transaction, amount, current owner, and latest event. Select a case to inspect its payment path and saved evidence. These figures come from the local demonstration database, and every payment record is fictional.
 
 ## 4. Case workspace — `/operations/cases/{case_id}`
 
@@ -30,9 +30,9 @@ Welcome to the AI Investigation Studio. The investigation works through saved re
 
 This is the QR and cash payment simulation. Begin with a fictional purchase, scan the simulated merchant code, and follow the payment response. If the result is unclear, record what happened and report a possible duplicate payment. The customer and investigator views share the same saved case, so you can see how a report moves into evidence review. Check the QR record, purchase details, and merchant cash record before reaching a conclusion. The simulation uses fictional money and records.
 
-## 7. MFS walkthrough — `/mfs`
+## 7. Add money walkthrough — `/mfs`
 
-Follow a mobile wallet top-up from the customer’s request to the investigation report. First choose a partner scenario. Then open the customer view and submit a fictional add-money request. The processing clock records the bank and wallet events. If the wallet credit is not confirmed, an incident can be opened for investigation. Staff inspect the saved payment trace, compare returned records, and either recommend an eligible correction for approval or assign a clear follow-up. The walkthrough uses simulated partners and fictional Bangladeshi taka; it does not move real money.
+Follow a mobile wallet top-up through five guided stages. Choose a scenario, start the journey, review your amount and linked bank, then confirm the fictional request. The current action resumes the same payment or investigation in this tab. Transfer progress shows what the bank and wallet have recorded. If wallet credit remains unconfirmed, staff investigate the saved trace and either review an eligible correction or assign an owned follow-up. The final report distinguishes confirmed credit from pending follow-up. Use the companion view for a second demonstration tab. The walkthrough uses simulated partners and fictional Bangladeshi taka; it does not move real money.
 
 ## 8. Add-money customer page — `/customer/payment`
 
@@ -52,4 +52,4 @@ The trace view explains what investigators checked and what each source returned
 
 ## Optional short closing line
 
-TraceFix makes each payment easier to follow, each finding easier to verify, and each next step clear.
+DataUkil makes each payment easier to follow, each finding easier to verify, and each next step clear.

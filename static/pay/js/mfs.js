@@ -1,216 +1,174 @@
-// MFS: the front door to the stalled add-money investigation. One page that lays out the whole sequence, tracks where
-// the current run is in it, and opens the customer and operations views in their own tabs. Each tab creates its own
-// scoped session, so the customer and operations pages never overwrite one another.
-import { get, post, ApiError } from './api.js';
-import { h, clear, fill, link, taka, simClock, toast } from './util.js';
+// Add-money front door. The guide resumes saved server progress; it never advances or approves a payment.
+import { get, post, startSession, ApiError } from './api.js';
+import { h, fill, link, navigate, taka, simClock, toast } from './util.js';
 import { icon } from './icons.js';
+import { withRun, journey, siteHeader, flowStrip, investigationPreview, rememberPayment, rememberRun } from './guide.js';
 
-const DISCLOSURE = 'Simulated partners and fictional BDT. No real accounts, transfers or provider credentials are involved.';
+const DISCLOSURE = 'Synthetic demo · Fictional BDT and partner records. No real transfers.';
+const SCENARIOS = {
+  worker_fault: ['Wallet processing stops', 'The bank approves, but the wallet worker stops before crediting.'],
+  lost_ack: ['Confirmation goes missing', 'The money arrives, but the confirmation never reaches the customer.'],
+  mapping_ambiguity: ['The records do not match', 'An unclear reference and unavailable source require an owned follow-up.'],
+  late_completion: ['The original transfer is delayed', 'Processing takes longer; the original request can still complete.'],
+};
 
-const STEPS = [
-  { id: 'scenario', icon: 'layers', title: 'Choose the fault', text: 'Pick what the partners will get wrong. The investigation does not know the answer in advance.' },
-  { id: 'customer', icon: 'phone', title: 'Customer adds money', text: 'The customer reviews the amount and masked bank, then confirms once. A repeat tap cannot send a second request.' },
-  { id: 'stall', icon: 'clock', title: 'The credit is not confirmed', text: 'The bank has approved, the wallet has not confirmed. The customer is told so plainly and an incident opens.' },
-  { id: 'investigate', icon: 'search', title: 'Staff investigate', text: 'Read-only checks light up the trace graph. A hypothesis changes only when a returned record supports it.' },
-  { id: 'decide', icon: 'doc', title: 'Decide and report', text: 'Approve a correction or hand off with an owned next step, then export the cited report.' },
-];
-
-// Which step the run is on, from the latest payment's phase.
-function position(run) {
-  if (!run) return { cur: 0, note: 'No run yet' };
-  const p = run.payments[run.payments.length - 1];
-  if (!p) return { cur: 1, note: 'Waiting for the customer' };
-  switch (p.phase) {
-    case 'submitted': return { cur: 2, note: p.status === 'UNCERTAIN' ? 'Not confirmed yet' : 'Processing' };
-    case 'incident': return { cur: 3, note: 'Incident open, ready to investigate' };
-    case 'investigating': return { cur: 3, note: 'Investigation running' };
-    case 'decision': return { cur: 4, note: 'Ready to decide' };
-    case 'handoff': return { cur: 5, note: 'Owned handoff saved. Payment remains unconfirmed.' };
-    default: return { cur: 5, note: 'Resolved. Start a new run to go again' };
+export async function mount(app, path, requestedRun) {
+  document.title = 'Add money · DataUkil';
+  const [scenarios, initialRuns] = await Promise.all([get('/scenarios'), get('/runs')]);
+  if (!app.isConnected) return () => {};
+  let runs = initialRuns;
+  // Only an explicit bookmark or this tab's chosen walkthrough can resume a run.
+  // A backend default (even one used in another tab) is not a scenario selection.
+  let remembered = null;
+  try { remembered = sessionStorage.getItem('tf.pay.walkthrough'); } catch { /* optional persistence */ }
+  const chosen = runs.find(r => r.id === (requestedRun || remembered));
+  runs.forEach(rememberRun);
+  const S = { run: chosen || null, scenario: chosen?.scenario || null, busy: false, stopped: false };
+  if (requestedRun && !chosen) {
+    app.append(h('div', { class: 'mfs' }, siteHeader(), h('main', { class: 'am-recovery' },
+      h('p', { class: 'am-kicker', text: 'Saved journey' }), h('h1', { text: 'This run is not in the recent list' }),
+      h('p', { text: 'The overview lists the twelve most recent runs. Your payment bookmark can still open its saved record. Choose a recent journey or start a new one below.' }),
+      link('/mfs', { class: 'btn btn--primary' }, 'View recent journeys'))));
+    return () => {};
   }
-}
-
-export async function mount(app) {
-  document.title = 'MFS · Stalled add-money · TraceFix';
-  const scenarios = await get('/scenarios');
-  let runs = await get('/runs');
-  const S = { scenario: 'worker_fault', run: null };
-  const pick = () => runs.find((r) => r.status === 'active') || null;
-  S.run = pick();
-  if (S.run) S.scenario = S.run.scenario;
-
-  const open = (url) => window.open(url, '_blank', 'noopener');
-  const runQ = () => '?run=' + encodeURIComponent(S.run.id);
-  const latest = () => (S.run && S.run.payments.length ? S.run.payments[S.run.payments.length - 1] : null);
-
-  const scenarioList = h('div', { class: 'scn-list', role: 'radiogroup', 'aria-label': 'Scenario' });
-  const runPanel = h('section', { class: 'run-panel', 'aria-label': 'Current run' });
-  const startBtn = h('button', { class: 'btn btn--primary', type: 'button' });
-  const heroBtn = h('button', { class: 'btn btn--primary btn--lg', type: 'button' });
-  const seq = h('ol', { class: 'seq', 'aria-label': 'Walkthrough steps' });
-  const seqNote = h('p', { class: 'seq-note', role: 'status' });
-
-  app.append(h('div', { class: 'mfs' },
-    h('header', { class: 'demo-top mfs-top' },
-      link('/mfs', { class: 'brand', 'aria-label': 'MFS home' }, h('span', { class: 'brand-mark' }, icon('pulse', 17)), h('span', { class: 'brand-name' }, h('strong', { text: 'MFS' }), h('small', { text: 'TraceFix · Stalled add-money' }))),
-      h('nav', { class: 'mfs-nav', 'aria-label': 'Pages' },
-        h('a', { href: '#sequence', text: 'Walkthrough' }),
-        h('a', { href: '#run', text: 'Run controls' }),
-        h('a', { href: '/', class: 'mfs-out' }, 'TraceFix site', icon('arrowRight', 14)))),
+  if (S.run) {
+    history.replaceState({}, '', withRun('/mfs', S.run.id));
+    try { sessionStorage.setItem('tf.pay.walkthrough', S.run.id); } catch { /* optional persistence */ }
+  }
+  const guideHost = h('div');
+  const nextLink = link('#setup', { class: 'btn btn--primary btn--lg', id: 'continue-walkthrough' }, 'Choose a scenario', icon('arrowRight', 18));
+  const nextNote = h('p', { class: 'am-next-note', role: 'status' });
+  const scenarioList = h('div', { class: 'am-scenarios', role: 'radiogroup', 'aria-label': 'Scenario' });
+  const startBtn = h('button', { class: 'btn btn--primary', type: 'button', id: 'start-walkthrough' });
+  const selectionNote = h('p', { class: 'am-selection-note', role: 'status', text: 'Choose one scenario to enable Start walkthrough.' });
+  const setup = h('details', { class: 'am-setup', id: 'setup', open: !S.run }, h('summary', {}, h('span', {}, h('small', { class: 'am-kicker', text: '01 / Start your walkthrough' }), h('strong', { text: 'What would you like to explore?' })), icon('chevronDown', 20)),
+    h('div', { class: 'am-setup-body' }, h('p', { class: 'am-muted', text: 'Choose a story. You’ll add money, track the transfer, and investigate what happened. No technical knowledge needed.' }), scenarioList,
+      h('div', { class: 'am-setup-action' }, h('div', {}, selectionNote, h('p', { class: 'am-muted small', text: 'Next: enter an amount and review it before confirming. All money is fictional.' })), startBtn)));
+  const runPanel = h('section', { class: 'am-current', 'aria-label': 'Current journey' });
+  const demoLink = link('/admin/queue', { class: 'btn btn--secondary am-demo-entry' }, icon('search', 18), 'Explore investigation demo', icon('arrowRight', 18));
+  const demoNote = h('p', { class: 'am-demo-note' });
+  const demoCard = link('/admin/queue', { class: 'am-demo-card', 'aria-label': 'Open investigation workspace' },
+    h('div', { class: 'am-demo-top' }, h('span', { class: 'am-kicker', text: 'Inside the investigation' }), h('span', { class: 'mono', text: 'WORKSPACE PREVIEW' })),
+    investigationPreview(), h('div', { class: 'am-demo-copy' }, h('h2', { text: 'Follow the evidence.' }),
+      h('p', { text: 'See the bank, wallet, and source records come together on one investigation board.' }),
+      h('span', { class: 'am-demo-action' }, 'Open investigation workspace', icon('arrowRight', 20)), demoNote));
+  const recent = h('details', { class: 'am-recent' }, h('summary', { text: 'Recent journeys' }));
+  app.append(h('div', { class: 'mfs' }, siteHeader(S.run?.id),
     h('main', { class: 'mfs-main', id: 'main' },
-      h('section', { class: 'mfs-hero' },
-        h('p', { class: 'mfs-eyebrow', text: 'Mobile financial services' }),
-        h('h1', { text: 'A wallet top-up stalls. Follow it from the customer to the evidence.' }),
-        h('p', { class: 'mfs-lead', text: 'The bank approved the money and the wallet never confirmed. This page runs the whole case: what the customer sees, how staff trace the fault on a live graph, and the cited report that closes it.' }),
-        h('div', { class: 'mfs-cta' }, heroBtn, h('a', { class: 'btn btn--secondary btn--lg', href: '#sequence' }, 'See the five steps'))),
-      h('section', { class: 'mfs-seq', id: 'sequence', 'aria-labelledby': 'seq-h' },
-        h('div', { class: 'mfs-seq-head' }, h('h2', { id: 'seq-h', text: 'The walkthrough' }), seqNote),
-        seq),
-      h('section', { class: 'demo-grid', id: 'run' },
-        h('section', { class: 'demo-col', 'aria-labelledby': 'scn-h' }, h('h2', { id: 'scn-h', text: 'Fault to demonstrate' }), scenarioList,
-          h('div', { class: 'demo-actions' }, startBtn,
-            h('p', { class: 'muted small', text: 'Starting a run creates a new isolated identity. Earlier runs stay readable and no project records are changed.' }))),
-        h('section', { class: 'demo-col', 'aria-labelledby': 'run-h' }, h('h2', { id: 'run-h', text: 'Current run' }), runPanel)),
-      h('footer', { class: 'demo-foot' }, h('p', { class: 'muted small', text: DISCLOSURE })))));
+      h('section', { class: 'mfs-hero' }, h('div', { class: 'am-hero-copy' },
+        h('p', { class: 'am-kicker', text: 'DataUkil / Bank-to-wallet walkthrough' }),
+        h('h1', {}, 'Add money.', h('br'), h('span', { text: 'See the whole story.' })),
+        h('p', { class: 'mfs-lead', text: 'A transfer is more than a button. Follow it from your bank to your wallet—and see how an investigator finds the next step when something goes wrong.' }),
+        h('div', { class: 'mfs-cta' }, nextLink, demoLink), nextNote,
+        h('p', { class: 'am-hero-disclosure', text: 'Interactive walkthrough · Fictional money · Progress saved' })), demoCard),
+      guideHost,
+      h('section', { class: 'am-workflow-grid' }, runPanel, setup), recent,
+      h('footer', { class: 'am-footer' }, h('span', { text: 'DataUkil / Connected by evidence.' }), h('span', { text: DISCLOSURE })))));
 
-  // ------------------------------------------------------------------------------------------------ sequence
-  function stepAction(step, state) {
-    const p = latest();
-    const a = (label, ic, onclick, disabled) => h('button', { class: 'btn btn--sm ' + (state === 'now' ? 'btn--primary' : 'btn--secondary'), type: 'button', disabled, onclick }, icon(ic, 14), label);
-    switch (step.id) {
-      case 'scenario': return a(S.run ? 'Change fault' : 'Start run', 'layers', () => document.getElementById('run').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }), false);
-      case 'customer': return a('Open customer view', 'external', () => open('/customer/payment' + runQ()), !S.run);
-      case 'stall': return a('Watch as the customer', 'external', () => open('/customer/payment/' + p.id + runQ()), !p);
-      case 'investigate': return a('Open trace graph', 'external', () => open('/admin/cases/' + p.id + runQ()), !p);
-      default: return a('Open the report', 'external', () => open('/admin/cases/' + p.id + '/report' + runQ()), !p || !p.case_id);
-    }
+  for (const s of scenarios) {
+    const [title, premise] = SCENARIOS[s.id] || [s.title, s.premise];
+    const [ic, tag] = { worker_fault: ['wallet', 'A good place to start'], lost_ack: ['message', 'Missing confirmation'], mapping_ambiguity: ['link', 'Unclear records'], late_completion: ['clock', 'Delayed processing'] }[s.id] || ['route', 'Explore this story'];
+    const card = h('article', { class: 'am-scenario' + (S.scenario === s.id ? ' is-on' : '') });
+    card.append(h('label', {}, h('input', { type: 'radio', name: 'scenario', value: s.id, checked: S.scenario === s.id,
+      onchange: () => {
+        S.scenario = s.id;
+        setup.classList.add('has-selection');
+        startBtn.disabled = S.busy;
+        selectionNote.textContent = 'Selected: ' + title;
+        scenarioList.querySelectorAll('.am-scenario').forEach(el => el.classList.toggle('is-on', el.querySelector('input').value === S.scenario));
+      } }), h('div', { class: 'am-scenario-copy' }, h('div', { class: 'am-scenario-heading' }, h('span', { class: 'am-scenario-icon' }, icon(ic, 20)), h('span', { class: 'am-scenario-tag', text: tag })), h('strong', { text: title }), h('p', { text: premise }))),
+      h('details', { class: 'am-scenario-detail' }, h('summary', { text: 'Presenter notes' }), h('p', { text: s.premise }), h('p', { text: s.outcome })));
+    scenarioList.append(card);
   }
 
-  function paintSeq() {
-    const { cur, note } = position(S.run);
-    setNote(note);
-    fill(seq, ...STEPS.map((step, i) => {
-      const state = i < cur ? 'done' : i === cur ? 'now' : 'next';
-      return h('li', { class: 'seq-step is-' + state, 'aria-current': state === 'now' ? 'step' : null },
-        h('span', { class: 'seq-dot' }, state === 'done' ? icon('check', 15) : h('span', { class: 'seq-n', text: String(i + 1) })),
-        h('div', { class: 'seq-body' },
-          h('strong', { text: step.title }),
-          h('p', { text: step.text }),
-          stepAction(step, state)));
-    }));
-  }
-  function setNote(note) {
-    seqNote.textContent = S.run ? `${S.run.scenario_title} · ${note}` : 'Start a run to begin';
-  }
-
-  // ------------------------------------------------------------------------------------------------ scenarios & run
-  function paintScenarios() {
-    fill(scenarioList, ...scenarios.map((s) => h('label', { class: 'scn' + (S.scenario === s.id ? ' is-on' : '') },
-      h('input', { type: 'radio', name: 'scn', value: s.id, checked: S.scenario === s.id, onchange: () => { S.scenario = s.id; paintScenarios(); paintStart(); } }),
-      h('div', {}, h('strong', { text: s.title }), h('p', { text: s.premise }), h('small', { text: 'Expected: ' + s.outcome })))));
-  }
-
-  function paintStart() {
-    const same = S.run && S.run.scenario === S.scenario;
-    startBtn.replaceChildren(icon(S.run ? 'refresh' : 'play', 16), document.createTextNode(S.run ? (same ? ' Reset this run' : ' Start new run with this fault') : ' Start run'));
-    const finished = S.run && position(S.run).cur >= STEPS.length;
-    heroBtn.replaceChildren(icon(finished ? 'refresh' : S.run ? 'external' : 'play', 18), document.createTextNode(finished ? ' Start a new run' : S.run ? ' Open customer view' : ' Start the walkthrough'));
-  }
-
-  async function startRun() {
-    startBtn.disabled = heroBtn.disabled = true;
+  async function start() {
+    if (S.busy || !S.scenario) return;
+    S.busy = true; startBtn.disabled = true; startBtn.textContent = 'Starting your journey…';
     try {
-      S.run = await post('/runs', { scenario: S.scenario, replaces: S.run ? S.run.id : undefined });
-      runs = await get('/runs');
-      S.run = runs.find((r) => r.id === S.run.id) || S.run;
-      toast('Run started. Open the customer view to add money.', 'ok');
+      S.run = await post('/runs', { scenario: S.scenario, ...(S.run ? { replaces: S.run.id } : {}) });
+      if (chosen) rememberRun({ id: chosen.id, status: 'archived' });
+      rememberRun(S.run);
+      try { sessionStorage.setItem('tf.pay.walkthrough', S.run.id); } catch { /* optional persistence */ }
+      await startSession('presenter', S.run.id);
+      history.replaceState({}, '', withRun('/mfs', S.run.id));
+      navigate(withRun('/customer/payment', S.run.id));
     } catch (e) {
-      toast(e instanceof ApiError ? e.detail : 'Could not start a run.', 'bad');
-    } finally {
-      startBtn.disabled = heroBtn.disabled = false;
-      paintStart();
-      paintRun(true);
-      paintSeq();
-      if (S.run) document.getElementById('sequence').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      toast(e instanceof ApiError ? e.detail : 'Could not start this journey. Please try again.', 'bad');
+      S.busy = false; painted = ''; paint();
     }
   }
-  startBtn.addEventListener('click', startRun);
-  heroBtn.addEventListener('click', () => (S.run && position(S.run).cur < STEPS.length ? open('/customer/payment' + runQ()) : startRun()));
+  startBtn.addEventListener('click', start);
+  nextLink.addEventListener('click', () => { if (nextLink.hash === '#setup') setup.open = true; });
 
-  async function clock(action, speed) {
-    try {
-      await post(`/runs/${S.run.id}/clock`, { action, speed });
-      await poll();
-    } catch (e) {
-      toast(e instanceof ApiError ? e.detail : 'Clock change failed.', 'bad');
-    }
-  }
-
-  const nodes = {};
-
-  function paintRun(rebuild) {
-    const r = S.run;
+  let painted = '';
+  const clockValue = h('strong', { class: 'mono' });
+  function paint() {
+    const progress = journey(S.run);
+    const signature = JSON.stringify([S.run?.id, S.run?.status, S.run?.paused, S.run?.speed, S.run?.payments, runs.map(r => [r.id, r.status, r.payments.at(-1)?.id])]);
+    clockValue.textContent = 'T+' + simClock(S.run?.clock_ms || 0);
+    if (signature === painted) return;
+    painted = signature;
+    fill(guideHost, flowStrip(progress.step, { run: S.run?.id, payment: S.run?.payments.at(-1)?.id, caseId: S.run?.payments.at(-1)?.case_id }));
+    nextLink.href = progress.href;
+    fill(nextLink, progress.label, icon('arrowRight', 18));
+    nextNote.textContent = progress.note;
+    startBtn.disabled = S.busy || !S.scenario;
+    startBtn.textContent = S.run ? 'Start a new journey' : 'Start walkthrough';
+    runPanel.hidden = !S.run;
+    setup.classList.toggle('has-selection', Boolean(S.scenario));
+    if (S.scenario) selectionNote.textContent = 'Selected: ' + (SCENARIOS[S.scenario]?.[0] || S.scenario);
+    const demoRun = S.run || runs.find(r => r.payments.length && r.status === 'active') || runs.find(r => r.payments.length);
+    const demoPayment = demoRun?.payments.at(-1);
+    const demoUrl = withRun(demoPayment ? '/admin/cases/' + demoPayment.id : '/admin/queue', demoRun?.id || S.run?.id);
+    demoLink.href = demoUrl;
+    demoCard.href = demoUrl;
+    demoNote.textContent = demoPayment ? 'Opens a saved investigation in this tab.' : 'Start a scenario to bring your own transfer into the workspace.';
+    const r = S.run, p = r?.payments.at(-1);
     if (!r) {
-      fill(runPanel, h('div', { class: 'run-empty' }, icon('play', 22), h('p', { text: 'No run yet. Start one to enable the controls.' })));
-      nodes.built = false;
-      return;
+      fill(runPanel, h('span', { class: 'am-kicker', text: 'Your journey starts here' }), h('div', { class: 'am-current-icon' }, icon('route', 32)),
+        h('h2', { text: 'One request. A complete picture.' }), h('p', { class: 'am-muted', text: 'Choose a scenario, add money, then follow the saved status. If a case opens, the investigation connects the evidence to an accountable next action.' }),
+        h('ul', { class: 'am-benefits' }, ['Review before you confirm', 'Resume the same saved payment', 'See what is known and what comes next'].map(text => h('li', {}, icon('check', 16), text))));
+    } else {
+      r.payments.forEach(p => rememberPayment(p.id, r.id));
+      const archived = r.status !== 'active';
+      const controls = h('details', { class: 'am-clock-controls' }, h('summary', { text: 'Presentation controls' }),
+        h('div', { class: 'am-clock-row' }, clockValue, h('span', { class: 'seg', role: 'group', 'aria-label': 'Processing speed' }, [1, 2, 4].map(speed => h('button', {
+          type: 'button', class: 'seg-btn' + (r.speed === speed ? ' is-on' : ''), disabled: archived, 'aria-pressed': String(r.speed === speed), onclick: () => clock('speed', speed) }, speed + '×'))),
+          h('button', { class: 'btn btn--secondary btn--sm', type: 'button', disabled: archived, onclick: () => clock(r.paused ? 'play' : 'pause') }, icon(r.paused ? 'play' : 'pause', 14), r.paused ? 'Play' : 'Pause')),
+        h('p', { class: 'am-muted small', text: 'The saved processing clock runs while work is pending. Pause freezes processing; replay only reads saved history.' }));
+      fill(runPanel, h('div', { class: 'am-current-top' }, h('span', { class: 'am-kicker', text: 'Current journey' }), h('span', { class: 'pill pill--' + (archived ? 'idle' : r.paused ? 'warn' : 'ok'), text: archived ? 'Archived · read only' : r.paused ? 'Paused' : 'Active' })),
+        h('h2', { text: SCENARIOS[r.scenario]?.[0] || r.scenario_title }), h('p', { class: 'am-muted', text: progress.note }),
+        p ? h('div', { class: 'am-payment-summary' }, h('small', { class: 'mono', text: p.reference }), h('strong', { text: taka(p.amount_minor) }),
+          h('span', { class: 'pill pill--' + (p.status === 'COMPLETED' ? 'ok' : p.status === 'UNCERTAIN' ? 'warn' : 'wait'), text: p.status === 'COMPLETED' ? 'Credit confirmed' : p.status === 'UNCERTAIN' ? 'Not confirmed yet' : 'Processing' }),
+          link(withRun('/customer/payment/' + p.id, r.id), { class: 'btn btn--secondary am-status-entry' }, 'View customer status', icon('arrowRight', 18))) : h('p', { class: 'am-muted', text: archived ? 'This run has no payment. Start a new journey to add money.' : 'No payment submitted yet.' }),
+        archived ? h('p', { class: 'am-archive-note', text: 'Saved records remain readable. Start a new journey to create a payment or change the clock.' }) : null,
+        link(archived && !p ? '#setup' : progress.href, { class: 'btn btn--primary am-resume-entry', onclick: () => { if (archived && !p) setup.open = true; } }, archived && !p ? 'Choose a new scenario' : progress.label, icon('arrowRight', 18)),
+        link(withRun(p ? '/admin/cases/' + p.id : '/admin/queue', r.id), { class: 'am-companion btn btn--secondary', target: '_blank', rel: 'noopener' }, icon('external', 18), 'Open companion investigation view'), controls);
+      if (archived && !p) { nextLink.href = '#setup'; fill(nextLink, 'Choose a new scenario', icon('arrowRight', 18)); }
     }
-    if (rebuild || !nodes.built) {
-      nodes.built = true;
-      nodes.clock = h('span', { class: 'mono clock-val' });
-      nodes.state = h('span', { class: 'pill pill--sm' });
-      nodes.pay = h('ul', { class: 'run-pay' });
-      nodes.speed = h('div', { class: 'seg', role: 'group', 'aria-label': 'Presentation speed' }, [1, 2, 4].map((s) => h('button', { type: 'button', class: 'seg-btn', dataset: { s }, onclick: () => clock('speed', s) }, s + 'x')));
-      nodes.pp = h('button', { class: 'btn btn--secondary btn--sm', type: 'button', onclick: () => clock(S.run.paused ? 'play' : 'pause') });
-      nodes.admin = h('button', { class: 'btn btn--secondary', type: 'button' }, icon('external', 16), 'Open operations view');
-      nodes.admin.addEventListener('click', () => {
-        const p = latest();
-        open((p ? '/admin/cases/' + p.id : '/admin/queue') + runQ());
-      });
-      fill(runPanel,
-        h('div', { class: 'run-head' }, h('div', {}, h('strong', { class: 'run-name', text: r.scenario_title }), h('small', { class: 'mono', text: r.id })), nodes.state),
-        h('div', { class: 'run-open' },
-          h('button', { class: 'btn btn--primary', type: 'button', onclick: () => open('/customer/payment' + runQ()) }, icon('external', 16), 'Open customer view'), nodes.admin),
-        h('div', { class: 'run-clock' },
-          h('div', {}, h('small', { class: 'lbl', text: 'Processing clock' }), nodes.clock),
-          nodes.speed, nodes.pp),
-        h('p', { class: 'muted small', text: 'The clock advances only while a payment is being processed. Pause freezes it, so no new processing step happens until you press play. Saved history stays readable, and replay in the operations view never re-runs an operation.' }),
-        h('h3', { class: 'insp-h2', text: 'Payments in this run' }), nodes.pay);
-    }
-    nodes.clock.textContent = 'T+' + simClock(r.clock_ms) + (r.paused ? '  paused' : '');
-    nodes.state.className = 'pill pill--sm pill--' + (r.status === 'active' ? (r.paused ? 'warn' : 'ok') : 'idle');
-    nodes.state.textContent = r.status === 'active' ? (r.paused ? 'Paused' : 'Running') : 'Archived';
-    nodes.speed.querySelectorAll('.seg-btn').forEach((b) => b.classList.toggle('is-on', +b.dataset.s === r.speed));
-    nodes.pp.replaceChildren(icon(r.paused ? 'play' : 'pause', 15), document.createTextNode(r.paused ? ' Play' : ' Pause'));
-    const sig = JSON.stringify(r.payments);
-    if (nodes.paySig !== sig) {
-      nodes.paySig = sig;
-      fill(nodes.pay, ...(r.payments.length ? r.payments.map((p) => h('li', {}, h('span', { class: 'mono', text: p.reference || p.id.slice(0, 12) }), h('strong', { text: taka(p.amount_minor) }),
-        h('span', { class: 'pill pill--sm pill--' + ({ COMPLETED: 'ok', UNCERTAIN: 'warn' }[p.status] || 'wait'), text: { COMPLETED: 'Completed', UNCERTAIN: 'Not confirmed', IN_PROGRESS: 'Processing' }[p.status] || p.status }),
-        h('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => open('/admin/cases/' + p.id + runQ()) }, 'Open in operations')))
-        : [h('li', { class: 'muted', text: 'None yet. Submit one from the customer view.' })]));
-    }
+    fill(recent, h('summary', { text: 'Recent journeys' }), h('ul', {}, runs.filter(r => r.payments.length || r.id === requestedRun).map(r => h('li', {},
+      link(withRun('/mfs', r.id), {}, h('span', {}, SCENARIOS[r.scenario]?.[0] || r.scenario_title, h('small', { class: 'mono', text: r.id })), h('span', { text: r.status === 'active' ? 'Resume →' : 'Read archived →' }))))));
   }
-
+  async function clock(action, speed) {
+    try { await post(`/runs/${S.run.id}/clock`, { action, speed }); await poll(); }
+    catch (e) { toast(e instanceof ApiError ? e.detail : 'Clock change failed.', 'bad'); }
+  }
+  let polling = false;
   async function poll() {
+    if (polling || S.stopped) return;
+    polling = true;
     try {
-      runs = await get('/runs');
-      const cur = S.run ? runs.find((r) => r.id === S.run.id) : pick();
-      S.run = cur || S.run;
-      paintRun(false);
-      const sig = JSON.stringify([S.run && S.run.payments.map((p) => p.phase + p.status), !!S.run]);
-      if (sig !== nodes.seqSig) {
-        nodes.seqSig = sig;
-        paintSeq();
-        paintStart();
-      }
-    } catch { /* keep the last values */ }
+      const fresh = await get('/runs');
+      if (S.stopped) return;
+      runs = fresh;
+      runs.forEach(rememberRun);
+      if (S.run) S.run = runs.find(r => r.id === S.run.id) || S.run;
+      paint();
+      nextNote.textContent = journey(S.run).note;
+    } catch { nextNote.textContent = 'Could not refresh live progress. Your last saved state remains visible.'; }
+    finally { polling = false; }
   }
-
-  paintScenarios();
-  paintStart();
-  paintRun(true);
-  paintSeq();
-  const timer = setInterval(poll, 1000);
-  return () => clearInterval(timer);
+  paint();
+  const timer = setInterval(poll, 1500);
+  return () => { S.stopped = true; clearInterval(timer); };
 }

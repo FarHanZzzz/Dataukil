@@ -1,17 +1,24 @@
 // Admin surface: incident queue, observed-transaction-trace canvas, evidence inspector, investigation log, replay,
 // plan approval and the operator report. Statuses come only from saved backend events and the authoritative snapshot.
-import { get, post, download, LiveStream, sessionInfo, ApiError } from './api.js';
+import { get, post, download, LiveStream, sessionInfo, staffRunState, ApiError } from './api.js';
 import { h, clear, fill, link, navigate, taka, hms, dayTime, simClock, uuid, toast, debounce, reducedMotion } from './util.js';
 import { icon, STATE_ICON } from './icons.js';
 import { Graph } from './graph.js';
 import { buildModel, STATE_LABEL, HYP_LABEL } from './model.js';
+import { withRun, rememberPayment, rememberRun, knownRun, siteHeader, flowStrip } from './guide.js';
 
 const KIND_LABEL = { ledger: 'Authoritative posting source', process: 'Processing stage', branch: 'Related service or check' };
 const PLAN_STATUS = { proposed: 'Awaiting approval', executing: 'Executing', completed: 'Completed', refused: 'Refused', superseded: 'Superseded by new evidence' };
 
+async function requireActiveRun(id) {
+  const status = await staffRunState(id);
+  rememberRun({ id, status });
+  if (status !== 'active') throw new ApiError(409, 'This journey is archived or unavailable in the recent list. Its saved records remain readable. Return to the Add money walkthrough before taking an action.');
+}
+
 function brand() {
-  return link('/admin/queue', { class: 'brand', 'aria-label': 'Payment investigations' },
-    h('span', { class: 'brand-mark' }, icon('pulse', 17)), h('span', { class: 'brand-name' }, h('strong', { text: 'TraceFix' }), h('small', { text: 'Payment investigations' })));
+  return link(withRun('/admin/queue', new URLSearchParams(location.search).get('run')), { class: 'brand', 'aria-label': 'Payment investigations' },
+    h('span', { class: 'brand-mark' }, icon('pulse', 17)), h('span', { class: 'brand-name' }, h('strong', { text: 'DataUkil' }), h('small', { text: 'Payment investigations' })));
 }
 
 function queueLabel(it) {
@@ -25,7 +32,7 @@ function queueLabel(it) {
 
 export async function mount(app, path) {
   const parts = path.split('/').filter(Boolean); // admin / queue | cases / :id / report
-  document.title = 'Payment investigations · TraceFix';
+  document.title = 'Payment investigations · DataUkil';
   if (parts[1] === 'cases' && parts[2] && parts[3] === 'report') return mountReport(app, parts[2]);
   return mountWorkspace(app, parts[1] === 'cases' ? parts[2] : null);
 }
@@ -53,12 +60,56 @@ async function mountWorkspace(app, ident) {
   document.body.classList.toggle('queue-collapsed', window.innerWidth < 1600);
 
   const graph = new Graph(graphRoot, {
-    onSelect: (id) => { S.selected = id; if (id) S.tab = 'evidence'; paint(true); },
+    onSelect: (id) => {
+      S.selected = id;
+      if (id) { S.tab = 'evidence'; showMobilePane('details'); }
+      paint(true);
+      if (id && narrow.matches) requestAnimationFrame(() => inspector.querySelector('[aria-selected="true"]')?.focus({ preventScroll: true }));
+    },
     onFollowChange: () => paintToolbar(),
   });
   const toolbar = h('div', { class: 'graph-toolbar', role: 'toolbar', 'aria-label': 'Canvas controls' });
   const legend = legendEl();
   graphRoot.append(toolbar, legend);
+
+  const narrow = matchMedia('(max-width: 1040px)');
+  ws.dataset.mobilePane = 'board';
+  const mobileNav = h('nav', { class: 'am-mobile-nav', 'aria-label': 'Investigation panels' });
+  const queueDialog = h('dialog', { class: 'am-queue-dialog', 'aria-label': 'Payment queue' });
+  const queueHome = h('div', { class: 'am-queue-home', hidden: true });
+  queueEl.before(queueHome);
+  app.append(queueDialog);
+  const queueButton = h('button', { type: 'button', class: 'am-mobile-button', onclick: () => {
+    queueDialog.append(queueEl);
+    queueDialog.showModal();
+    queueDialog.querySelector('button').focus();
+  } }, icon('panelLeft', 16), 'Queue');
+  queueDialog.append(h('button', { type: 'button', class: 'btn btn--secondary', onclick: () => queueDialog.close() }, icon('x', 16), 'Close queue'));
+  queueDialog.addEventListener('close', () => { queueHome.after(queueEl); queueButton.focus({ preventScroll: true }); });
+  queueDialog.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const controls = [...queueDialog.querySelectorAll('button:not(:disabled),a[href],[tabindex="0"]')].filter(el => el.getClientRects().length && getComputedStyle(el).display !== 'none');
+    const first = controls[0], last = controls.at(-1);
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  function showMobilePane(pane) {
+    if (!narrow.matches) return;
+    ws.dataset.mobilePane = pane;
+    mobileNav.querySelectorAll('[data-pane]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pane === pane)));
+    if (pane === 'activity' && !S.logOpen) { S.logOpen = true; paintLog(); }
+    if (pane === 'board') requestAnimationFrame(() => graph.autoFit && graph.fit(false));
+  }
+  mobileNav.append(queueButton, ...[['board', 'Board'], ['details', 'Details'], ['activity', 'Activity']].map(([pane, text]) => h('button', {
+    type: 'button', class: 'am-mobile-button', dataset: { pane }, 'aria-pressed': String(pane === 'board'), onclick: () => showMobilePane(pane) }, text)));
+  top.after(mobileNav);
+  const resize = () => {
+    if (!narrow.matches && queueDialog.open) queueDialog.close();
+    paintTop();
+    if (narrow.matches) showMobilePane(ws.dataset.mobilePane);
+    requestAnimationFrame(() => graph.autoFit && graph.fit(false));
+  };
+  narrow.addEventListener('change', resize);
 
   const viewModel = () => (S.replay ? S.replay.model : S.model);
 
@@ -80,6 +131,7 @@ async function mountWorkspace(app, ident) {
 
   // ------------------------------------------------------------------------------------------------ top bar
   function paintTop() {
+    const menuOpen = narrow.matches && top.querySelector('.am-board-menu')?.open;
     const m = viewModel();
     const a = S.auth;
     const payment = a ? a.payment : null;
@@ -96,6 +148,7 @@ async function mountWorkspace(app, ident) {
     else if (resolved) { disabled = true; label = 'Resolved'; hint = 'The wallet credit is confirmed.'; }
     else if (running) { disabled = true; label = `Investigating ${inv.checks_used ?? 0}/${inv.budget}`; if (m.investigation) label = `Investigating ${m.investigation.used}/${m.investigation.budget}`; }
     else if (inv && inv.status === 'concluded') label = 'Investigate again';
+    if (a && knownRun(a.run.id) !== 'active') { disabled = true; hint = 'This journey is archived or its availability could not be verified. Saved history remains readable; return to the walkthrough to recover.'; }
     if (S.replay) { disabled = true; hint = 'Replay shows saved history. Actions are disabled.'; }
 
     const start = h('button', { class: 'btn btn--primary btn--sm', type: 'button', disabled, title: hint || null, onclick: startInvestigation }, icon(running ? 'ring' : 'search', 16, running ? 'spin-ic' : ''), h('span', { text: label }));
@@ -118,16 +171,30 @@ async function mountWorkspace(app, ident) {
         h('span', { class: 'conn-chip conn-chip--' + live[0], title: 'Live connection to the saved event journal' }, h('i'), live[1]),
         start,
         a && a.case ? h('button', { class: 'btn btn--ghost btn--sm' + (S.replay ? ' is-on' : ''), type: 'button', onclick: toggleReplay, 'aria-pressed': String(!!S.replay) }, icon('replay', 16), h('span', { text: S.replay ? 'Exit replay' : 'Replay' })) : null,
-        a && a.case ? link('/admin/cases/' + a.case.id + '/report', { class: 'btn btn--ghost btn--sm' }, icon('doc', 16), h('span', { text: 'Report' })) : null,
-        h('a', { class: 'btn btn--ghost btn--sm', href: '/mfs', title: 'Back to the MFS walkthrough' }, icon('layers', 16), h('span', { text: 'MFS' })),
+        a && a.case ? link(withRun('/admin/cases/' + a.case.id + '/report', a.run.id), { class: 'btn btn--ghost btn--sm' }, icon('doc', 16), h('span', { text: 'Report' })) : null,
+        h('a', { class: 'btn btn--ghost btn--sm', href: withRun('/mfs', a?.run.id || info.runId), title: 'Back to the Add-money walkthrough', 'aria-label': 'Back to Add-money walkthrough' }, icon('layers', 16), h('span', { text: 'MFS' })),
         h('button', { class: 'btn btn--ghost btn--sm', type: 'button', title: 'Hide the queue and secondary panels (P)', onclick: () => document.body.classList.toggle('presenting') }, icon('maximize', 16), h('span', { text: 'Present' })),
         h('span', { class: 'who', title: 'This tab holds its own investigator session' }, icon('user', 15), h('span', { text: info.label || 'Investigator' }))));
+    if (narrow.matches) {
+      const actions = top.querySelector('.top-actions');
+      const menu = h('details', { class: 'am-board-menu', open: menuOpen, onkeydown: e => {
+        if (e.key === 'Escape') { menu.open = false; menu.querySelector('summary').focus(); e.stopPropagation(); }
+      } }, h('summary', { text: 'More' }));
+      const items = h('div');
+      for (const el of [...actions.children]) {
+        if (!el.classList.contains('btn--primary') && !el.classList.contains('sim-t') && !el.classList.contains('conn-chip')) items.append(el);
+      }
+      menu.append(items);
+      actions.append(menu);
+    }
+
   }
 
   async function startInvestigation() {
     if (S.busy) return;
     S.busy = true;
     try {
+      await requireActiveRun(S.snap.run.id);
       await post(`/staff/cases/${S.snap.payment.id}/investigate`, {}, uuid());
       graph.setFollow(true);
       S.tab = 'hypotheses';
@@ -152,7 +219,7 @@ async function mountWorkspace(app, ident) {
       h('ul', { class: 'q-list' }, items.length ? items.map((it) => {
         const [tone, text] = queueLabel(it);
         const active = S.snap && (it.payment_id === S.snap.payment.id);
-        return h('li', {}, link('/admin/cases/' + (it.case_id || it.payment_id), { class: 'q-row' + (active ? ' is-active' : ''), 'aria-current': active ? 'true' : null },
+        return h('li', {}, link(withRun('/admin/cases/' + (it.case_id || it.payment_id), S.snap?.run.id || info.runId), { class: 'q-row' + (active ? ' is-active' : ''), 'aria-current': active ? 'true' : null },
           h('span', { class: 'q-top' }, h('span', { class: 'mono q-ref', text: it.reference }), h('span', { class: 'q-amt', text: taka(it.amount_minor) })),
           h('span', { class: 'q-bot' }, h('span', { class: 'pill pill--sm pill--' + tone, text }), h('span', { class: 'q-time mono', text: hms(it.created_at) }))));
       }) : h('li', { class: 'q-empty', text: 'New payments appear here as customers submit them.' })));
@@ -170,6 +237,7 @@ async function mountWorkspace(app, ident) {
 
   // ------------------------------------------------------------------------------------------------ inspector
   function paintInspector() {
+    const focusedTab = inspector.contains(document.activeElement) ? document.activeElement.dataset.tab : null;
     const m = viewModel();
     const body = inspector.querySelector('.insp-body');
     const scroll = body ? body.scrollTop : 0;
@@ -177,11 +245,16 @@ async function mountWorkspace(app, ident) {
     const planDot = S.auth && S.auth.plan && S.auth.plan.status === 'proposed' || (m && m.handoff);
     fill(inspector,
       h('div', { class: 'insp-tabs', role: 'tablist' }, tabs.map(([id, text]) => h('button', {
-        class: 'insp-tab' + (S.tab === id ? ' is-on' : ''), type: 'button', role: 'tab', 'aria-selected': String(S.tab === id),
-        onclick: () => { S.tab = id; paintInspector(); } }, text, id === 'plan' && planDot ? h('i', { class: 'tab-dot', 'aria-label': 'New' }) : null,
+        class: 'insp-tab' + (S.tab === id ? ' is-on' : ''), type: 'button', role: 'tab', dataset: { tab: id }, id: 'insp-tab-' + id, tabindex: S.tab === id ? '0' : '-1', 'aria-controls': 'insp-panel', 'aria-selected': String(S.tab === id),
+        onclick: () => { S.tab = id; paintInspector(); }, onkeydown: e => {
+          const index = tabs.findIndex(([key]) => key === id);
+          const next = e.key === 'ArrowRight' ? (index + 1) % tabs.length : e.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
+          if (next !== null) { e.preventDefault(); S.tab = tabs[next][0]; paintInspector(); inspector.querySelector('[data-tab="' + S.tab + '"]').focus({ preventScroll: true }); }
+        } }, text, id === 'plan' && planDot ? h('i', { class: 'tab-dot', 'aria-label': 'New' }) : null,
       id === 'hypotheses' && m && m.investigation && m.investigation.status === 'running' ? h('i', { class: 'tab-dot tab-dot--live' }) : null))),
-      h('div', { class: 'insp-body', role: 'tabpanel' }, !m ? null : S.tab === 'evidence' ? evidenceTab(m) : S.tab === 'hypotheses' ? hypothesesTab(m) : planTab(m)));
+      h('div', { class: 'insp-body', id: 'insp-panel', role: 'tabpanel', 'aria-labelledby': 'insp-tab-' + S.tab, tabindex: '0' }, !m ? null : S.tab === 'evidence' ? evidenceTab(m) : S.tab === 'hypotheses' ? hypothesesTab(m) : planTab(m)));
     inspector.querySelector('.insp-body').scrollTop = scroll;
+    if (focusedTab) inspector.querySelector('[data-tab="' + focusedTab + '"]')?.focus({ preventScroll: true });
   }
 
   const kv = (rows) => h('dl', { class: 'kv' }, rows.filter(Boolean).map(([k, v]) => h('div', {}, h('dt', { text: k }), h('dd', {}, v))));
@@ -195,6 +268,7 @@ async function mountWorkspace(app, ident) {
     S.selected = node || null;
     S.tab = 'evidence';
     graph.select(node);
+    showMobilePane('details');
     graph.ensureVisible && node && graph.ensureVisible(node);
   }
 
@@ -267,11 +341,12 @@ async function mountWorkspace(app, ident) {
     if (plan) {
       const stale = plan.status === 'proposed' && a.case && a.case.evidence_version !== plan.evidence_version;
       const status = plan.status;
-      const canApprove = !S.replay && status === 'proposed' && !stale && (a.sandbox_enabled || !plan.moves_money);
+      const canApprove = !S.replay && knownRun(a.run.id) === 'active' && status === 'proposed' && !stale && (a.sandbox_enabled || !plan.moves_money);
       const key = (S.approveKeys[plan.plan_id] = S.approveKeys[plan.plan_id] || uuid());
       const btn = h('button', { class: 'btn btn--primary btn--block', type: 'button', disabled: !canApprove, onclick: async () => {
         btn.disabled = true;
         try {
+          await requireActiveRun(a.run.id);
           await post(`/staff/cases/${a.payment.id}/corrections/${plan.plan_id}/approve`, { evidence_version: plan.evidence_version }, key);
           graph.setFollow(true);
           toast('Approved. Progress appears on the graph.', 'ok');
@@ -306,7 +381,7 @@ async function mountWorkspace(app, ident) {
         reasons.length ? h('ul', { class: 'elig' }, reasons.map((r) => h('li', { class: 'is-no' }, h('span', { class: 'elig-ic' }, icon('x', 14)), h('div', {}, h('strong', { text: r.label }), h('small', { text: (r.reasons || []).join(' ') }))))) : null,
         hand ? h('div', { class: 'handoff' }, h('h4', { class: 'insp-h2', text: 'Owned handoff' }),
           kv([['Owner', hand.owner], ['Queue', hand.queue], ['Next requirement', hand.next_requirement], ['Next review', hand.next_review ? dayTime(hand.next_review) : null]])) : null,
-        a && a.case ? link('/admin/cases/' + a.case.id + '/report', { class: 'btn btn--secondary btn--block' }, icon('doc', 16), 'Open the operator report') : null));
+        a && a.case ? link(withRun('/admin/cases/' + a.case.id + '/report', a.run.id), { class: 'btn btn--secondary btn--block' }, icon('doc', 16), 'Open the operator report') : null));
     }
     if (!blocks.length) {
       return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }),
@@ -475,6 +550,11 @@ async function mountWorkspace(app, ident) {
 
   async function loadCase() {
     S.snap = await get(`/staff/cases/${S.ident}`);
+    const availability = await staffRunState(S.snap.run.id).catch(() => 'unavailable');
+    rememberRun({ id: S.snap.run.id, status: availability });
+    rememberPayment(S.snap.payment.id, S.snap.run.id);
+    if (app.isConnected) history.replaceState({}, '', withRun(location.pathname, S.snap.run.id));
+    info.runId = S.snap.run.id;
     S.events = [...S.snap.events];
     S.evSeen = new Set(S.events.map((x) => x.event_id));
     S.model = buildModel(S.snap, S.events);
@@ -483,7 +563,7 @@ async function mountWorkspace(app, ident) {
     syncHub(S.model);
     if (S.model.investigation && S.model.investigation.status === 'running') S.tab = 'hypotheses';
     else if (S.auth.plan && S.auth.plan.status === 'proposed') S.tab = 'plan';
-    document.title = (S.auth.case ? S.auth.case.reference : S.auth.payment.reference) + ' · Payment investigations';
+    if (app.isConnected) document.title = (S.auth.case ? S.auth.case.reference : S.auth.payment.reference) + ' · Payment investigations · DataUkil';
     return S.snap.cursor;
   }
 
@@ -497,7 +577,9 @@ async function mountWorkspace(app, ident) {
   let caseStream = null;
   if (S.ident) {
     try {
+      const queueRun = info.runId;
       const cursor = await loadCase();
+      if (S.snap.run.id !== queueRun) await refreshQueue();
       paintToolbar();
       paintEmpty();
       caseStream = new LiveStream({
@@ -534,8 +616,14 @@ async function mountWorkspace(app, ident) {
   const onToggle = () => setTimeout(() => graph.autoFit && graph.fit(false), 280);
   const mo = new MutationObserver(onToggle);
   mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  const availabilityChanged = e => { if (e.key === 'tf.pay.runState.' + S.snap?.run.id) paint(true); };
+  window.addEventListener('storage', availabilityChanged);
 
   return () => {
+    window.removeEventListener('storage', availabilityChanged);
+    narrow.removeEventListener('change', resize);
+    if (queueDialog.open) queueDialog.close();
+    queueDialog.remove();
     if (caseStream) caseStream.stop();
     inbox.stop();
     if (S.replay) clearTimeout(S.replay.timer);
@@ -558,12 +646,19 @@ function legendEl() {
 async function mountReport(app, ident) {
   const data = await get(`/staff/cases/${ident}/report`);
   const r = data.report;
+  const snapshot = await get(`/staff/cases/${ident}`);
+  const runId = snapshot.run.id;
+  rememberPayment(snapshot.payment.id, runId);
+  if (!app.isConnected) return () => {};
+  history.replaceState({}, '', withRun(location.pathname, runId));
   const cites = (ids) => ids && ids.length ? h('span', { class: 'cites' }, ids.map((i) => h('span', { class: 'cite mono', text: i }))) : null;
   const sec = (title, ...kids) => h('section', { class: 'rep-sec' }, h('h2', { text: title }), ...kids);
   app.append(h('div', { class: 'rep' },
-    h('header', { class: 'rep-top' }, brand(),
+    siteHeader(runId),
+    flowStrip(4, { run: runId, payment: snapshot.payment.id, caseId: snapshot.case?.id }),
+    h('header', { class: 'rep-top' }, h('span', { class: 'am-kicker', text: 'Evidence report' }),
       h('div', { class: 'rep-actions' },
-        link('/admin/cases/' + ident, { class: 'btn btn--ghost btn--sm' }, icon('arrowLeft', 16), 'Back to workspace'),
+        link(withRun('/admin/cases/' + ident, runId), { class: 'btn btn--ghost btn--sm' }, icon('arrowLeft', 16), 'Back to workspace'),
         h('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => download(`/staff/cases/${ident}/report.md`, `${r.case_reference}-report-v${data.version}.md`) }, icon('download', 16), 'Markdown'),
         h('button', { class: 'btn btn--primary btn--sm', type: 'button', onclick: () => download(`/staff/cases/${ident}/report.html`, `${r.case_reference}-report-v${data.version}.html`) }, icon('download', 16), 'HTML'))),
     h('article', { class: 'rep-doc' },
@@ -571,6 +666,7 @@ async function mountReport(app, ident) {
       h('h1', { text: r.case_reference }),
       h('p', { class: 'rep-meta' }, `Payment ${r.payment_reference} · ${taka(r.amount_minor)} · ${r.bank_label} to ${r.wallet_label}`),
       h('p', { class: 'rep-meta' }, `Status ${r.status} · ${String(r.resolution).replace('_', ' ')} · evidence version ${r.evidence_version} · SHA-256 ${data.sha256.slice(0, 16)}`),
+      h('section', { class: 'am-report-outcome' + (r.resolution === 'credit_confirmed' ? ' is-confirmed' : ' is-unconfirmed') }, h('strong', {}, icon(r.resolution === 'credit_confirmed' ? 'check' : 'warning', 18), ' ', r.resolution === 'credit_confirmed' ? 'Wallet credit confirmed' : r.resolution === 'handoff' ? 'Owned follow-up · credit unconfirmed' : 'Decision pending · credit unconfirmed'), h('p', { text: r.operator.next_action })),
       sec('Customer symptom', h('p', { text: r.symptom.text }), r.symptom.appeared_at ? h('p', { class: 'muted', text: 'First visible at ' + hms(r.symptom.appeared_at) + ' (Asia/Dhaka)' }) : null),
       sec('Confirmed facts', r.confirmed.length ? h('ul', {}, r.confirmed.map((f) => h('li', {}, f.text, ' ', cites(f.cites)))) : h('p', { class: 'muted', text: 'No facts have been confirmed by a check yet.' })),
       sec('Unknowns', r.unknowns.length ? h('ul', {}, r.unknowns.map((f) => h('li', {}, f.text, ' ', cites(f.cites)))) : h('p', { class: 'muted', text: 'No open unknowns recorded.' })),
@@ -585,5 +681,6 @@ async function mountReport(app, ident) {
       sec('Operator ownership', h('p', {}, h('strong', { text: 'Owner: ' }), r.operator.owner), h('p', {}, h('strong', { text: 'Next action: ' }), r.operator.next_action)),
       sec('Action log', h('ol', { class: 'rep-log' }, r.log.map((l) => h('li', {}, h('time', { class: 'mono', text: hms(l.at) }), h('span', {}, l.text, ' ', cites(l.cites)))))),
       h('footer', { class: 'rep-foot' }, h('p', { text: r.execution_mode }), h('p', { class: 'muted', text: r.disclosure })))));
+  app.querySelectorAll('.rep-table').forEach(table => { const wrap = h('div', { class: 'am-report-table', tabindex: '0', role: 'region', 'aria-label': 'Checks performed table' }); table.before(wrap); wrap.append(table); });
   return () => {};
 }

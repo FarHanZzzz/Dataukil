@@ -1,4 +1,4 @@
-# TraceFix: Final Track 6 Decision, Hybrid Specification and Master Build Prompt
+# DataUkil: Final Track 6 Decision, Hybrid Specification and Master Build Prompt
 
 Final scope decision: 3 October 2026, Asia/Dhaka.
 
@@ -8,7 +8,7 @@ This document supersedes the two compared design specifications for the competit
 
 ### 1. Decision
 
-Build **TraceFix — Paid-Twice Investigation Workspace**.
+Build **DataUkil — Paid-Twice Investigation Workspace**.
 
 Use the previous proposal's primary problem and ML task: investigate QR merchant complaints about paying twice for one purchase, beginning with mixed cash/QR evidence.
 
@@ -108,7 +108,7 @@ Copy Part B into the development environment. Its scope is authoritative for thi
 
 ### Your role and outcome
 
-You are the engineering and ML implementation lead for TraceFix, a Track 6 Operations & Service Intelligence hackathon prototype for an upay-relevant merchant-payment investigation workflow.
+You are the engineering and ML implementation lead for DataUkil, a Track 6 Operations & Service Intelligence hackathon prototype for an upay-relevant merchant-payment investigation workflow.
 
 Build a working **Paid-Twice Investigation Workspace** for one merchant purchase allegedly paid by cash and QR, with QR-plus-QR examples included in evaluation. Deliver one customer-to-investigator-to-customer journey and one primary trained evidence-verification capability.
 

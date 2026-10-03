@@ -36,18 +36,18 @@ if ($tracefixListeners.Count -gt 0) {
             throw "Port $Port belongs to another application (PID $tracefixOwnerId). It was left running. Choose a free port with: .\run.ps1 -Port 8001"
         }
         if ($Check) {
-            Write-Host "Dependencies and application imports OK. TraceFix already owns port $Port (PID $tracefixOwnerId)."
+            Write-Host "Dependencies and application imports OK. DataUkil already owns port $Port (PID $tracefixOwnerId)."
             Write-Host 'To load current code in this terminal: .\run.ps1 -Restart'
             exit 0
         }
         if (-not $Restart) {
-            Write-Host "TraceFix is already listening on port $Port (PID $tracefixOwnerId)."
+            Write-Host "DataUkil is already listening on port $Port (PID $tracefixOwnerId)."
             Write-Host "Open http://127.0.0.1:$Port/customer or http://127.0.0.1:$Port/operations"
             Write-Host 'To restart it with current code in this terminal: .\run.ps1 -Restart'
             Open-TraceFixHome
             exit 0
         }
-        Write-Host "Stopping this workspace's TraceFix server (PID $tracefixOwnerId); saved cases and uploads remain on disk."
+        Write-Host "Stopping this workspace's DataUkil server (PID $tracefixOwnerId); saved cases and uploads remain on disk."
         Stop-Process -Id $tracefixOwnerId -ErrorAction Stop
         Wait-Process -Id $tracefixOwnerId -Timeout 10 -ErrorAction SilentlyContinue
     }

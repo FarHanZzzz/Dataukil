@@ -1,4 +1,4 @@
-# TraceFix — Project Report
+# DataUkil — Project Report
 **Transaction Investigation & Operations Intelligence**  
 *System Architecture, AI/ML Advisory Verification, and Operational Governance*
 
@@ -6,9 +6,9 @@
 
 ## 1. Executive Summary
 
-**TraceFix** is an AI-assisted transaction investigation and operations intelligence platform designed to resolve complex, disputed payment incidents. Built specifically to handle scenarios such as "paid-twice" merchant complaints, stalled bank-to-wallet transfers, and ambiguous multi-channel transactions (QR, cash, MFS, bank accounts), TraceFix bridges the communication gap between customer statements and authoritative backend ledgers.
+**DataUkil** is an AI-assisted transaction investigation and operations intelligence platform designed to resolve complex, disputed payment incidents. Built specifically to handle scenarios such as "paid-twice" merchant complaints, stalled bank-to-wallet transfers, and ambiguous multi-channel transactions (QR, cash, MFS, bank accounts), DataUkil bridges the communication gap between customer statements and authoritative backend ledgers.
 
-As a local **synthetic prototype**, payment records, bank journals, and customer identities are simulated within an isolated, deterministic environment. TraceFix features:
+As a local **synthetic prototype**, payment records, bank journals, and customer identities are simulated within an isolated, deterministic environment. DataUkil features:
 - A **Bilingual Customer Portal** (`/customer`) supporting real-time transaction progression, localized English/বাংলা messaging, and structured dispute submission.
 - An **Operations Workspace** (`/operations`) for centralized incident triage, queue analytics, and multi-source ledger reconstruction.
 - A **Dedicated AI Investigation Studio** (`/operations/cases/{case_id}/studio`) combining a trained ML advisory verifier with optional local LLM structured reasoning (`qwen3:4b-instruct`).
@@ -24,7 +24,7 @@ In emerging mobile financial service (MFS) ecosystems (such as Bangladesh's upay
 2. **Stalled Add-Money Transfers**: A bank approves an outward transfer, but the recipient wallet system fails to post confirmation. Customers are left debited without credited funds, while front-line support lacks unified visibility across both bank and wallet settlement ledgers.
 3. **Evidence Conflation**: Customer-provided claims, chat messages, or unofficial screenshots are often conflated with immutable source records, leading to incorrect manual reversals or prolonged dispute cycles.
 
-**TraceFix resolves this** by enforcing an architectural invariant: *what is claimed by a customer is strictly decoupled from what is verified by source ledgers*. All evidence is indexed, timestamped, versioned, and cited before any corrective action is proposed.
+**DataUkil resolves this** by enforcing an architectural invariant: *what is claimed by a customer is strictly decoupled from what is verified by source ledgers*. All evidence is indexed, timestamped, versioned, and cited before any corrective action is proposed.
 
 ---
 
@@ -51,19 +51,19 @@ graph TD
 
 | Route | Workspace Name | Core Functionality |
 |---|---|---|
-| `/` | **Landing & Overview** | Unified entry point into all workspaces; streamlined single Walkthrough navigation. |
+| `/` | **Landing & Overview** | Dedicated Add money header/hero/feature entry, independent QR + cash link and Workspaces menu. |
 | `/customer` | **Customer Portal** | 8 bank-to-upay synthetic scenarios, live stage visualization, timeline events, complaint submission, bilingual English/বাংলা toggle. |
 | `/operations` | **Operations Center** | Live server-derived triage queue, incident cards, multi-source ledger comparison (Bank, Wallet, Core). |
 | `/operations/cases/{id}/studio` | **AI Investigation Studio** | Deep-dive case workspace: multi-phase investigation pipeline, evidence citations, hypothesis generation, replay, and atomic sandbox repair approval. |
 | `/qr-demo` | **QR & Cash Simulation Lab** | Retained interactive single-purchase simulation testing customer QR attempts, cash payment records, and late QR debit outcomes. |
-| `/mfs` (also `/demo`) | **Add-Money Walkthrough** | Standalone 5-step walkthrough tracking stalled wallet top-ups with simulated processing clocks and presenter controls. |
+| `/mfs` (also `/demo`) | **Add-Money Walkthrough** | Five-stage same-tab guide with explicit scenario setup, saved-run resume and expandable presenter controls. |
 | `/customer/payment`<br>`/admin/queue` | **Add-Money Portals** | Dedicated role-scoped customer status view and rules-based investigator dispute queue. |
 
 ---
 
 ## 4. Phase-by-Phase Implementation Status
 
-TraceFix was built iteratively across seven rigorously verified phases:
+DataUkil was built iteratively across seven rigorously verified phases:
 
 | Phase | Milestone | Operational Result |
 |---|---|---|
@@ -78,7 +78,7 @@ TraceFix was built iteratively across seven rigorously verified phases:
 
 ## 5. Machine Learning & Advisory Intelligence
 
-TraceFix incorporates a hybrid intelligence model: a dedicated learned classifier head for evidence verification alongside local generative structured reasoning.
+DataUkil incorporates a hybrid intelligence model: a dedicated learned classifier head for evidence verification alongside local generative structured reasoning.
 
 ### 5.1 Trained Evidence Verifier
 - **Architecture**: Frozen text embedding encoder combined with a trained logistic regression classification head.
@@ -100,7 +100,7 @@ TraceFix incorporates a hybrid intelligence model: a dedicated learned classifie
 
 ## 6. Financial Governance & Security Controls
 
-Because TraceFix simulates financial reconciliation, enterprise-grade safety invariants are embedded into every operational route:
+Because DataUkil simulates financial reconciliation, enterprise-grade safety invariants are embedded into every operational route:
 
 1. **Balance Conservation**: Every sandbox correction must balance to zero across source and destination ledgers ($\sum \Delta = 0$). No phantom credits can be created.
 2. **Human-in-the-Loop Gate**: Machine learning models and LLMs are strictly advisory. Model outputs are completely prohibited from triggering balance updates or executing corrections directly.
@@ -174,4 +174,4 @@ cd D:\dataukil
 
 ## 9. Conclusion
 
-TraceFix demonstrates an accountable, evidence-grounded approach to modern transaction dispute operations. By integrating trained advisory classification, local structured generative reasoning, and strict financial governance into an intuitive bilingual interface, it establishes a blueprint for transparent, verifiable payment recovery systems.
+DataUkil demonstrates an accountable, evidence-grounded approach to modern transaction dispute operations. By integrating trained advisory classification, local structured generative reasoning, and strict financial governance into an intuitive bilingual interface, it establishes a blueprint for transparent, verifiable payment recovery systems.

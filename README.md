@@ -1,6 +1,8 @@
-# TraceFix — Transaction Investigation & Operations Intelligence
+# DataUkil — Transaction Investigation & Operations Intelligence
 
-The [master build prompt](docs/MASTER_BUILD_PROMPT.md) is the authoritative scope. TraceFix is a local **synthetic prototype**: payment and correction records are fictional. Persistent bank-to-upay transfers, the AI Investigation Studio and approved sandbox repairs now run alongside the retained QR/cash workflow and the add-money walkthrough pulled from `main`.
+DataUkil is the website's product name. Existing `tracefix` Python paths, `TRACEFIX_*` settings, session headers/cookies and saved case references remain stable for compatibility.
+
+The [master build prompt](docs/MASTER_BUILD_PROMPT.md) is the authoritative scope. DataUkil is a local **synthetic prototype**: payment and correction records are fictional. Persistent bank-to-upay transfers, the AI Investigation Studio and approved sandbox repairs now run alongside the retained QR/cash workflow and the add-money walkthrough pulled from `main`.
 
 Implementation progress (3 October 2026, Asia/Dhaka):
 
@@ -26,7 +28,7 @@ cd D:\dataukil
 .\run.ps1 -Restart
 ```
 
-The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the server responds. The header has one **Walkthrough** button, which navigates directly to `/customer` on desktop and mobile. The other header and footer navigation shortcuts have been removed.
+The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the server responds. **Add money** is directly accessible from the header, hero and dedicated Bank → Wallet → Investigation → Outcome section on desktop and mobile. **QR + cash** opens the retained simulation; **Workspaces** contains the transfer dashboard and operations links.
 
 | Page | Purpose |
 |---|---|
@@ -35,16 +37,17 @@ The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the
 | `/operations` | Persistent queue, overview and case workspace |
 | `/operations/cases/{case_id}/studio` | Dedicated AI investigation, hypotheses, citations, replay and separate approval/execution |
 | `/qr-demo` | Retained interactive QR/cash purchase and complaint simulation |
-| `/mfs` (also `/demo`) | Add-money walkthrough with a saved processing clock |
-| `/customer/payment` and `/admin/queue` | Add-money customer and rules-based investigator pages |
+| `/mfs` (also `/demo`) | Five-stage Add money guide: explicit scenario choice, same-tab progression and exact-run resume |
+| `/customer/payment[/{id}]`, `/customer/cases/{id}` | Add money form, saved review, customer-safe status and investigation updates |
+| `/admin/queue`, `/admin/cases/{id}[ /report]` | Preserved desktop investigation board, mobile Board/Details/Activity views, report and exports |
 
 The two payment workspaces have distinct case families and ledgers in the shared SQLite database. Their routes enforce those boundaries. The add-money walkthrough uses its own rules-based investigation; the Studio uses the trained advisory verifier and optional local Qwen.
 
-The workspace already has its environment and trained artifact. The launcher checks application imports and, with `-Restart`, replaces only this workspace's existing TraceFix server. It leaves unrelated applications running. Saved cases and uploads stay in `runtime/`. Press **Ctrl+C** in your terminal to stop. Write `-Restart` as one argument; the launcher also accepts the accidental spelling `- Restart`. Both spellings were verified with `-Check`.
+The workspace already has its environment and trained artifact. The launcher checks application imports and, with `-Restart`, replaces only this workspace's existing DataUkil server. It leaves unrelated applications running. Saved cases and uploads stay in `runtime/`. Press **Ctrl+C** in your terminal to stop. Write `-Restart` as one argument; the launcher also accepts the accidental spelling `- Restart`. Both spellings were verified with `-Check`.
 
 Use `.\run.ps1 -Check` for an installation/port check without starting, stopping or opening a browser. Use `-NoBrowser` to start without opening the homepage. For development, use `.\run.ps1 -Restart -Reload`; a reload interrupts active investigations, which require an explicit analysis restart. If another application owns port 8000, choose a free port with `.\run.ps1 -Port 8001`.
 
-Direct launch, after stopping any older TraceFix server:
+Direct launch, after stopping any older DataUkil server:
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn tracefix.app:app --host 127.0.0.1 --port 8000
