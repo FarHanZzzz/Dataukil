@@ -106,6 +106,14 @@ def customer_view(c):
         if f['bank_debit_minor']:confirmed.append(f"Checked bank records show BDT {f['bank_debit_minor']/100:.2f} debited for this transfer.")
         if f['wallet_credit_minor']:confirmed.append(f"Checked wallet records show BDT {f['wallet_credit_minor']/100:.2f} credited.")
         if f['recorded_repaid_minor']:confirmed.append(f"The verified sandbox correction returned BDT {f['recorded_repaid_minor']/100:.2f}.")
+    qr = c.get('qr_pipeline') or {}
+    safe_qr = {}
+    if qr.get('verdict') and qr['verdict'].get('evidence_version')==c['evidence_version'] and qr['verdict'].get('status')=='RECORDED':
+        safe_qr['verdict'] = {k: qr['verdict'].get(k) for k in ('outcome','reason','at','status')}
+    if qr.get('resolution') and ((qr['resolution'].get('evidence_version')==c['evidence_version'] and qr.get('verdict',{}).get('status')=='RECORDED') or qr['resolution'].get('state')=='REFUND_COMPLETED'):
+        safe_qr['resolution'] = {k: qr['resolution'].get(k) for k in ('state','amount_minor','completed_at','synthetic')}
+    if qr.get('handoff'):
+        safe_qr['handoff'] = {k: qr['handoff'].get(k) for k in ('status','next_review','reason','owner','queue')}
     return {k:c[k] for k in ['id','reference','version','status','owner','created_at','updated_at','next_review','reported_amount_minor','second_method']} | dict(
         scale=2, currency='BDT', confirmed_facts=confirmed,confirmed_facts_bn=localization.confirmed_facts(c,f),
         unresolved=f['requirements'],unresolved_bn=[localization.REQUIREMENTS.get(r,r) for r in f['requirements']],
@@ -122,6 +130,7 @@ def customer_view(c):
         reviews=[dict(note=d['note'],at=d['at'],decision=d['decision'],stale=d['stale']) for d in c['decisions']],
         incident_id=c.get('incident_id'),transaction_id=c.get('transaction_id'),issue_type=c.get('issue_type','PAID_TWICE'),
         last_verified_update=c.get('last_verified_update'),investigation_stage=c.get('investigation_stage','NOT_STARTED'),
+        workflow=c.get('workflow'),customer_observed_debit=bool(c.get('customer_observed_debit')),qr_pipeline=safe_qr,
         resolution=({k:c['resolution'].get(k) for k in ('action','result','amount_minor','at','synthetic')} if c.get('resolution') else None),synthetic=True)
 
 

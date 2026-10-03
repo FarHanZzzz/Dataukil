@@ -26,9 +26,9 @@ This case workspace brings the customer’s report and the payment records toget
 
 Welcome to the AI Investigation Studio. The investigation works through saved records step by step: loading the case, reconstructing the transaction, comparing evidence, checking the customer’s claim, and assessing possible explanations. Select an event or citation to see the record behind a finding. Hypotheses can be supported, contradicted, or left unresolved. The AI can suggest what to review, but backend rules determine whether a repair is eligible. An operator must approve and separately execute any sandbox correction. Investigation progress alone does not mean the payment is resolved.
 
-## 6. QR and cash simulation — `/qr-demo`
+## 6. QR + cash investigation — `/qr-demo`
 
-This is the QR and cash payment simulation. Begin with a fictional purchase, scan the simulated merchant code, and follow the payment response. If the result is unclear, record what happened and report a possible duplicate payment. The customer and investigator views share the same saved case, so you can see how a report moves into evidence review. Check the QR record, purchase details, and merchant cash record before reaching a conclusion. The simulation uses fictional money and records.
+Follow one saved journey from the customer phone to the operator. Create a purchase and press Pay with QR. The screen shows failure or no confirmation, so the customer records cash and keeps the issued receipt. Later, bank activity shows a debit. Attach the receipt, review its transcript and file the complaint. The operator begins with a visual receipt scan. OpenCV highlights regions; it is not OCR or authentication. The synthetic Marketplace check compares the exact purchase, amounts and payment context. Matching records propose an operator-approved simulated refund. Rejection sends an explanation, and uncertainty pauses automation for an owned human review. Refund completion appears only after its separate saved event. No real money or external requests occur.
 
 ## 7. Add money walkthrough — `/mfs`
 

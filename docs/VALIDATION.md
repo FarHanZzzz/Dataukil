@@ -1,5 +1,7 @@
 # Validation context
 
+Current browser validation: [QR + cash](QR_UI_VALIDATION.md) and [site-wide light theme](LIGHT_THEME_VALIDATION.md). The results below describe the earlier build.
+
 Predeclared operational gates: no ownership leak; customer cannot execute staff mutations; arbitrary uploads never verified; no automatic financial routes; QR completion never resolves second-payment question; repayment request != completion; evidence changes make analyses/decisions stale; exact mismatch gates; successful duplicate operations replay; changed keys/new stale writes conflict; GET purity; failed handoff retains owner; missing model/evaluation honest; citations match stored evidence versions.
 
 Predeclared exploratory ML report: three-class macro F1, confusion matrices, per-language metrics, unsupported support fraction, contradiction recall, insufficient-evidence recall, latency and baseline differences. No fixed accuracy target justifies deployment on unreviewed synthetic data. Production gate requires independently reviewed authorized real cases and operational evaluation.

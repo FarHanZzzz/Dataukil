@@ -3,16 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#153f35" />
-    <title>DataUkil · A payment story, in your hands</title>
-    <link rel="stylesheet" href="/static/legacy/style.css?v=3" />
-    <script src="/static/legacy/app.js?v=3" defer></script>
+    <meta name="theme-color" content="#f7f9fc" />
+    <meta name="color-scheme" content="light" />
+    <title>DataUkil · QR + cash investigation</title>
+    <link rel="stylesheet" href="/static/legacy/style.css?v=5" />
+    <link rel="stylesheet" href="/static/legacy/qr.css?v=5" />
+    <script src="/static/legacy/qr-graph.js?v=5" defer></script>
+    <script src="/static/legacy/app.js?v=5" defer></script>
+    <link rel="stylesheet" href="/static/light-theme.css?v=1" />
   </head>
-  <body>
+  <body class="theme-light qr-workspace">
     <a class="skip" href="#phone-content">Skip to customer app</a>
     <header class="site-header">
       <a class="brand" href="/" aria-label="DataUkil home"
-        ><span class="brand-mark">t<span>↗</span></span
+        ><span class="brand-mark">D<span>↗</span></span
         >DataUkil<span class="brand-divider"></span
         ><span class="brand-note">THE INTERACTIVE LAB</span></a
       >
@@ -26,20 +30,27 @@
     <main id="main">
       <section class="intro">
         <div>
-          <p class="eyebrow">ONE PURCHASE. EVERY SIDE OF THE STORY.</p>
-          <h1>Experience it. Report it. Resolve it.</h1>
+          <p class="eyebrow">QR + CASH INVESTIGATION</p>
+          <h1>One payment story.<br />Every source in view.</h1>
           <p>
-            Make a payment in the app. Follow the complaint from your phone to
-            an investigator’s desk.
+            Follow the customer from a failed QR screen to receipt evidence,
+            Marketplace verification, and a safe operator outcome.
           </p>
         </div>
         <div class="view-switch" role="group" aria-label="Workspace view">
           <button data-view="both" class="active">Live simulation</button
-          ><button data-view="phone">Customer app</button
-          ><button data-view="desk">Investigator</button>
+          ><button data-view="phone">Customer status</button
+          ><button data-view="desk">Operator investigation</button>
         </div>
-      </section>
+        </section>
+      <div class="journey-links" aria-label="Journey shortcuts">
+          <a class="button primary" href="#workspace" data-view="desk">Open operator investigation <span aria-hidden="true">↗</span></a>
+          <a class="button secondary" href="#workspace" data-view="phone">See customer status <span aria-hidden="true">↗</span></a>
+          <a class="companion-link" href="/qr-demo?view=operator" target="_blank" rel="noopener">Open companion view <span aria-hidden="true">↗</span></a>
+        </div>
       <nav id="journey" class="journey" aria-label="Simulation progress"></nav>
+      <section id="current-stage" class="qr-stage-banner" aria-live="polite"></section>
+      <nav class="qr-mobile-nav" aria-label="Investigation sections"><button class="button secondary" data-action="steps">View all steps</button><button class="button secondary" data-action="sections">Navigate workspace</button></nav>
       <div
         id="feedback"
         class="toast"
@@ -76,7 +87,7 @@
             <span class="home-indicator"></span>
           </div>
           <p class="phone-caption">
-            <span class="live-dot"></span>Real interactions. Fictional money.
+            <span class="live-dot"></span>Interactive journey. Fictional money.
           </p>
         </section>
         <section

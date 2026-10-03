@@ -2,7 +2,9 @@
 
 DataUkil is the website's product name. Existing `tracefix` Python paths, `TRACEFIX_*` settings, session headers/cookies and saved case references remain stable for compatibility.
 
-The [master build prompt](docs/MASTER_BUILD_PROMPT.md) is the authoritative scope. DataUkil is a local **synthetic prototype**: payment and correction records are fictional. Persistent bank-to-upay transfers, the AI Investigation Studio and approved sandbox repairs now run alongside the retained QR/cash workflow and the add-money walkthrough pulled from `main`.
+Every website surface now uses the shared **light theme**: white cards, pale blue backgrounds, slate text and blue actions. The homepage hero uses the supplied landscape image. Customer, QR, Add money, operations, Studio and report pages share the same palette and typography. See [light-theme validation](docs/LIGHT_THEME_VALIDATION.md).
+
+The [master build prompt](docs/MASTER_BUILD_PROMPT.md) is the authoritative scope. DataUkil is a local **synthetic prototype**: payment and correction records are fictional. Persistent bank-to-upay transfers, the AI Investigation Studio and approved sandbox repairs now run alongside the unified QR + cash investigation and the add-money walkthrough pulled from `main`.
 
 Implementation progress (3 October 2026, Asia/Dhaka):
 
@@ -17,7 +19,7 @@ Merged verification: **121 tests passed**, followed by **27 passing add-money/in
 | 5–6 — Studio and controlled outcomes | Implemented; both saved endings verified | Evidence graph, hypotheses, replay, isolated reset, three approved atomic sandbox actions and owned handoff |
 | 7 — Coverage, reports and final verification | Implementation documented; validation recorded | Markdown/JSON exports, [33-section coverage matrix](docs/MASTER_COVERAGE.md) and [integration validation](docs/MAIN_SYNC_VALIDATION.md) |
 
-The website now runs a **mobile wallet simulation** beside a live investigator desk. Enter a purchase and your own amounts, attempt QR, record cash, check the eventual QR outcome, and file a linked complaint. Customer/investigator messages, evidence requests, source checks, assessments and cited outcomes are saved to the same case. Refresh restores progress. Simulation controls provide different fictional source behaviors and a clearly marked repayment stage.
+The **QR + cash investigation** at `/qr-demo` keeps the customer phone and operator workflow in one saved journey: QR failure → cash receipt → later observed debit → receipt attachment and complaint → OpenCV visual scan → synthetic Marketplace comparison → verdict. Matching records propose an operator-approved simulated refund; rejected cases create no refund, while uncertain cases remain owned and open for human review. Refresh and exact-context bookmarks restore progress. [Workflow and API contract](docs/QR_CASH_INVESTIGATION.md).
 
 Interaction context: [mobile simulation](docs/MOBILE_SIMULATION.md), [assessment behavior](docs/SIMULATION_AI.md), and [observed validation](docs/MOBILE_VALIDATION.md).
 
@@ -28,7 +30,7 @@ cd D:\dataukil
 .\run.ps1 -Restart
 ```
 
-The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the server responds. **Add money** is directly accessible from the header, hero and dedicated Bank → Wallet → Investigation → Outcome section on desktop and mobile. **QR + cash** opens the retained simulation; **Workspaces** contains the transfer dashboard and operations links.
+The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the server responds. **Add money** is directly accessible from the header, hero and dedicated Bank → Wallet → Investigation → Outcome section on desktop and mobile. **QR + cash** opens the unified customer/operator investigation at `/qr-demo`; **Workspaces** contains the transfer dashboard and operations links.
 
 | Page | Purpose |
 |---|---|
@@ -36,10 +38,10 @@ The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the
 | `/customer` | Eight bank-to-upay scenarios, complaints, evidence and verified English/বাংলা updates |
 | `/operations` | Persistent queue, overview and case workspace |
 | `/operations/cases/{case_id}/studio` | Dedicated AI investigation, hypotheses, citations, replay and separate approval/execution |
-| `/qr-demo` | Retained interactive QR/cash purchase and complaint simulation |
+| `/qr-demo` | Unified QR + cash customer, receipt scan, Marketplace, verdict and simulated resolution journey |
 | `/mfs` (also `/demo`) | Five-stage Add money guide: explicit scenario choice, same-tab progression and exact-run resume |
 | `/customer/payment[/{id}]`, `/customer/cases/{id}` | Add money form, saved review, customer-safe status and investigation updates |
-| `/admin/queue`, `/admin/cases/{id}[ /report]` | Preserved desktop investigation board, mobile Board/Details/Activity views, report and exports |
+| `/admin/queue`, `/admin/cases/{id}[ /report]` | Light investigation board with existing topology and controls, mobile Board/Details/Activity views, report and exports |
 
 The two payment workspaces have distinct case families and ledgers in the shared SQLite database. Their routes enforce those boundaries. The add-money walkthrough uses its own rules-based investigation; the Studio uses the trained advisory verifier and optional local Qwen.
 

@@ -1,5 +1,7 @@
 # Observed mobile simulation validation
 
+The canonical QR journey now has real browser upload coverage, all six required viewport widths and a shared light theme. See [QR validation](QR_UI_VALIDATION.md) and [light-theme validation](LIGHT_THEME_VALIDATION.md). The browser-extension limitation below applies to the earlier validation session.
+
 Date: 3 October 2026. Scope: local synthetic prototype.
 
 ## Automated server checks

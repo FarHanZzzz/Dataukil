@@ -9,7 +9,6 @@ const navEl = document.querySelector('.nav');
 const state = {
   session: null, cases: [], case: null, source: null, sourceRevision: null, busy: false, page: 'home', intake: null,
   faq: { tab: 'model', q: 0 },
-  story: { step: 0, paid: false, ai: null, aiError: '', running: false, customer: null, customerError: '', loadingCustomer: false }
 };
 
 /* ---------- helpers ---------- */
@@ -262,7 +261,7 @@ function renderHome() {
           <div class="swap-mid">${icon('arrow-up-down')}</div>
           <div class="swap-row dim"><div class="who"><span>${icon('banknote')}</span><div>Cash · ৳500<span class="swap-state claim">Reported, not confirmed</span></div></div><span class="amt">PUR-103</span></div>
         </div>
-        ${link(`Follow a case${icon('arrow-right')}`, 'data-nav="story"')}
+        <a class="btn ghost" href="/qr-demo">Follow the QR + cash journey →</a>
       </article>
       <article class="bento-card c7 panel glow-card reveal"><div class="deco deco-glow"></div>
         <h3>The problem, measured</h3><p>Mobile money moves over Tk 1.5 trillion a month across 250 million accounts. When a payment goes wrong, people are left chasing agents and hotlines.</p>
@@ -339,26 +338,6 @@ function loadPod() {
 /* ==========================================================================
    STORY (how it works)
    ========================================================================== */
-const STORY = [
-  { rail: 'Start', who: 'Everyone', title: 'One shop purchase. Two payments.', line: 'Follow the scene left to right. The model only appears when someone has to read the wording of a receipt or record.' },
-  { rail: 'Pay', who: 'Customer', title: 'The QR payment never confirms', line: 'At Rafi Store the phone shows a real code for QR-DEMO-003. Paying it leaves the result unclear.' },
-  { rail: 'Report', who: 'Customer', title: 'Cash for the same purchase', line: 'The customer pays ৳500 cash, then files one complaint. That file is already saved as TF-260003.' },
-  { rail: 'Desk', who: 'Investigator', title: 'Two facts stay separate', line: 'The QR record can be confirmed. The cash claim cannot be confirmed from a customer upload alone.' },
-  { rail: 'Model', who: 'Model', title: 'Where the AI helps', line: 'It reads one claim against one passage. It does not prove cash, approve a refund, or close the case.' },
-  { rail: 'Status', who: 'Customer', title: 'The customer sees the saved step', line: 'They see what is confirmed, what is still missing, and who reviews next. They do not see model scores.' }
-];
-const say = code => code === 'SUPPORTED_BY_PASSAGE' ? 'The words support the claim.' : code === 'CONTRADICTED_BY_PASSAGE' ? 'The words contradict the claim.' : 'The words do not settle the claim.';
-const phone = inner => `<div class="phone"><div class="phone-screen">${inner}</div></div>`;
-function storyPair(c, claimId, test) {
-  const claim = c.analysis.claims.find(x => x.id === claimId);
-  const l = claim.links.find(test) || claim.links[0];
-  return { claim: claim.text, excerpt: l.excerpt, trained: l.learned_label || l.label, used: l.label, source: l.source_status, engine: l.engine };
-}
-function clip(text, n = 140) { const s = String(text || ''); return s.length > n ? s.slice(0, n).trim() + '…' : s; }
-function cashPair(c) {
-  if (!c?.analysis) return null;
-  return storyPair(c, 'cash', l => l.excerpt.includes('গ্রহণ') || /cash payment of|was received/i.test(l.excerpt));
-}
 function lifeScene(c, { highlight = 'all' } = {}) {
   const ref = c?.qr_reference || 'QR-DEMO-003';
   const amount = money(c?.reported_amount_minor ?? 50000);
@@ -377,73 +356,10 @@ function lifeScene(c, { highlight = 'all' } = {}) {
   <article class="beat ${on('impact')}"><div class="beat-visual impact-visual"><div class="scene-tag">04 · Impact</div><strong>Complaint stays open</strong><p>${esc(next)}</p><p class="impact-no">No refund from QR success. No refund from the receipt.</p></div><p>The investigator still owns the next human step.</p></article>
  </section>`;
 }
-function aiHelpMap(c) {
-  const cash = cashPair(c);
-  const flow = [
-    ['Claim', 'A cash payment was received.'],
-    ['Passage', clip(cash?.excerpt || 'নগদ ৫০০ টাকা গ্রহণ করা হয়েছে। একই কেনাকাটার রসিদ।', 90)],
-    ['AI reading', cash ? say(cash.trained) : 'Run the model to see the live answer'],
-    ['Impact', cash ? 'Cash stays unverified. Ask the merchant.' : 'Impact appears after the live read']
-  ];
-  return `<section class="ai-map panel" aria-label="Where the AI helps"><div class="ai-map-head"><span>Where the AI helps</span><h2>One claim. One passage. One reading.</h2><p>It does not decide money movement. It does not replace the investigator.</p></div><div class="ai-flow">${flow.map(([k, v], i) => `<article><span>0${i + 1} · ${esc(k)}</span><p>${esc(v)}</p></article>${i < 3 ? `<div class="ai-arrow" aria-hidden="true">${icon('arrow-right', 'icon-lg')}</div>` : ''}`).join('')}</div>
-  <div class="impact-row"><article><span>Without this reading</span><h2>Easy to close too early</h2><p>Someone sees a completed QR later and treats the case as done. Or they treat a Bangla receipt as proof that cash moved.</p></article><article><span>With DataUkil</span><h2>The second payment stays a question</h2><p>${cash ? `The model said: ${say(cash.trained)} The desk shows: ${say(cash.used)} The source stays ${cash.source}. The next step is still a human request.` : 'Run the model on TF-260003. The live answer will fill this panel.'}</p></article></div></section>`;
-}
 function renderStory() {
   state.page = 'story';
-  const s = state.story, step = STORY[s.step];
-  const rail = STORY.map((item, i) => `<button type="button" class="rail-step ${i === s.step ? 'current' : i < s.step ? 'done' : ''}" data-story-step="${i}" ${i === s.step ? 'aria-current="step"' : ''}><span>0${i + 1}</span>${esc(item.rail)}</button>`).join('');
-  let body = '';
-  if (s.step === 0) body = `${lifeScene(s.ai, { highlight: 'all' })}<div class="cast">${[
-    ['Customer', 'Pays at the shop, reports paying twice, and later reads only the saved status.'],
-    ['Investigator', 'Owns the case, keeps QR and cash separate, and saves the next human step.'],
-    ['Model', 'Reads a claim against a passage. Says support, contradiction, or not enough.']
-  ].map(([name, job], i) => `<article class="cast-card panel glow-card"><span>Role 0${i + 1}</span><h2>${name}</h2><p>${job}</p></article>`).join('')}</div><p class="help">Nothing here moves money. The QR code, the shop, and the case are synthetic.</p>`;
-  if (s.step === 1) body = `${lifeScene(null, { highlight: 'pay' })}<div class="stage">${phone(s.paid ? `<div class="pay-top"><strong>Rafi Store</strong><span>upay · fictional</span></div><div class="pay-amount">৳500</div><p class="pay-status">Processing</p><p>The shop app has not said success or failure.</p><div class="note warning">Do not treat this screen as a failed payment, and do not pay again only because the response disappeared.</div>` : `<div class="pay-top"><strong>Rafi Store</strong><span>Show this code</span></div><img class="qr" src="/static/qr-demo-003.svg" alt="QR code encoding the fictional payment reference QR-DEMO-003" width="148" height="148"><p class="qr-ref">QR-DEMO-003</p><p>One purchase · PUR-103 · ৳500</p>${btn('Pay ৳500', { id: 'phone-pay' })}`)}<div class="stage-copy"><p>${s.paid ? 'The customer is stuck on an unclear result. The next step is their report, not a second QR payment.' : 'Press Pay on the phone. The next arrow continues only after that payment screen turns unclear.'}</p></div></div>`;
-  if (s.step === 2) body = `${lifeScene(null, { highlight: 'cash' })}<div class="stage">${phone(`<div class="pay-top"><strong>DataUkil</strong><span>Customer</span></div><p class="phone-kicker">Report paying twice</p><label>QR reference</label><div class="fake-input">QR-DEMO-003</div><p class="phone-ok">Your payment · PUR-103 · ৳500</p><label>Second payment</label><div class="fake-input">Cash · ৳500</div><label>What happened</label><div class="fake-text">আমি QR এর পরে একই কেনাকাটার জন্য নগদ টাকা দিয়েছি।</div><div class="phone-saved">Saved as TF-260003 · Investigator 1 owns the review</div>`)}<div class="stage-copy"><p>The phone is showing the complaint already stored for Customer 1. Filing it does not refund anyone.</p>${btn('Open this complaint as the customer', { id: 'open-story-customer', cls: 'ghost', after: 'arrow-right' })}</div></div>`;
-  if (s.step === 3) body = `${lifeScene(s.ai, { highlight: 'impact' })}<div class="split-facts"><article class="panel glow-card"><span>From the QR record</span><h2>৳500 posted</h2><p>Simulated provider record for QR-DEMO-003 and purchase PUR-103. This confirms that QR payment only.</p>${badge('Confirmed in the mock source')}</article><article class="panel glow-card"><span>From the customer</span><h2>৳500 cash claimed</h2><p>আমি QR এর পরে একই কেনাকাটার জন্য নগদ টাকা দিয়েছি। A receipt transcript exists. The upload does not make the cash confirmed.</p>${badge('Reported, not confirmed', 'warning')}</article></div><p class="help">The investigator keeps those two facts apart, then asks the model to read the wording.</p>`;
-  if (s.step === 4) {
-    if (s.running) body = `${lifeScene(null, { highlight: 'ai' })}<p class="note">The trained model is reading the saved passages for TF-260003. The first read can take several seconds.</p>`;
-    else if (!s.ai) body = `${lifeScene(null, { highlight: 'ai' })}${aiHelpMap(null)}${btn('Run the model on TF-260003', { id: 'run-model' })}<p class="help">${esc(s.aiError)}</p>`;
-    else body = `${lifeScene(s.ai, { highlight: 'ai' })}${aiHelpMap(s.ai)}${btn('Open this scene on the investigator desk', { id: 'open-story-case', cls: 'ghost', after: 'arrow-right' })}`;
-  }
-  if (s.step === 5) {
-    if (s.loadingCustomer) body = '<p class="note">Loading the customer’s saved status.</p>';
-    else if (s.customerError) body = `<p class="error">${esc(s.customerError)}</p>${btn('Try the customer view again', { id: 'retry-customer' })}`;
-    else if (s.customer) {
-      const c = s.customer;
-      body = `${lifeScene(s.ai, { highlight: 'impact' })}<div class="stage">${phone(`<div class="pay-top"><strong>DataUkil</strong><span>${esc(c.reference)}</span></div><p class="phone-kicker">Saved status</p><p><strong>Confirmed</strong></p><ul>${c.confirmed_facts.map(f => `<li>${esc(f)}</li>`).join('') || '<li>Nothing financial is confirmed yet.</li>'}</ul><p><strong>Still open</strong></p><ul>${c.unresolved.map(f => `<li>${esc(f)}</li>`).join('') || '<li>Waiting for investigator review.</li>'}</ul><div class="phone-saved">${esc(c.next_step)}</div>`)}<div class="stage-copy"><p>This is the only view the customer gets. A review time is an investigation step, not a promise that money will return.</p>${btn('Continue in the customer portal', { id: 'open-story-customer', after: 'arrow-right' })}</div></div>`;
-    } else body = '<p class="note">Loading the customer’s saved status.</p>';
-  }
-  const nextLabel = s.step === 1 && !s.paid ? 'Pay on the phone first' : s.step === 5 ? 'Open the customer case' : 'Next step';
-  render(`<div class="page story page-enter"><span class="eyebrow">How a paid-twice case moves</span><div class="story-rail" role="group" aria-label="Story steps">${rail}</div><p class="role-now">Role for this step: <strong>${esc(step.who)}</strong></p><h1>${esc(step.title)}</h1><p class="story-line">${esc(step.line)}</p>${body}<div class="story-nav">${btn('Back', { id: 'story-back', cls: 'ghost', before: 'arrow-left', attrs: s.step === 0 && !s.paid ? 'disabled' : '' })}<span>Step ${s.step + 1} of ${STORY.length}</span>${btn(nextLabel, { id: 'story-next', after: 'arrow-right', attrs: s.step === 1 && !s.paid ? 'disabled' : '' })}</div></div>`, { page: 'story' });
-  if (s.step === 5 && !s.customer && !s.loadingCustomer && !s.customerError) loadStoryCustomer();
+  render(`<div class="page story page-enter"><span class="eyebrow">QR + CASH INVESTIGATION</span><h1>Follow one payment story from phone to operator.</h1><p class="story-line">The canonical QR workspace keeps the customer phone, receipt evidence, Marketplace check, verdict, and customer outcome in one saved journey.</p><div class="hero-cta"><a class="btn home-add-cta" href="/qr-demo">Open QR investigation <span aria-hidden="true">→</span></a><a class="btn ghost" href="/qr-demo?view=operator">See operator workspace <span aria-hidden="true">→</span></a></div><div class="impact-row"><article><span>Customer</span><h2>QR → cash → receipt → complaint</h2><p>See the failed QR screen, cash receipt, later debit, and evidence handoff.</p></article><article><span>Operator</span><h2>Scan → Marketplace → verdict</h2><p>Run the receipt scan, compare the order, and refund, reject, or hand off safely.</p></article></div></div>`, { page: 'story' });
 }
-async function runStoryModel() {
-  if (state.story.running) return;
-  state.story.running = true; state.story.aiError = ''; renderStory();
-  try {
-    await api('/session', { method: 'POST', body: JSON.stringify({ role: 'staff' }) });
-    setSession(await api('/session'));
-    let c = await api('/cases/case_3');
-    if (!c.analysis || !c.analysis_fresh) c = await api('/cases/case_3/analyze', { method: 'POST', headers: { 'Idempotency-Key': key() }, body: JSON.stringify({ version: c.version }) });
-    state.story.ai = c;
-  } catch (e) { state.story.aiError = e.message; }
-  finally { state.story.running = false; renderStory(); }
-}
-async function loadStoryCustomer() {
-  state.story.loadingCustomer = true;
-  try {
-    await api('/session', { method: 'POST', body: JSON.stringify({ role: 'customer' }) });
-    setSession(await api('/session'));
-    state.story.customer = await api('/cases/case_3');
-    state.story.customerError = '';
-  } catch (e) { state.story.customerError = e.message; }
-  finally { state.story.loadingCustomer = false; if (state.page === 'story' && state.story.step === 5) renderStory(); }
-}
-async function storyNext() { const s = state.story; if (s.step === 1 && !s.paid) return; if (s.step < 5) { s.step += 1; renderStory(); return; } await openStoryCustomer(); }
-function storyBack() { const s = state.story; if (s.step === 1 && s.paid) { s.paid = false; renderStory(); return; } if (s.step > 0) { s.step -= 1; renderStory(); } }
-async function openStoryCustomer() { await switchRole('customer'); await openCase('case_3'); }
-async function openStoryCase() { await switchRole('staff'); await openCase('case_3'); }
 
 /* ==========================================================================
    CUSTOMER PORTAL + INVESTIGATOR INBOX
@@ -564,7 +480,6 @@ document.addEventListener('click', async ev => {
     if (b.dataset.nav) { ev.preventDefault(); await navigate(b.dataset.nav); return; }
     if (b.dataset.faqTab) { state.faq = { tab: b.dataset.faqTab, q: 0 }; document.querySelector('#faq-area').innerHTML = faqArea(); document.querySelector(`[data-faq-tab="${state.faq.tab}"]`)?.focus(); return; }
     if (b.dataset.faqQ != null) { state.faq.q = Number(b.dataset.faqQ); document.querySelector('#faq-area').innerHTML = faqArea(); document.querySelector(`[data-faq-q="${state.faq.q}"]`)?.focus(); return; }
-    if (b.dataset.storyStep != null) { state.story.step = Number(b.dataset.storyStep); renderStory(); return; }
     if (b.dataset.role) { await switchRole(b.dataset.role); return; }
     if (b.dataset.case) { await openCase(b.dataset.case); return; }
     if (b.dataset.source) { state.source = b.dataset.source; state.sourceRevision = b.dataset.revision ? Number(b.dataset.revision) : null; renderSource(); return; }
@@ -572,13 +487,6 @@ document.addEventListener('click', async ev => {
     if (b.dataset.resolve) { mutationDialog('Record a cited evidence response', select('evidence_id', 'Evidence addressing the request', state.case.evidence.map(e => [e.id, e.kind + ' / ' + e.id])) + field('reason', 'Resolution and remaining uncertainty', 'textarea'), 'resolve-task', f => ({ task_id: b.dataset.resolve, evidence_id: f.get('evidence_id'), reason: f.get('reason') })); return; }
     if (b.dataset.judgeCase) { const id = b.dataset.judgeCase; await switchRole('staff'); await openCase(id); return; }
     switch (b.id) {
-      case 'story-back': storyBack(); break;
-      case 'story-next': await storyNext(); break;
-      case 'phone-pay': state.story.paid = true; renderStory(); break;
-      case 'run-model': await runStoryModel(); break;
-      case 'retry-customer': state.story.customerError = ''; state.story.customer = null; renderStory(); break;
-      case 'open-story-customer': await openStoryCustomer(); break;
-      case 'open-story-case': await openStoryCase(); break;
       case 'back-list': await loadList(); break;
       case 'refresh': if (state.case && state.page === 'case') await openCase(state.case.id); else await loadList(); message('Saved status refreshed. No source check or analysis was run.'); break;
       case 'new-case': intakeForm(); break;

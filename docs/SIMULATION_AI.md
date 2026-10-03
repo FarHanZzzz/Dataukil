@@ -1,4 +1,13 @@
-# Evidence assessment in the mobile simulation
+# QR visual assistance and existing evidence assessment
+
+## QR + cash first-line operator
+
+The canonical `/qr-demo` journey uses a deterministic first-line operator pipeline: OpenCV visual region detection followed by exact-context synthetic Marketplace/payment comparisons. Receipt values come from the preserved human transcript or deterministic fixture wording; OpenCV does not perform OCR, authenticate the paper or prove cash movement. No model prediction grants receipt authority.
+
+Matching receipt/order/amount/bank context proposes a simulated refund requiring operator approval. Rejection needs a documented conflict or explicit denial. Missing, unavailable or conflicting source data pauses automation and creates an owned human review. Source checks and verdicts carry evidence versions; new evidence or a new source result invalidates a prior decision. Customer-safe outputs hide fixture profiles, raw queries and internal confidence. See [QR workflow](QR_CASH_INVESTIGATION.md).
+
+The following assessment engine remains available for the existing case workspaces and older QR JSON complaint flows.
+
 
 ## Inputs and responsibility
 

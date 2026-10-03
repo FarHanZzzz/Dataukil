@@ -1,4 +1,9 @@
-# Mobile simulation context and implementation plan
+# Canonical QR + cash workspace
+
+The completed guided customer/operator journey is `/qr-demo`: purchase → failed/unconfirmed QR screen → reported cash and issued receipt → observed later debit → attached receipt and complaint → operator scan → synthetic Marketplace comparison → verdict and separately approved simulated resolution. Read [QR workflow and contract](QR_CASH_INVESTIGATION.md) and [current QR validation](QR_UI_VALIDATION.md).
+
+The entries below describe the preserved compatibility API and older evidence-assessment workflow. The main QR journey now starts operator work with receipt scanning, and keeps customer-observed debit separate from verified bank records.
+
 
 ## Requested behavior
 

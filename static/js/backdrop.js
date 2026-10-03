@@ -5,7 +5,7 @@
    - Falls back to the CSS background if WebGL is unavailable. */
 (() => {
   const canvas = document.getElementById('webgl-canvas');
-  if (!canvas) return;
+  if (!canvas || document.body.classList.contains('theme-light')) return;
   const gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
   let ready = false;
   if (!gl) { document.documentElement.classList.add('no-webgl'); return; }

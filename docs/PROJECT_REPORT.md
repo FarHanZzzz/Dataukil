@@ -55,7 +55,7 @@ graph TD
 | `/customer` | **Customer Portal** | 8 bank-to-upay synthetic scenarios, live stage visualization, timeline events, complaint submission, bilingual English/বাংলা toggle. |
 | `/operations` | **Operations Center** | Live server-derived triage queue, incident cards, multi-source ledger comparison (Bank, Wallet, Core). |
 | `/operations/cases/{id}/studio` | **AI Investigation Studio** | Deep-dive case workspace: multi-phase investigation pipeline, evidence citations, hypothesis generation, replay, and atomic sandbox repair approval. |
-| `/qr-demo` | **QR & Cash Simulation Lab** | Retained interactive single-purchase simulation testing customer QR attempts, cash payment records, and late QR debit outcomes. |
+| `/qr-demo` | **QR & Cash Simulation Lab** | Unified customer/operator journey: failed QR display, cash receipt, observed late debit, complaint evidence, OpenCV visual annotations, synthetic Marketplace comparison and approved refund/rejection/owned handoff. |
 | `/mfs` (also `/demo`) | **Add-Money Walkthrough** | Five-stage same-tab guide with explicit scenario setup, saved-run resume and expandable presenter controls. |
 | `/customer/payment`<br>`/admin/queue` | **Add-Money Portals** | Dedicated role-scoped customer status view and rules-based investigator dispute queue. |
 

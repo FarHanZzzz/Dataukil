@@ -129,7 +129,10 @@ def operation(request,p,case_id,action,fn,staff=True):
             return json.loads(old['response'])
         if type(p.get('version')) is not int or p['version']!=c['version']:
             raise HTTPException(409,'This case changed. Refresh before making a new change.')
+        qr_event_count=len(c.get('qr_events',[]))
         fn(db,c,s,p)
+        for event in c.get('qr_events',[])[qr_event_count:]:
+            event.update(actor=s['actor'],idempotency_key=key,request_version=p['version'])
         if c.get('analysis') and not fresh(c):
             db.execute("UPDATE approvals SET status='STALE' WHERE case_id=? AND status='APPROVED'",(case_id,))
         c['version']+=1
@@ -157,6 +160,10 @@ def new_evidence(c,e):
     c['evidence'].append(e)
     c['evidence_version']+=1
     c['status']='OPEN'
+    if c.get('workflow')=='qr_cash':
+        pipeline=c.get('qr_pipeline',{})
+        if pipeline.get('verdict'): pipeline['verdict']['status']='STALE'
+        c.setdefault('qr_events',[]).append(dict(id=uid('qre'),sequence=len(c.get('qr_events',[]))+1,workflow='qr_cash',kind='EVIDENCE_CHANGED',node='annotated_fields',state='uncertain',actor=e.get('supplied_by','customer'),at=now(),version=c['version']+1,evidence_version=c['evidence_version'],evidence_ids=[e['id']],source_identifiers=dict(purchase_id=c['purchase_id']),detail='New evidence invalidated the saved scan and verdict.'))
     for d in c['decisions']:
         d['stale']=True
     notify(c,'New evidence was saved. The assigned investigator will review what changed.')
@@ -435,6 +442,10 @@ async def correct(case_id:str,request:Request):
         c['status']='OPEN'
         for d in c['decisions']:
             d['stale']=True
+        if c.get('workflow')=='qr_cash':
+            if c.get('qr_pipeline',{}).get('verdict'): c['qr_pipeline']['verdict']['status']='STALE'
+            from .qr_workflow import emit
+            emit(c,s['actor'],'RECEIPT_TRANSCRIPT_CORRECTED','annotated_fields','uncertain',[e['id']],reason)
         notify(c,'An evidence transcript was corrected. The investigation is awaiting updated review.')
     return operation(request,p,case_id,'correct',act)
 
@@ -554,12 +565,36 @@ async def check(case_id:str,request:Request):
     p=await payload(request)
     def act(db,c,s,p):
         kind=p.get('kind')
-        if kind not in ('qr','repayment','merchant','invoice'):
-            raise HTTPException(422,'Choose a QR, invoice, merchant or repayment source check.')
-        ch=dict(id=uid('check'),kind=kind,requested_at=now(),scope='exact case QR reference only',as_of=now(),
+        if kind in ('receipt_scan','marketplace'):
+            if c.get('workflow')!='qr_cash': raise HTTPException(409,'This check requires a QR + cash workflow case.')
+            if s['actor']!=c['owner']: raise HTTPException(403,'Only the case owner can advance the QR investigation.')
+            if p.get('evidence_version')!=c['evidence_version']: raise HTTPException(409,'Use the current evidence version for QR investigation checks.')
+        if kind not in ('qr','repayment','merchant','invoice','receipt_scan','marketplace'):
+            raise HTTPException(422,'Choose a QR, invoice, merchant, receipt, Marketplace or repayment source check.')
+        ch=dict(id=uid('check'),kind=kind,requested_at=now(),scope='exact purchase and linked receipt context' if kind in ('receipt_scan','marketplace') else 'exact case QR reference only',as_of=now(),
                 states=[dict(state='REQUESTED',at=now()),dict(state='QUEUED',at=now()),dict(state='RUNNING',at=now())])
         available=db.execute("SELECT value FROM demo WHERE key='repayment_available'").fetchone()['value']=='true'
-        if p.get('simulate_unavailable'):
+        if kind == 'receipt_scan':
+            existing=c.get('qr_pipeline',{}).get('receipt_scan')
+            if existing and existing.get('evidence_version')==c['evidence_version']:
+                return
+            receipt=next((e for e in reversed(c['evidence']) if e.get('blob') and e['blob']['mime'].startswith('image/') and e.get('kind')=='customer_supplied'),None)
+            if not receipt: raise HTTPException(409,'Attach an original receipt image before scanning.')
+            from .qr_receipt import annotate
+            from .qr_workflow import emit
+            emit(c,s['actor'],'RECEIPT_SCAN_STARTED','receipt_scan','active',[receipt['id']])
+            try: scan=annotate(base64.b64decode(receipt['blob']['base64']),current_text(receipt),receipt['blob']['mime'])
+            except ValueError as e: raise HTTPException(422,str(e))
+            c.setdefault('qr_pipeline',{})['receipt_scan']=dict(evidence_id=receipt['id'],source_evidence_id=receipt['id'],**scan,evidence_version=c['evidence_version'])
+            for region in scan['regions']: emit(c,s['actor'],'RECEIPT_REGION_ANNOTATED','annotated_fields','completed',[receipt['id']],region['field'])
+            c['operator_state']='RECEIPT_SCAN_ANNOTATED'
+            emit(c,s['actor'],'RECEIPT_SCAN_ANNOTATED','receipt_scan','completed',[receipt['id']])
+            ch.update(state='COMPLETED',result='OpenCV visual regions saved. Values come from the preserved transcript, not OCR.',artifact=c['qr_pipeline']['receipt_scan'])
+        elif kind == 'marketplace':
+            from .qr_workflow import marketplace_check
+            result=marketplace_check(db,c,s['actor'],bool(p.get('simulate_unavailable')))
+            ch.update(state='UNAVAILABLE' if result['outcome']=='UNCERTAIN' else 'COMPLETED',result=result['reason'])
+        elif p.get('simulate_unavailable'):
             ch.update(state='UNAVAILABLE',result='Synthetic source unavailable; no financial conclusion follows.')
         elif c.get('simulation_id'):
             from .simulation import check_source
@@ -581,6 +616,19 @@ async def check(case_id:str,request:Request):
         ch['states'].append(dict(state=ch['state'],at=now()))
         c['checks'].append(ch)
     return operation(request,p,case_id,'check',act)
+
+
+@app.post('/api/cases/{case_id}/qr-action')
+async def qr_action(case_id:str,request:Request):
+    p=await payload(request)
+    def act(db,c,s,p):
+        if c.get('workflow')!='qr_cash': raise HTTPException(409,'Use the original case controls for this case.')
+        if c['owner']!=s['actor']: raise HTTPException(403,'The current case owner must approve this QR operation.')
+        if p.get('evidence_version')!=c['evidence_version']: raise HTTPException(409,'Use the current evidence version for QR decisions.')
+        from .qr_workflow import action
+        message=action(db,c,s['actor'],p)
+        notify(c,message)
+    return operation(request,p,case_id,'qr-action',act)
 
 
 @app.post('/api/cases/{case_id}/task')
@@ -643,6 +691,10 @@ async def acknowledge(case_id:str,request:Request):
             raise HTTPException(403,'Only the receiving investigator can acknowledge this handoff.')
         h['status']='ACKNOWLEDGED';h['acknowledged_at']=now()
         c['owner']=s['actor']
+        if c.get('workflow')=='qr_cash':
+            c.get('qr_pipeline',{}).get('handoff',{}).update(status='ACKNOWLEDGED',owner=s['actor'])
+            from .qr_workflow import emit
+            emit(c,s['actor'],'HANDOFF_ACCEPTED','human_handoff','handoff',detail='Receiving investigator accepted ownership.')
         db.execute("UPDATE approvals SET status='STALE' WHERE case_id=? AND status='APPROVED'",(c['id'],))
         for t in c['tasks']:
             if t['status'] in ('OPEN','RESPONDED'):
@@ -705,9 +757,13 @@ def dossier(case_id:str,request:Request):
                 lines += [f'- [{link["evidence_id"]}] revision {link["transcript_version"]}: {link["label"]}; {link["source_status"]}'+ ('; '+ '; '.join(link['mismatches']) if link['mismatches'] else ''),
                           '> '+link['excerpt'].replace('\n','\n> ')]
     for title,key in [('Missing evidence','tasks'),('Attempted read-only checks','checks'),('Handoff','handoffs'),('Human review (no financial execution)','decisions')]:
-        lines += ['',f'## {title}',json.dumps(c[key],ensure_ascii=False,indent=2)]
+        lines += ['',f'## {title}',json.dumps([{**ch, 'artifact':{k:v for k,v in ch['artifact'].items() if k!='preview_base64'}} if ch.get('artifact') else ch for ch in c[key]] if key=='checks' else c[key],ensure_ascii=False,indent=2)]
     lines += ['', '## Shared case conversation',json.dumps(c.get('messages',[]),ensure_ascii=False,indent=2)]
     lines += ['', '## Claim and purchase-link corrections',json.dumps(c.get('claim_corrections',[])+c.get('links',[]),ensure_ascii=False,indent=2)]
+    if c.get('workflow')=='qr_cash':
+        pipeline=json.loads(json.dumps(c.get('qr_pipeline',{})))
+        if pipeline.get('receipt_scan'): pipeline['receipt_scan'].pop('preview_base64',None)
+        lines += ['', '## QR + cash visual assistance and synthetic outcome', 'OpenCV regions are visual assistance, not OCR or receipt authentication. Marketplace and refund records are synthetic. Approval is separate from completed refund.', json.dumps(pipeline,ensure_ascii=False,indent=2), '', '## Append-only QR event history', json.dumps(c.get('qr_events',[]),ensure_ascii=False,indent=2)]
     body='\n'.join(lines)
     return PlainTextResponse(body,media_type='text/markdown',headers={'Content-Disposition':f'attachment; filename="{c["reference"]}-v{c["version"]}.md"',
          'X-Dossier-SHA256':hashlib.sha256(body.encode()).hexdigest()})

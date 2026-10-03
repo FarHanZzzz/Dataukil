@@ -39,7 +39,7 @@ Each Studio event saves a phase, purpose, action, finding, changed state, citati
 | 7. Payment pipeline | Seven connected payment stages, saved events, separate investigation state | Eight scenarios and unknown-node inspection tests |
 | 8. Expandable details | Node drawers with correlation, attempts, request/response and source timestamps | Source-inspection checks and browser settlement drawer |
 | 9. Analyze Case | Asynchronous persisted run; immediate Studio navigation | Restart, interrupted-run and investigation API checks |
-| 10. Dedicated Studio | Separate dark console route | Served-page/CSP tests and browser Studio journeys |
+| 10. Dedicated Studio | Separate light console route | Served-page/CSP tests and browser Studio journeys |
 | 11. Observable investigation | Eleven phases with saved explanations and operations | Walkthrough asserts every explanation field and phase |
 | 12. Automation graph | SVG phase graph, follow active node and evidence drawers | Browser graph controls and phase/citation inspection |
 | 13. Live events | Authenticated fetch SSE with cursor and polling fallback | Ordered cursor tests; live add-money stream and Studio observations |
@@ -57,7 +57,7 @@ Each Studio event saves a phase, purpose, action, finding, changed state, citati
 | 25. Customer updates | Verified bilingual facts; internal tasks stay private | Notification privacy, partial repayment and Bangla verified-fact tests |
 | 26. Report export | Markdown/JSON reconstruction, citations, findings, hypotheses, decision, repair and remaining issues | SHA-256 and ledger agreement in actual walkthrough |
 | 27. Access control | Server-issued scoped sessions, ownership and case-family guards | Customer/staff/presenter and cross-workspace integration tests |
-| 28. UI layout | Light customer/operations pages, dark Studio, responsive panels, reduced motion | Browser desktop/mobile observations recorded in validation document |
+| 28. UI layout | Shared light theme across all page surfaces, responsive panels, reduced motion | 86 site-wide assertions across ten page types and six widths; [light theme validation](LIGHT_THEME_VALIDATION.md) |
 | 29. Featured simulation | ৳1,000 duplicate reversal and missing-response handoff | `scripts/master_walkthrough.py --live`; saved artifacts |
 | 30. Development phases | README phase table and documentation updated during development | Phase entries and current validation record |
 | 31. System layers | FastAPI, SQLite, source adapters, advisory model, policy and browser separated | Existing regressions plus merged shared-storage checks |
@@ -67,3 +67,8 @@ Each Studio event saves a phase, purpose, action, finding, changed state, citati
 Detailed checks live in `tests/test_master.py`, `tests/test_transfer.py`, `tests/test_integration.py`, `tests/test_simulation.py`, `tests/test_workflow.py` and `tests/test_ml.py`. Reproduction commands and observed results are in [MAIN_SYNC_VALIDATION.md](MAIN_SYNC_VALIDATION.md).
 
 The receipt API was exercised with real PNG bytes and download/hash verification. Browser file-chooser automation was limited by the local browser extension's file-access setting; it was not bypassed. Replay/reset financial invariants are tested through the actual backend. Model scores remain synthetic and unchanged; no independent human validation or live financial-provider integration is implied.
+
+
+## QR + cash coverage
+
+The canonical `/qr-demo` route now persists the customer lifecycle through QR failure, cash payment, receipt attachment, observed bank debit, complaint, operator scan, bounded Marketplace comparison, and three explicit verdict branches. Receipt originals are hashed and immutable; OpenCV annotations are derived visual assistance. The Add money graph remains on its existing variant and contract.

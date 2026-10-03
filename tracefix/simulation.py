@@ -7,7 +7,8 @@ import io
 import base64
 from functools import lru_cache
 import qrcode
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, UploadFile, File, Form
+from PIL import Image
 from . import store
 from .domain import uid, now, evidence, current_text, customer_view, facts, fresh, assessment
 
@@ -39,7 +40,17 @@ def qr_image(reference,purchase,amount):
 
 def project(sim):
     keys=['id','version','stage','customer_name','merchant','item','purchase_id','qr_reference','total_minor','qr_amount_minor','cash_amount_minor','case_id','created_at','events']
-    return {k:sim[k] for k in keys} | dict(synthetic=True,currency='BDT',qr_status=sim.get('qr_status','NOT_ATTEMPTED'),qr_image=qr_image(sim['qr_reference'],sim['purchase_id'],sim['qr_amount_minor']))
+    return {k:sim[k] for k in keys} | dict(
+        synthetic=True, workflow='qr_cash', currency='BDT',
+        qr_status=sim.get('qr_status','NOT_ATTEMPTED'),
+        qr_display_result=sim.get('qr_display_result','NOT_ATTEMPTED'),
+        customer_observed_debit=bool(sim.get('customer_observed_debit')),
+        receipt_draft=({k:sim['receipt_draft'].get(k) for k in ('id','transcript','mime','base64','hash','at')} if sim.get('receipt_draft') else None),
+        issued_receipt=({k:sim['issued_receipt'].get(k) for k in ('mime','base64','transcript')} if sim.get('issued_receipt') else None),
+        customer_state=sim.get('customer_state',sim['stage']),
+        receipt_evidence_id=(sim.get('receipt_draft') or {}).get('id'),
+        qr_pipeline={},
+        qr_image=qr_image(sim['qr_reference'],sim['purchase_id'],sim['qr_amount_minor']))
 
 
 def operation_key(request,p,scope,actor,db):
@@ -96,12 +107,17 @@ async def create_simulation(request:Request):
         key,digest,old=operation_key(request,p,'simulation:create',s['actor'],db)
         if old is not None:return old
         suffix=secrets.token_hex(4).upper()
-        sim=dict(id=uid('sim'),customer_id=s['actor'],customer_name=name,merchant=merchant,item=item,
+        sim=dict(id=uid('sim'),workflow='qr_cash',customer_id=s['actor'],customer_name=name,merchant=merchant,item=item,
                  purchase_id='PUR-'+suffix,qr_reference='QR-'+suffix,total_minor=total,qr_amount_minor=amount,
                  cash_amount_minor=0,case_id=None,version=1,stage='PURCHASE_CREATED',qr_status='NOT_ATTEMPTED',
-                 created_at=now(),profile=profile,source_records={},events=[dict(at=now(),kind='purchase',text=f'Purchase created at {merchant}.')])
+                 created_at=now(),profile=profile,source_records={},receipt_draft=None,receipt_drafts=[],customer_state='PURCHASE_CREATED',
+                 qr_display_result='NOT_ATTEMPTED',customer_observed_debit=False,qr_pipeline={},
+                 events=[dict(at=now(),kind='purchase',text=f'Purchase created at {merchant}.')])
         sim['source_records']['invoice']=evidence(f'Invoice for purchase {sim["purchase_id"]}. Purchase total BDT {total/100:.2f}. Merchant: {merchant}. Item: {item}.',
                  'mock_invoice','INV-'+suffix,total,sim['purchase_id'],'purchase_total')
+        for event in sim['events']:
+            event.update(actor=s['actor'],version=1,evidence_version=0,idempotency_key=key,source_identifiers=dict(simulation_id=sim['id'],purchase_id=sim['purchase_id']))
+        sim['marketplace_record']=dict(order_exists=True,available=profile not in ('unverified',),purchase_id=sim['purchase_id'],merchant=merchant,item=item,amount=f'{total/100:.2f}',cash_reference='CASH-'+sim['purchase_id'],qr_reference=sim['qr_reference'],bank_debit_reference='BANK-'+sim['qr_reference'],timestamp=sim['created_at'],bank_debit_verified=profile!='qr_failed',cash_received=profile=='confirmed',denial=profile=='denied',refunded=False)
         save_sim(db,sim)
         result=project(sim);remember(db,s['actor'],'simulation:create',key,digest,result)
         return result
@@ -144,12 +160,16 @@ async def simulation_action(identifier:str,request:Request):
         revision(p,sim)
         action=p.get('action')
         if action=='attempt_qr' and sim['stage']=='PURCHASE_CREATED':
-            sim.update(stage='QR_UNCLEAR',qr_status='UNCLEAR')
-            sim['events'].append(dict(at=now(),kind='qr_unclear',text='QR attempted. The phone did not receive a clear result.'))
+            sim.update(stage='QR_UNCLEAR',qr_status='UNCLEAR',qr_display_result='FAILED',customer_state='QR_DISPLAY_FAILED_OR_UNCONFIRMED')
+            sim['events'].append(dict(at=now(),kind='qr_attempted',customer_states=['QR_ATTEMPTED','QR_DISPLAY_FAILED_OR_UNCONFIRMED'],text='The payment screen showed a failed result and no confirmation was received.'))
         elif action=='pay_cash' and sim['stage']=='QR_UNCLEAR':
             amount=positive_int(p.get('amount_minor'))
-            sim.update(stage='SECOND_PAID',cash_amount_minor=amount)
-            sim['events'].append(dict(at=now(),kind='cash_reported',text=f'Customer recorded paying BDT {amount/100:.2f} cash at the counter.'))
+            sim.update(stage='SECOND_PAID',cash_amount_minor=amount,customer_state='RECEIPT_ISSUED')
+            from .qr_receipt import sample_receipt
+            blob,mime,transcript=sample_receipt(sim)
+            sim['issued_receipt']=dict(mime=mime,base64=base64.b64encode(blob).decode(),transcript=transcript)
+            sim['events'].append(dict(at=now(),kind='cash_reported',customer_states=['CASH_PAID'],text=f'Customer recorded paying BDT {amount/100:.2f} cash at the counter.'))
+            sim['events'].append(dict(at=now(),kind='receipt_issued',text='The merchant issued a receipt for the cash payment.'))
             if sim['profile']=='confirmed':
                 sim['source_records']['merchant']=evidence(f'Cash payment of BDT {amount/100:.2f} was received for purchase {sim["purchase_id"]}. Both payments are for the same purchase. Merchant: {sim["merchant"]}.',
                     'mock_merchant','CASH-'+sim['purchase_id'],amount,sim['purchase_id'],'cash_received')
@@ -161,6 +181,18 @@ async def simulation_action(identifier:str,request:Request):
             elif sim['profile']=='qr_failed':
                 sim['source_records']['merchant']=evidence(f'Cash payment of BDT {amount/100:.2f} was received for purchase {sim["purchase_id"]}.',
                     'mock_merchant','CASH-'+sim['purchase_id'],amount,sim['purchase_id'],'cash_received')
+        elif action=='observe_debit' and sim['stage'] in ('SECOND_PAID','QR_CONFIRMED'):
+            if sim.get('customer_observed_debit'): raise HTTPException(409,'The bank activity update is already saved.')
+            sim['customer_observed_debit']=True;sim['customer_state']='CUSTOMER_OBSERVED_BANK_DEBIT'
+            sim['events'].append(dict(at=now(),kind='customer_debit_observed',text=f'Customer later saw a BDT {sim["qr_amount_minor"]/100:.2f} debit in bank activity.'))
+        elif action=='attach_sample_receipt' and sim['stage'] in ('SECOND_PAID','QR_CONFIRMED'):
+            if not sim.get('customer_observed_debit'): raise HTTPException(409,'Observe the later bank activity before attaching complaint evidence.')
+            from .qr_receipt import sample_receipt
+            blob, mime, transcript = sample_receipt(sim)
+            sim['receipt_draft']=dict(id=uid('receipt'),simulation_id=identifier,actor=s['actor'],mime=mime,base64=base64.b64encode(blob).decode(),transcript=transcript,hash=hashlib.sha256(blob).hexdigest(),at=now())
+            sim['stage']='RECEIPT_ATTACHED';sim['customer_state']='RECEIPT_ATTACHED'
+            sim.setdefault('receipt_drafts',[]).append(sim['receipt_draft'])
+            sim['events'].append(dict(at=now(),kind='receipt_attached',text='Synthetic receipt attached as customer evidence for review.'))
         elif action=='refresh_qr' and sim['stage'] in ('QR_UNCLEAR','SECOND_PAID'):
             completed=sim['profile']!='qr_failed'
             sim.update(stage='QR_CONFIRMED',qr_status='COMPLETED' if completed else 'NOT_COMPLETED')
@@ -170,6 +202,9 @@ async def simulation_action(identifier:str,request:Request):
             sim['events'].append(dict(at=now(),kind='qr_status',text=text))
         else:
             raise HTTPException(409,'That action is not available at this purchase stage.')
+        for event in sim['events']:
+            event.setdefault('idempotency_key',key)
+            event.setdefault('evidence_version',1 if sim.get('receipt_draft') else 0);event.setdefault('evidence_ids',[sim['receipt_draft']['id']] if sim.get('receipt_draft') else []);event.setdefault('actor',s['actor']);event.setdefault('version',sim['version']+1);event.setdefault('source_identifiers',dict(simulation_id=sim['id'],purchase_id=sim['purchase_id']))
         sim['version']+=1;save_sim(db,sim)
         result=project(sim);remember(db,s['actor'],scope,key,digest,result)
         return result
@@ -192,7 +227,7 @@ async def file_complaint(identifier:str,request:Request):
             result=dict(simulation=project(sim),case=customer_view(store.get_case(db,sim['case_id'])))
             remember(db,s['actor'],scope,key,digest,result);return result
         revision(p,sim)
-        if not sim['cash_amount_minor'] or sim['stage'] not in ('SECOND_PAID','QR_CONFIRMED'):
+        if not sim['cash_amount_minor'] or sim['stage'] not in ('SECOND_PAID','QR_CONFIRMED','RECEIPT_ATTACHED'):
             raise HTTPException(409,'Record the second payment before reporting a paid-twice complaint.')
         description=text_field(p,'description')
         supplied=text_field(p,'receipt_text',4000,False)
@@ -204,14 +239,57 @@ async def file_complaint(identifier:str,request:Request):
                version=1,evidence_version=1,created_at=now(),updated_at=now(),next_review=due,
                evidence=[evidence(description,purchase=sim['purchase_id'])],analysis=None,analyses=[],checks=[],tasks=[],handoffs=[],decisions=[],notifications=[],
                messages=[dict(id=uid('msg'),at=now(),actor=s['actor'],role='customer',text=description)])
+        c.update(workflow='qr_cash',operator_state='CASE_RECEIVED',customer_observed_debit=bool(sim.get('customer_observed_debit')),qr_events=[],qr_pipeline={})
+        receipt_id=p.get('receipt_evidence_id')
+        if sim['stage']=='RECEIPT_ATTACHED' and not receipt_id: raise HTTPException(422,'Cite the attached receipt_evidence_id when submitting the complaint.')
+        if receipt_id and receipt_id != (sim.get('receipt_draft') or {}).get('id'): raise HTTPException(409,'The requested receipt artifact does not belong to this purchase.')
+        if receipt_id and sim.get('receipt_draft') and receipt_id==sim['receipt_draft']['id']:
+            draft=sim['receipt_draft']
+            e=evidence(draft.get('transcript') or 'Synthetic receipt supplied for review.',reference='RECEIPT-'+sim['purchase_id'],amount=sim['cash_amount_minor'],purchase=sim['purchase_id'])
+            e['blob']=dict(mime=draft['mime'],base64=draft['base64']);e['original_hash']=draft['hash'];e['transcription']='customer supplied transcript';e['receipt_draft_id']=receipt_id
+            c['evidence'].append(e)
         if supplied:
             c['evidence'].append(evidence(supplied,reference='SUPPLIED-'+sim['purchase_id'],amount=sim['cash_amount_minor'],purchase=sim['purchase_id']))
+        if receipt_id:
+            from .qr_workflow import emit
+            emit(c,s['actor'],'QR_RECEIPT_ATTACHED','receipt_received',evidence_ids=[next(e['id'] for e in c['evidence'] if e.get('receipt_draft_id')==receipt_id)],version=1)
+            emit(c,s['actor'],'CASE_RECEIVED','receipt_received',evidence_ids=[next(e['id'] for e in c['evidence'] if e.get('receipt_draft_id')==receipt_id)],version=1)
+            for event in c['qr_events']:
+                event.update(idempotency_key=key,request_version=p['version'])
         notify(c,'Your complaint is saved. Investigator 1 will check both payments and the purchase records.')
         store.save_case(db,c);store.audit(db,c,s['actor'],'simulation_complaint')
-        sim.update(stage='COMPLAINT_FILED',case_id=case_id,version=sim['version']+1)
-        sim['events'].append(dict(at=now(),kind='complaint',text='Complaint saved as '+c['reference']+'.'))
+        sim.update(stage='COMPLAINT_FILED',customer_state='COMPLAINT_FILED',case_id=case_id,version=sim['version']+1)
+        sim['events'].append(dict(at=now(),actor=s['actor'],version=sim['version'],evidence_version=c['evidence_version'],evidence_ids=[e['id'] for e in c['evidence']],idempotency_key=key,source_identifiers=dict(simulation_id=sim['id'],case_id=case_id),kind='complaint',text='Complaint saved as '+c['reference']+'.'))
         save_sim(db,sim)
         result=dict(simulation=project(sim),case=customer_view(c));remember(db,s['actor'],scope,key,digest,result)
+        return result
+
+
+@router.post('/api/simulations/{identifier}/receipt')
+async def save_receipt(identifier:str,request:Request,file:UploadFile=File(...),transcript:str=Form(''),version:int=Form(...)):
+    from .app import session
+    from .qr_receipt import validate_image
+    s=session(request)
+    if s['role']!='customer': raise HTTPException(403,'Customer session required.')
+    content=await file.read(2*1024*1024+1)
+    if len(content)>2*1024*1024: raise HTTPException(413,'Maximum upload is 2 MiB.')
+    try: validate_image(content,file.content_type)
+    except Exception as e: raise HTTPException(422,str(e))
+    if not transcript.strip() or len(transcript)>4000: raise HTTPException(422,'Provide a receipt transcript of at most 4000 characters.')
+    with store.transaction() as db:
+        sim=get_sim(db,identifier);owned(s,sim)
+        scope='simulation:'+identifier+':receipt'
+        digest_body=dict(version=version,hash=hashlib.sha256(content).hexdigest(),transcript=transcript,mime=file.content_type)
+        key,digest,old=operation_key(request,digest_body,scope,s['actor'],db)
+        if old is not None:return old
+        revision({'version':version},sim)
+        if sim['case_id'] or not sim['cash_amount_minor']: raise HTTPException(409,'Attach a draft receipt after cash payment and before the complaint.')
+        draft=dict(id=uid('receipt'),simulation_id=identifier,mime=file.content_type,base64=base64.b64encode(content).decode(),transcript=transcript.strip(),hash=digest_body['hash'],at=now(),actor=s['actor'])
+        sim['receipt_draft']=draft;sim.setdefault('receipt_drafts',[]).append(draft);sim['stage']='RECEIPT_ATTACHED';sim['customer_state']='RECEIPT_ATTACHED';sim['version']+=1
+        sim['events'].append(dict(at=now(),actor=s['actor'],version=sim['version'],evidence_version=1,evidence_ids=[draft['id']],idempotency_key=key,source_identifiers=dict(simulation_id=identifier,purchase_id=sim['purchase_id']),kind='receipt_attached',text='Customer attached an immutable receipt as evidence for review.'))
+        save_sim(db,sim)
+        result=project(sim)|dict(receipt_evidence_id=draft['id'])
+        remember(db,s['actor'],scope,key,digest,result)
         return result
 
 
@@ -260,6 +338,7 @@ async def repayment_request(case_id:str,request:Request):
     def act(db,c,s,p):
         if not c.get('simulation_id') or not fresh(c) or assessment(c)['status']!='SUPPORTED':
             raise HTTPException(409,'A current, source-supported duplicate-payment assessment is required.')
+        if c.get('qr_pipeline',{}).get('receipt_scan'): raise HTTPException(409,'Use the QR verdict and operator approval controls for this investigation.')
         if any(e['kind']=='repayment_request' for e in c['evidence']):
             raise HTTPException(409,'A resolution request is already recorded.')
         note=text_field(p,'note',1000)
@@ -287,6 +366,7 @@ async def simulate_repayment(identifier:str,request:Request):
         if old is not None:return old
         revision(p,sim)
         c=store.get_case(db,sim['case_id'])
+        if c.get('qr_pipeline',{}).get('receipt_scan'): raise HTTPException(409,'Use the guarded QR refund controls for this investigation.')
         req=next((e for e in c['evidence'] if e['kind']=='repayment_request'),None)
         if not req:
             raise HTTPException(409,'Record a supported resolution request before advancing the repayment source.')

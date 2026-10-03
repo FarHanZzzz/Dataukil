@@ -270,6 +270,7 @@ async function mountWorkspace(app, ident) {
     S.selected = node || null;
     S.tab = 'evidence';
     graph.select(node);
+    paintInspector();
     showMobilePane('details');
     graph.ensureVisible && node && graph.ensureVisible(node);
   }

@@ -71,7 +71,7 @@ try {
   await ready(home, '#start-walkthrough');
   check(await home.locator('#start-walkthrough').isDisabled(), 'Fresh visit requires explicit scenario selection');
   check(await home.locator('input[name=scenario]:checked').count() === 0, 'Automatic backend run is not a chosen scenario');
-  check(await home.locator('body').evaluate(e => getComputedStyle(e).backgroundColor) === 'rgb(1, 4, 15)', 'Walkthrough uses the landing page navy canvas');
+  check(await home.locator('body').evaluate(e => getComputedStyle(e).backgroundColor) === 'rgb(247, 249, 252)', 'Walkthrough uses the shared light canvas');
   check(await home.getByRole('link', { name: 'Explore investigation demo', exact: true }).isVisible(), 'Investigation demo has a prominent hero action');
   check(await home.getByRole('link', { name: 'Open investigation workspace', exact: true }).isVisible(), 'Whole investigation preview is an accessible link');
   await home.getByRole('link', { name: 'Explore investigation demo', exact: true }).click();

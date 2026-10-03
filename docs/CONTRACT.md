@@ -43,3 +43,8 @@ Every mutation: authorize -> scoped idempotency key + payload digest -> successf
 # Mobile simulation additions
 
 The versioned simulation routes, shared conversation and separate surface-session header are mapped in [MOBILE_SIMULATION.md](MOBILE_SIMULATION.md). Customer projection now additionally exposes their own supplied evidence wording, user-facing messages and requests, safe review notes, current assessment and explicit freshness state. It still excludes the staff evidence matrix, raw model scores, internal/merchant tasks, audit log and hidden simulation source data. Source records are imported only by read-only checks; the ordinary text model never receives simulation profiles or future source records.
+
+
+## QR + cash investigation contract
+
+The canonical route is `/qr-demo`. The pre-complaint multipart receipt draft, atomic `receipt_evidence_id` promotion, OpenCV visual scan, exact-context synthetic Marketplace check, operator-only QR decisions, separately approved/completed simulated refund and append-only replay events are documented in [QR + cash investigation](QR_CASH_INVESTIGATION.md). Original bytes/hashes remain immutable; OpenCV annotations and transcript values confer no source authority. Unavailable Marketplace data is uncertain, never rejection. Customer projections hide raw source data and internal scan confidence.

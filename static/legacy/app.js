@@ -38,6 +38,11 @@ const S = {
   selectedEvidence: null,
   file: null,
   modal: null,
+  qrZoom: .7,
+  qrReplay: null,
+  qrSelected: null,
+  qrAnimation: null,
+  receiptFile: null,
 };
 const money = (n) =>
   n == null
@@ -212,11 +217,17 @@ async function mutate(role, path, body) {
     throw e;
   }
 }
+function focusSelector(node){
+  if(node.id)return '#'+CSS.escape(node.id);
+  const key=['data-action','data-modal','data-check','data-qr-action','data-qr-verdict','data-qr-section','data-qr-zoom','data-qr-node','data-staff-tab','data-customer-tab','data-phone-nav','data-qr-replay'].find(key=>node.hasAttribute(key));
+  return key?`[${key}="${CSS.escape(node.getAttribute(key))}"]`:null;
+}
 function snapshot(el) {
   return {
     focus: el.contains(document.activeElement)
       ? {
           id: document.activeElement.id,
+          selector:focusSelector(document.activeElement),
           start: document.activeElement.selectionStart,
           end: document.activeElement.selectionEnd,
         }
@@ -224,6 +235,7 @@ function snapshot(el) {
     scroll: [...el.querySelectorAll("[data-scroll]")].map((n) => ({
       key: n.dataset.scroll,
       top: n.scrollTop,
+      left:n.scrollLeft,
       bottom: n.scrollHeight - n.scrollTop - n.clientHeight < 35,
     })),
   };
@@ -231,12 +243,13 @@ function snapshot(el) {
 function restore(el, s) {
   for (const old of s.scroll) {
     const n = el.querySelector(`[data-scroll="${old.key}"]`);
+    if(n)n.scrollLeft=old.left||0;
     if (n)
       n.scrollTop =
         old.key === "thread" && old.bottom ? n.scrollHeight : old.top;
   }
-  if (s.focus?.id) {
-    const n = document.getElementById(s.focus.id);
+  if (s.focus?.selector) {
+    const n = el.querySelector(s.focus.selector)||el.querySelector('.qr-primary-stage .button:not([disabled])');
     if (n && el.contains(n)) {
       n.focus({ preventScroll: true });
       try {
@@ -254,18 +267,35 @@ function clearDraft(form) {
   delete S.drafts[form];
   sessionStorage.setItem("tf.drafts", JSON.stringify(S.drafts));
 }
-function rememberSelection() {
-  localStorage.setItem("tf.activeSim", S.sim?.id || "new");
-  if (S.customerCase) localStorage.setItem("tf.activeCase", S.customerCase.id);
-  else localStorage.removeItem("tf.activeCase");
+function journeyURL(view=S.view) {
+  const params=new URLSearchParams();
+  if(S.sim) params.set("simulation",S.sim.id);
+  const caseId=S.customerCase?.id || S.staffCase?.id;
+  if(caseId) params.set("case",caseId);
+  params.set("view",view==="phone"?"customer":view==="desk"?"operator":"both");
+  return "/qr-demo?"+params;
 }
-function setView(view) {
-  S.view = view;
-  $("#workspace").className = "workspace view-" + view;
-  document.querySelectorAll("[data-view]").forEach((n) => {
-    n.classList.toggle("active", n.dataset.view === view);
-    n.setAttribute("aria-pressed", String(n.dataset.view === view));
+function rememberSelection(push=true) {
+  if(S.sim) localStorage.setItem("tf.activeSim",S.sim.id);
+  if(S.customerCase) localStorage.setItem("tf.activeCase",S.customerCase.id);
+  const url=journeyURL();
+  if(location.pathname+location.search!==url) history[push?"pushState":"replaceState"]({},"",url);
+  updateJourneyLinks();
+}
+function canonicalView(view) { return view === "customer" ? "phone" : view === "operator" ? "desk" : view; }
+function updateJourneyLinks() {
+  document.querySelectorAll("a[data-view]").forEach(a=>a.href=journeyURL(a.dataset.view));
+  document.querySelectorAll(".companion-link,.qr-companion").forEach(a=>a.href=journeyURL("desk"));
+}
+function setView(view,persist=false) {
+  view=canonicalView(view);S.view=["both","phone","desk"].includes(view)?view:"both";
+  $("#workspace").className="workspace view-"+S.view;
+  document.querySelectorAll("[data-view]").forEach(n=>{
+    n.classList.toggle("active",n.dataset.view===S.view);
+    if(n.tagName==="BUTTON") n.setAttribute("aria-pressed",String(n.dataset.view===S.view));
   });
+  if(persist)rememberSelection();
+  updateJourneyLinks();
 }
 function renderJourney() {
   const sim = S.sim,
@@ -278,26 +308,39 @@ function renderJourney() {
         ? 2
         : sim.stage === "SECOND_PAID" || sim.stage === "QR_CONFIRMED"
           ? 3
-          : 4;
-  if (c?.status === "OUTCOME_RECORDED") at = 5;
+          : sim.stage === "RECEIPT_ATTACHED"
+            ? 4
+            : 5;
+  const pipe=S.staffCase?.id===c?.id?S.staffCase?.qr_pipeline:null;
+  if(pipe?.receipt_scan && pipe.receipt_scan.evidence_version===S.staffCase.evidence_version)at=6;
+  if(pipe?.marketplace && pipe.marketplace.evidence_version===S.staffCase.evidence_version)at=7;
+  if(pipe?.verdict?.status==='RECORDED' && pipe.verdict.evidence_version===S.staffCase?.evidence_version || c?.qr_pipeline?.verdict)at=8;
+  if(S.qrAnimation?.kind==="receipt_scan")at=5;
+  if(S.qrAnimation?.kind==="marketplace")at=6;
   const steps = [
-    ["Purchase", "Enter the details"],
-    ["QR payment", "Try the app"],
-    ["Second payment", "Record the cash"],
-    ["Report", "Tell us what happened"],
-    ["Investigation", "Follow the evidence"],
-    ["Outcome", "Read the review"],
+    ["Purchase", "Prepare the order"],
+    ["QR payment", "Pay on the phone"],
+    ["Cash", "Receive the receipt"],
+    ["Bank activity", "See the debit"],
+    ["Complaint", "Attach evidence"],
+    ["Scan", "AI annotates regions"],
+    ["Marketplace", "Cross-check the order"],
+    ["Verdict", "Refund or handoff"],
+    ["Outcome", "Customer update"],
   ];
   $("#journey").innerHTML = steps
     .map(
       ([title, sub], i) =>
-        `<div class="journey-step ${i === at ? "current" : i < at ? "complete" : ""}" ${i === at ? 'aria-current="step"' : ""}><span class="step-number">${i < at ? icon("check") : String(i + 1).padStart(2, "0")}</span><div><strong>${title}</strong><small>${sub}</small></div>${i < 5 ? '<span class="step-connector"></span>' : ""}</div>`,
+        `<div class="journey-step ${i === at ? "current" : i < at ? "complete" : ""}" ${i === at ? 'aria-current="step"' : ""}><span class="step-number">${i < at ? icon("check") : String(i + 1).padStart(2, "0")}</span><div><strong>${title}</strong><small>${sub}</small></div>${i < steps.length - 1 ? '<span class="step-connector"></span>' : ""}</div>`,
     )
     .join("");
+  const labels = ["Start with the purchase", "Customer is paying by QR", "Customer is paying cash", sim?.customer_observed_debit?"Bank debit observed · attach receipt":"Check later bank activity", "File the complaint with receipt evidence", "Operator is scanning receipt evidence", "AI is checking Marketplace records", "Operator is reviewing the verdict", c?.qr_pipeline?.verdict?.outcome==="UNCERTAIN"?"Human review continues · automation paused":c?.qr_pipeline?.resolution?.state==="REFUND_COMPLETED"?"Simulated refund completed":c?.qr_pipeline?.resolution?.state==="REFUND_REQUESTED"?"Refund requested · completion pending":c?.qr_pipeline?.verdict?.outcome==="LEGITIMATE"?"Refund proposed · operator approval required":"Review explanation shared with customer"];
+  const banner = document.querySelector("#current-stage");
+  if (banner && !S.qrAnimation) banner.innerHTML = `<span class="qr-stage-kicker">CURRENT STAGE</span><strong>${esc(labels[Math.min(at, labels.length - 1)])}</strong><span>${sim ? `${esc(sim.merchant)} · ${esc(sim.purchase_id)}` : "Create a purchase to begin"}</span>`;
 }
 function phoneTitle(title, sub = "", back = false) {
   $("#phone-header").innerHTML =
-    `${back ? `<button class="icon-button" data-action="phone-back" aria-label="Back">${icon("back")}</button>` : '<span class="wallet-mark">t↗</span>'}<div><strong>${esc(title)}</strong>${sub ? `<small>${esc(sub)}</small>` : ""}</div><span class="avatar">${esc((S.sim?.customer_name || "You").slice(0, 1))}</span>`;
+    `${back ? `<button class="icon-button" data-action="phone-back" aria-label="Back">${icon("back")}</button>` : '<span class="wallet-mark">D↗</span>'}<div><strong>${esc(title)}</strong>${sub ? `<small>${esc(sub)}</small>` : ""}</div><span class="avatar">${esc((S.sim?.customer_name || "You").slice(0, 1))}</span>`;
 }
 function renderPhone() {
   const el = $("#phone-content"),
@@ -320,7 +363,7 @@ function renderPhone() {
         ? "Your activity"
         : S.phone === "cases"
           ? "Your support"
-          : "trace wallet",
+          : "DataUkil wallet",
     isCase ? c.reference : "FICTIONAL WALLET",
     S.phone === "report" || isCase,
   );
@@ -363,12 +406,13 @@ function renderPhone() {
     S.busy.customer || "Your side of the counter";
 }
 function purchaseScreen() {
-  return `<div class="app-kicker">LET’S START AT THE COUNTER</div><h2>A purchase,<br>in your hands.</h2><p class="app-description">Enter your own details to begin the payment story.</p><form id="purchase-form" data-draft="purchase" class="app-form">
+  const saved=S.sims.find(sim=>sim.id===localStorage.getItem("tf.activeSim"));
+  return `${saved?`<section class="qr-resume"><strong>A saved journey is available</strong><p>${esc(saved.merchant)} · ${money(saved.total_minor)}</p><button class="button secondary full" data-resume-sim="${esc(saved.id)}">Resume saved journey ${icon("arrow")}</button></section>`:""}<div class="app-kicker">START NEW SCENARIO</div><h2>A purchase,<br>in your hands.</h2><p class="app-description">Enter your own details to begin the payment story.</p><form id="purchase-form" data-draft="purchase" class="app-form">
  ${field("purchase", "customer_name", "Your name", "Farhan", "text", 'required maxlength="80" autocomplete="given-name"')}
  ${field("purchase", "merchant", "Merchant name", "Rafi Store", "text", 'required maxlength="100"')}
  ${field("purchase", "item", "What are you buying?", "Groceries", "text", 'required maxlength="120"')}
  <div class="field-row">${field("purchase", "total_minor", "Invoice total (৳)", "500.00", "text", 'required inputmode="decimal"')}${field("purchase", "qr_amount_minor", "QR payment (৳)", "500.00", "text", 'required inputmode="decimal"')}</div>
- <p class="field-hint">For split tender, enter a QR amount below the invoice total.</p><p class="form-error" id="purchase-error" role="alert"></p><button class="button primary full" type="submit"${disabled("customer")}>${S.busy.customer || "Continue to payment"} ${icon("arrow")}</button>
+ <details class="qr-presenter"><summary>Presenter scenario setup</summary><p class="field-hint">Choose source behavior before starting. This is hidden from the operator checks.</p><label class="field"><span>Scenario</span><select id="purchase-profile">${[["confirmed","Matching purchase and payment records"],["denied","Marketplace denies the cash claim"],["unverified","Marketplace is unavailable"],["qr_failed","Bank record needs human review"]].map(([id,title])=>`<option value="${id}" ${S.profile===id?"selected":""}>${title}</option>`).join('')}</select></label></details><p class="form-error" id="purchase-error" role="alert"></p><button class="button primary full" type="submit"${disabled("customer")}>${S.busy.customer || "Start new scenario"} ${icon("arrow")}</button>
  </form><div class="app-security">${icon("shield")}A safe simulation. No real money is used.</div>`;
 }
 function merchantCard(sim) {
@@ -381,9 +425,11 @@ function paymentScreen(sim) {
   if (sim.stage === "PURCHASE_CREATED")
     return `<div class="app-kicker">PAYMENT · STEP 02</div><h2>Pay ${esc(sim.merchant)}.</h2><p class="app-description">Your purchase is ready. Try the fictional QR payment.</p>${merchantCard(sim)}<div class="qr-checkout"><img src="${sim.qr_image}" width="182" height="182" alt="QR containing the fictional reference ${esc(sim.qr_reference)}"><span class="qr-caption">DEMO PAYMENT CODE</span><strong>${money(sim.qr_amount_minor)}</strong><span class="mono">${esc(sim.qr_reference)}</span></div>${receiptRows(sim)}<button class="button primary full" data-action="attempt-qr"${disabled("customer")}>${S.busy.customer || "Pay by QR"} ${icon("scan")}</button><p class="center-hint">This QR contains a demo reference, not a payable wallet link.</p>`;
   if (sim.stage === "QR_UNCLEAR")
-    return `<div class="result-symbol amber">${icon("alert")}</div><div class="app-kicker">AT THE COUNTER</div><h2>The result is unclear.</h2><p class="app-description">The app lost the payment response. You don’t yet know if the QR payment went through.</p>${merchantCard(sim)}${note("An unclear screen does not mean the payment failed. This story simulates the customer’s choice to pay cash.", "warning")}<form id="cash-form" data-draft="cash-${sim.id}" class="app-form">${field("cash-" + sim.id, "amount_minor", "Cash paid at the counter (৳)", amount(sim.total_minor === sim.qr_amount_minor ? sim.total_minor : sim.total_minor - sim.qr_amount_minor), "text", 'required inputmode="decimal"')}<p class="form-error" id="cash-error" role="alert"></p><button class="button primary full" type="submit"${disabled("customer")}>${S.busy.customer || "Record cash payment"} ${icon("cash")}</button></form><button class="button secondary full" data-action="refresh-qr"${disabled("customer")}>Check QR status first</button>`;
-  if (sim.stage === "SECOND_PAID")
-    return `<div class="result-symbol green">${icon("cash")}</div><div class="app-kicker">SECOND PAYMENT RECORDED</div><h2>You paid ${money(sim.cash_amount_minor)} cash.</h2><p class="app-description">Your cash entry is saved. Let’s check what happened to the original QR payment.</p>${merchantCard(sim)}<div class="payment-tile"><span>${icon("scan")}</span><div><strong>QR payment</strong><small>Waiting for a clear result</small></div><b>${money(sim.qr_amount_minor)}</b></div><div class="payment-tile"><span>${icon("cash")}</span><div><strong>Cash payment</strong><small>Reported by you · not yet checked</small></div><b>${money(sim.cash_amount_minor)}</b></div><button class="button primary full" data-action="refresh-qr"${disabled("customer")}>${S.busy.customer || "Check QR payment status"} ${icon("refresh")}</button><button class="button secondary full" data-action="report">Report the problem now</button>`;
+    return `<div class="result-symbol red">${icon("alert")}</div><div class="app-kicker">QR PAYMENT · NO CONFIRMATION</div><h2>The payment failed on screen.</h2><p class="app-description">The app did not confirm the QR payment. Continue with cash and keep the receipt. A later bank activity update may still show a debit.</p>${merchantCard(sim)}${note("The phone result and the eventual bank record are separate facts. This screen does not prove whether money moved.", "warning")}<form id="cash-form" data-draft="cash-${sim.id}" class="app-form">${field("cash-" + sim.id, "amount_minor", "Cash paid at the counter (৳)", amount(sim.total_minor === sim.qr_amount_minor ? sim.total_minor : sim.total_minor - sim.qr_amount_minor), "text", 'required inputmode="decimal"')}<p class="form-error" id="cash-error" role="alert"></p><button class="button primary full" type="submit"${disabled("customer")}>${S.busy.customer || "Pay cash and get receipt"} ${icon("cash")}</button></form>`;
+  if (sim.stage === "SECOND_PAID" || (sim.stage === "QR_CONFIRMED" && sim.cash_amount_minor))
+    return `<div class="result-symbol ${sim.customer_observed_debit ? "amber" : "green"}">${icon(sim.customer_observed_debit ? "alert" : "cash")}</div><div class="app-kicker">${sim.customer_observed_debit ? "BANK ACTIVITY · DEBIT OBSERVED" : "CASH PAID · RECEIPT ISSUED"}</div><h2>${sim.customer_observed_debit ? "Your bank still shows a debit." : "Your cash payment is saved."}</h2><p class="app-description">${sim.customer_observed_debit ? "Attach the receipt as evidence before filing your complaint." : "The merchant issued a receipt. Next, check your bank activity for the original QR amount."}</p>${merchantCard(sim)}<div class="payment-tile"><span>${icon("cash")}</span><div><strong>Cash payment recorded</strong><small>Merchant receipt issued · customer report</small></div><b>${money(sim.cash_amount_minor)}</b></div><figure class="qr-phone-receipt"><img src="${sim.issued_receipt?`data:${sim.issued_receipt.mime};base64,${sim.issued_receipt.base64}`:"/static/receipt-fixture.png"}" alt="Watermarked synthetic cash receipt for this exact purchase."><figcaption>Receipt issued at the counter · synthetic preview</figcaption></figure>${sim.customer_observed_debit ? `<section class="qr-observed-debit"><span class="app-kicker">BANK ACTIVITY · CUSTOMER OBSERVED</span><h3>−${money(sim.qr_amount_minor)}</h3><p>Original QR reference: ${esc(sim.qr_reference)}. The operator still needs to check the bank record.</p></section>${receiptAttachScreen(sim)}` : `<button class="button primary full" data-action="observe-debit"${disabled("customer")}>${S.busy.customer || "View later bank activity"} ${icon("refresh")}</button>`}${sim.qr_status === "UNCLEAR" ? '<button class="button quiet full" data-action="refresh-qr">Check QR status (secondary)</button>' : ""}`;
+  if (sim.stage === "RECEIPT_ATTACHED")
+    return `<div class="result-symbol amber">${icon("receipt")}</div><div class="app-kicker">BANK DEBIT OBSERVED · RECEIPT READY</div><h2>Your bank still shows a debit.</h2><p class="app-description">Attach the receipt as evidence and file the complaint. The operator will compare the receipt, bank record, and Marketplace order.</p>${merchantCard(sim)}<div class="payment-tile"><span>${icon("scan")}</span><div><strong>QR screen</strong><small>Failed / no confirmation</small></div><b>${money(sim.qr_amount_minor)}</b></div><div class="payment-tile"><span>${icon("receipt")}</span><div><strong>Receipt evidence</strong><small>Attached for operator review</small></div><b>READY</b></div>${receiptDraftPreview(sim)}<button class="button primary full" data-action="report">File complaint with receipt ${icon("arrow")}</button>`;
   const complete = sim.qr_status === "COMPLETED";
   return `<div class="result-symbol ${complete ? "amber" : "green"}">${icon(complete ? "receipt" : "check")}</div><div class="app-kicker">PAYMENT STATUS UPDATED</div><h2>${complete && sim.cash_amount_minor ? "One purchase.<br>Two payment entries." : complete ? "Your QR payment completed." : "The QR did not complete."}</h2><p class="app-description">${complete ? "The provider’s fictional record now shows the QR payment completed." : "The fictional provider records no completed QR payment."} ${sim.cash_amount_minor ? "Your cash entry is also saved. An investigator can check how the records fit together." : ""}</p>${merchantCard(sim)}<div class="payment-tile"><span>${icon("scan")}</span><div><strong>QR · ${complete ? "Completed" : "Not completed"}</strong><small>${esc(sim.qr_reference)}</small></div><b>${money(complete ? sim.qr_amount_minor : 0)}</b></div>${sim.cash_amount_minor ? `<div class="payment-tile"><span>${icon("cash")}</span><div><strong>Cash · Reported</strong><small>Merchant confirmation still needed</small></div><b>${money(sim.cash_amount_minor)}</b></div>` : ""}${receiptRows(sim)}${sim.cash_amount_minor ? `<button class="button primary full" data-action="report">Report paying twice ${icon("arrow")}</button>` : `<button class="button primary full" data-action="new-purchase">Start another purchase ${icon("plus")}</button>`}<button class="button secondary full" data-phone-nav="activity">View payment timeline</button>`;
 }
@@ -393,7 +439,7 @@ function defaultComplaint(sim) {
 function reportScreen() {
   const sim = S.sim,
     form = "report-" + sim.id;
-  return `<div class="app-kicker">WE’LL FOLLOW BOTH PAYMENTS</div><h2>Tell us what happened.</h2><p class="app-description">Your payment details are linked. A receipt is optional.</p><div class="report-summary"><span>${icon("receipt")}</span><div><strong>${esc(sim.merchant)}</strong><small>QR ${money(sim.qr_amount_minor)} + cash ${money(sim.cash_amount_minor)}</small><small class="mono">${esc(sim.purchase_id)}</small></div></div><form id="report-form" data-draft="${form}" class="app-form">${textarea(form, "description", "Your complaint", defaultComplaint(sim), 'required maxlength="4000" rows="6"')}${textarea(form, "receipt_text", "Receipt wording (optional)", "", 'maxlength="4000" rows="3" placeholder="Type the wording from a receipt, if you have one."')}<p class="field-hint">English, Bangla and Banglish are welcome. You can attach a file after submitting.</p><p class="form-error" id="report-error" role="alert"></p><button class="button primary full" type="submit"${disabled("customer")}>${S.busy.customer || "Submit complaint"} ${icon("arrow")}</button></form>${note("Your investigator checks the evidence before recording an outcome. Submitting a report does not trigger a repayment.")}`;
+  return `<div class="app-kicker">CUSTOMER WORKFLOW · FINAL STEP</div><h2>File the complaint.</h2><p class="app-description">Your receipt is attached as customer evidence. The operator will review it against the bank and Marketplace records.</p><div class="report-summary"><span>${icon("receipt")}</span><div><strong>${esc(sim.merchant)}</strong><small>QR ${money(sim.qr_amount_minor)} + cash ${money(sim.cash_amount_minor)}</small><small class="mono">${esc(sim.purchase_id)}</small></div></div><div class="receipt-ready"><span>${icon("check")}</span><div><strong>Receipt evidence attached</strong><small>${esc(sim.receipt_draft?.transcript || "Synthetic receipt ready for review")}</small></div></div><form id="report-form" data-draft="${form}" class="app-form">${textarea(form, "description", "Your complaint", defaultComplaint(sim), 'required maxlength="4000" rows="6"')}${textarea(form, "receipt_text", "Add a note about the receipt (optional)", sim.receipt_draft?.transcript || "", 'maxlength="4000" rows="3"')}<p class="field-hint">English, Bangla and Banglish are welcome. A receipt is evidence for review, not proof by itself.</p><p class="form-error" id="report-error" role="alert"></p><button class="button primary full" type="submit"${disabled("customer")}>${S.busy.customer || "Submit complaint"} ${icon("arrow")}</button></form>${note("Submitting a complaint opens the operator workflow. It does not move or refund money.")}`;
 }
 function activityScreen() {
   const sim = S.sim;
@@ -424,8 +470,10 @@ function customerScreen(c) {
   let body = "";
   const pending =
     c.requests?.filter((t) => ["OPEN", "RESPONDED"].includes(t.status)) || [];
-  if (S.customerTab === "summary")
-    body = `<div class="case-status-card"><div>${pill(statusName(c.status), c.status === "OUTCOME_RECORDED" ? "green" : "neutral")}<span class="mono">${esc(c.reference)}</span></div><h3>${esc(c.purchase_label)}</h3><p>${esc(actorName(c.owner))} is responsible for your case.</p><div class="review-time">${icon("activity")}<span>Next review<strong>${date(c.next_review)} · Dhaka</strong></span></div></div>${c.status === "OUTCOME_RECORDED" && c.reviews?.some((r) => r.decision === "OUTCOME_RECORDED" && !r.stale) ? `<div class="customer-request final-review"><span class="app-kicker">YOUR INVESTIGATOR’S OUTCOME</span><p>${esc(c.reviews.filter((r) => r.decision === "OUTCOME_RECORDED" && !r.stale).at(-1).note)}</p><small>Saved ${date(c.reviews.filter((r) => r.decision === "OUTCOME_RECORDED" && !r.stale).at(-1).at)}</small></div>` : ""}${assessmentCard(c.assessment, true, c.analysis_state === "STALE")}${pending.map((t) => `<div class="customer-request"><span class="app-kicker">${t.status === "RESPONDED" ? "YOUR RESPONSE IS SAVED" : "YOUR INVESTIGATOR NEEDS YOU"}</span><p>${esc(t.question)}</p>${t.status === "OPEN" ? `<button class="button primary full" data-reply-task="${esc(t.id)}">Reply to request ${icon("chat")}</button>` : "<small>Your investigator will review your reply.</small>"}</div>`).join("")}<section class="phone-section"><h3>What’s confirmed</h3>${c.confirmed_facts.map((t) => `<p class="confirmed-line">${icon("check")}${esc(t)}</p>`).join("") || '<p class="muted">No payment facts have been confirmed by your investigator yet.</p>'}</section><section class="phone-section"><h3>Latest updates</h3>${c.notifications
+  const qrOutcome = c.qr_pipeline?.verdict ? `<div class="customer-qr-outcome ${String(c.qr_pipeline.verdict.outcome).toLowerCase()}"><span class="app-kicker">OPERATOR OUTCOME</span><h3>${esc(c.qr_pipeline.verdict.outcome === "LEGITIMATE" ? "Legitimate duplicate · refund review" : c.qr_pipeline.verdict.outcome === "REJECTED" ? "Rejected after source review" : "Uncertain · human review continues")}</h3><p>${esc(c.qr_pipeline.verdict.reason || (c.qr_pipeline.verdict.outcome === "LEGITIMATE" ? "A simulated refund requires operator approval." : c.qr_pipeline.verdict.outcome === "REJECTED" ? "No refund was created." : "Automation paused and an investigator owns the next step."))}</p>${c.qr_pipeline.resolution?.state === "REFUND_COMPLETED" ? '<strong class="qr-success-label">Simulated refund completed</strong>' : ""}</div>` : "";
+  if(c.workflow==="qr_cash" && S.customerTab==="summary")body=qrCustomerStatus(c);
+  else if (S.customerTab === "summary")
+    body = `${qrOutcome}<div class="case-status-card"><div>${pill(statusName(c.status), c.status === "OUTCOME_RECORDED" ? "green" : "neutral")}<span class="mono">${esc(c.reference)}</span></div><h3>${esc(c.purchase_label)}</h3><p>${esc(actorName(c.owner))} is responsible for your case.</p><div class="review-time">${icon("activity")}<span>Next review<strong>${date(c.next_review)} · Dhaka</strong></span></div></div>${c.status === "OUTCOME_RECORDED" && c.reviews?.some((r) => r.decision === "OUTCOME_RECORDED" && !r.stale) ? `<div class="customer-request final-review"><span class="app-kicker">YOUR INVESTIGATOR’S OUTCOME</span><p>${esc(c.reviews.filter((r) => r.decision === "OUTCOME_RECORDED" && !r.stale).at(-1).note)}</p><small>Saved ${date(c.reviews.filter((r) => r.decision === "OUTCOME_RECORDED" && !r.stale).at(-1).at)}</small></div>` : ""}${assessmentCard(c.assessment, true, c.analysis_state === "STALE")}${pending.map((t) => `<div class="customer-request"><span class="app-kicker">${t.status === "RESPONDED" ? "YOUR RESPONSE IS SAVED" : "YOUR INVESTIGATOR NEEDS YOU"}</span><p>${esc(t.question)}</p>${t.status === "OPEN" ? `<button class="button primary full" data-reply-task="${esc(t.id)}">Reply to request ${icon("chat")}</button>` : "<small>Your investigator will review your reply.</small>"}</div>`).join("")}<section class="phone-section"><h3>What’s confirmed</h3>${c.confirmed_facts.map((t) => `<p class="confirmed-line">${icon("check")}${esc(t)}</p>`).join("") || '<p class="muted">No payment facts have been confirmed by your investigator yet.</p>'}</section><section class="phone-section"><h3>Latest updates</h3>${c.notifications
       .slice(-4)
       .reverse()
       .map(
@@ -492,7 +540,7 @@ function renderDesk() {
       ],
       S.staffTab,
       "data-staff-tab",
-    )}<div class="desk-scroll" role="tabpanel" aria-labelledby="staff-tab-${S.staffTab}" data-scroll="desk">${S.staffTab === "overview" ? staffOverview(c) : S.staffTab === "conversation" ? conversation(c, "staff") : S.staffTab === "evidence" ? evidenceScreen(c) : staffActivity(c)}</div><div class="desk-footer"><span class="live-dot"></span><span>${S.busy.staff || "Saved in this workspace"} · Case v${c.version} · Evidence v${c.evidence_version}</span><button class="button quiet small" data-action="refresh">${icon("refresh")}Refresh</button></div>`;
+    )}<div class="desk-scroll" role="tabpanel" aria-labelledby="staff-tab-${S.staffTab}" data-scroll="desk">${S.staffTab === "overview" ? staffOverview(c) : S.staffTab === "conversation" ? conversation(c, "staff") : S.staffTab === "evidence" ? evidenceScreen(c) : staffActivity(c)}</div><div class="desk-footer"><span class="live-dot"></span><span>${S.qrAnimation?.label || S.busy.staff || "Saved in this workspace"} · Case v${c.version} · Evidence v${c.evidence_version}</span><button class="button quiet small" data-action="refresh">${icon("refresh")}Refresh</button></div>`;
   update($("#desk"), html);
   if (routeChanged) {
     const scroll = $("#desk .desk-scroll");
@@ -506,10 +554,48 @@ function inbox() {
     S.filter === "live" ? S.cases.filter((c) => c.simulation_id) : S.cases;
   return `<div class="inbox-heading"><div><p class="eyebrow">YOUR WORKSPACE</p><h2>Investigation inbox <span>${rows.length}</span></h2></div><button class="icon-button" data-action="refresh" aria-label="Refresh cases">${icon("refresh")}</button></div><div class="inbox-filters"><button data-filter="live" class="${S.filter === "live" ? "active" : ""}">Live complaints</button><button data-filter="all" class="${S.filter === "all" ? "active" : ""}">All cases &amp; examples</button><span>Ordered by saved review time</span></div>${rows.length ? `<div class="inbox-list" data-scroll="desk">${rows.map((c) => `<button class="inbox-row" data-staff-case="${esc(c.id)}"><span class="inbox-avatar">${icon("receipt")}</span><div><strong>${esc(c.purchase_label || "Purchase " + c.purchase_id)}</strong><small class="mono">${esc(c.reference)}</small><p>${esc(c.facts.requirements[0] || "Evidence ready for investigator review.")}</p><small>${actorName(c.owner)} · ${date(c.next_review)}${c.overdue ? " · Review overdue" : ""}</small></div><div>${pill(statusName(c.status))}${pill(c.analysis_fresh ? "Assessment current" : "Needs assessment", c.analysis_fresh ? "green" : "amber")}</div>${icon("arrow")}</button>`).join("")}</div>` : `<div class="desk-empty"><div class="empty-illustration"><span>${icon("scan")}</span><i></i><span>${icon("chat")}</span><i></i><span>${icon("shield")}</span></div><p class="eyebrow">THE DESK IS READY</p><h3>Every complaint starts<br>with someone’s experience.</h3><p>Complete the purchase in the customer app and report the problem. The exact case will appear here, with the details you entered.</p><div class="empty-checklist"><span>${icon("check")}One linked purchase</span><span>${icon("check")}A saved conversation</span><span>${icon("check")}Evidence before an outcome</span></div><button class="button secondary" data-filter="all">Explore saved example cases ${icon("arrow")}</button></div>`}`;
 }
+function qrCustomerStatus(c){
+  const p=c.qr_pipeline||{},verdict=p.verdict,resolution=p.resolution;
+  return `<div class="app-kicker">COMPLAINT SAVED · ${esc(c.reference)}</div><h2>${resolution?.state==="REFUND_COMPLETED"?"Your simulated refund is complete.":verdict?.outcome==="REJECTED"?"Your complaint was reviewed.":verdict?.outcome==="UNCERTAIN"?"Human review continues.":"Your complaint is in review."}</h2><p class="app-description">${esc(actorName(c.owner))} owns this case. ${esc(c.next_step)}</p><div class="qr-status-facts"><article><span>QR screen result</span><strong>Failed / no confirmation</strong></article><article><span>Cash payment</span><strong>${money(c.reported_amount_minor)} · customer reported</strong></article><article><span>Bank activity</span><strong>Later debit observed by the customer</strong></article><article><span>Receipt evidence</span><strong>${c.evidence_receipts?.some(e=>e.mime?.startsWith("image/"))?"Attached for review":"Additional evidence requested"}</strong></article><article><span>Operator verdict</span><strong>${verdict?esc(verdict.outcome):"Awaiting investigation"}</strong></article><article><span>Refund</span><strong>${resolution?.state==="REFUND_COMPLETED"?"Simulated completion recorded":resolution?.state==="REFUND_REQUESTED"?"Approved request · awaiting completion":resolution?.state==="REFUND_PROPOSED"?"Proposed · operator approval required":verdict?.outcome==="REJECTED"?"No refund created":"No refund completed"}</strong></article></div>${verdict?`<section class="customer-qr-outcome ${verdict.outcome.toLowerCase()}"><h3>${verdict.outcome==="UNCERTAIN"?"Automation paused":verdict.outcome==="REJECTED"?"Review explanation":"Source review completed"}</h3><p>${esc(verdict.reason)}</p></section>`:""}${p.handoff?`<section class="qr-resolution-card handoff"><h3>Owned human follow-up</h3><p>${esc(actorName(c.owner))} · ${esc(p.handoff.queue)}</p><p>Next review: ${date(p.handoff.next_review)}</p></section>`:""}<section class="phone-section"><h3>What happens next</h3><p>${verdict?.outcome==="REJECTED"?"You can send further evidence for another review.":resolution?.state==="REFUND_COMPLETED"?"The synthetic refund completion is saved. No real money moved.":"Your investigator reviews the saved evidence and keeps the next step owned."}</p><button class="button secondary full" data-customer-tab="chat">Message your investigator</button></section><section class="phone-section"><h3>Recent updates</h3>${c.notifications.slice(-4).reverse().map(n=>`<div class="customer-update"><small>${date(n.at)}</small><p>${esc(n.text)}</p></div>`).join('')}</section>`;
+}
+function receiptDraftPreview(sim) {
+  const draft=sim.receipt_draft;
+  if(!draft)return "";
+  return `<figure class="qr-phone-receipt"><img src="data:${draft.mime};base64,${draft.base64}" alt="Attached receipt original"><figcaption>Original receipt · unverified customer evidence</figcaption></figure><details><summary>Review receipt transcript</summary><p class="qr-transcript">${esc(draft.transcript)}</p></details>`;
+}
+function receiptAttachScreen(sim) {
+  return `<section class="qr-receipt-attach"><h3>Attach your cash receipt</h3><p>The receipt is evidence for review. The operator must corroborate it.</p><button class="button primary full" data-action="attach-sample-receipt"${disabled("customer")}>Use sample receipt ${icon("receipt")}</button><details><summary>Upload your own receipt</summary><form id="receipt-draft-form" class="app-form" data-draft="receipt-${sim.id}"><label class="field"><span>Receipt image</span><input type="file" name="file" accept="image/png,image/jpeg" required></label>${textarea("receipt-"+sim.id,"transcript","Visible receipt wording","",'required maxlength="4000" rows="5"')}<p class="field-hint">PNG or JPEG · up to 2 MiB. Include merchant, purchase, item, amount, cash reference and timestamp.</p><button class="button secondary full" type="submit"${disabled("customer")}>Attach receipt</button><p id="receipt-draft-error" class="form-error" role="alert"></p></form></details></section>`;
+}
+function qrOperatorPanel(c) {
+  const pipe=c.qr_pipeline || {},scan=pipe.receipt_scan,market=pipe.marketplace,verdict=pipe.verdict,resolution=pipe.resolution;
+  const receipt=[...c.evidence].reverse().find(e=>e.kind==="customer_supplied" && e.blob?.mime?.startsWith("image/"));
+  const scanFresh=scan?.evidence_version===c.evidence_version;
+  const marketFresh=market?.evidence_version===c.evidence_version && scanFresh;
+  const verdictFresh=verdict?.evidence_version===c.evidence_version && marketFresh && verdict.status==='RECORDED' && verdict.source_result_id===market.id;
+  const anim=S.qrAnimation;
+  const isOwner=S.tokens.staff?.actor===c.owner;
+  const stage=anim?.label || (!scanFresh?"Scan the receipt":!marketFresh?"Verify with Marketplace":!verdictFresh?"Record the source-grounded verdict":resolution?.state==="REFUND_COMPLETED"?"Simulated refund completed":resolution?.state==="REFUND_REQUESTED"?"Refund request approved · completion pending":verdict.outcome==="LEGITIMATE"?"Operator approval required":pipe.handoff?"Owned human review · automation paused":verdict.outcome==="UNCERTAIN"?"Create an owned human handoff":"Rejection explanation saved");
+  let primary="";
+  if(!scanFresh)primary=`<button class="button primary" data-check="receipt_scan" ${receipt && isOwner?"":"disabled"}${disabled("staff")}>Scan receipt ${icon("scan")}</button>`;
+  else if(!marketFresh)primary=`<button class="button primary" data-check="marketplace" ${isOwner?"":"disabled"}${disabled("staff")}>Verify with Marketplace ${icon("search")}</button>`;
+  else if(!verdictFresh)primary=`<button class="button primary ${market.outcome.toLowerCase()}" data-qr-verdict="${esc(market.outcome)}" ${isOwner?"":"disabled"}${disabled("staff")}>Record ${market.outcome.toLowerCase()} verdict ${icon("check")}</button>`;
+  else if(verdict.outcome==="LEGITIMATE" && resolution?.state!=="REFUND_COMPLETED")primary=`<button class="button primary" data-qr-action="${resolution?.state==="REFUND_REQUESTED"?"complete_refund":"approve_refund"}" ${isOwner?"":"disabled"}${disabled("staff")}>${resolution?.state==="REFUND_REQUESTED"?"Post simulated refund":"Approve simulated refund"} ${icon("cash")}</button>`;
+  else if(verdict.outcome==="UNCERTAIN" && !pipe.handoff)primary=`<button class="button primary handoff" data-qr-action="handoff" ${isOwner?"":"disabled"}${disabled("staff")}>Create human handoff ${icon("users")}</button>`;
+  const active=anim?.node;
+  const graph=QRGraph.render(c.qr_events || [],{count:S.qrReplay??undefined,zoom:S.qrZoom,selected:S.qrSelected,active});
+  const original=receipt?`<img src="data:${receipt.blob.mime};base64,${receipt.blob.base64}" alt="Original customer receipt">`:'<p>No receipt image is attached. Request evidence from the customer.</p>';
+  const scanView=anim?.kind==="receipt_scan"?original:scan?`<img src="data:image/png;base64,${scan.preview_base64}" alt="OpenCV annotated receipt preview">`:original;
+  const receiptView=`<section id="qr-evidence" class="qr-evidence-section"><div class="section-heading"><h3>Receipt evidence</h3><span>Original preserved · derived annotations</span></div><div class="qr-receipt-pair"><figure><div class="qr-receipt-image">${original}</div><figcaption>Immutable original · customer supplied</figcaption></figure><figure><div class="qr-receipt-image ${anim?.kind==="receipt_scan"?"scanning":""}">${scanView}${anim?.kind==="receipt_scan"?`<span class="qr-scan-beam scan-step-${anim.index || 0}" aria-hidden="true"></span>${scan?`<svg class="qr-region-overlay" viewBox="0 0 ${scan.image_width} ${scan.image_height}" aria-hidden="true">${scan.regions.slice(0,(anim.index||0)+1).map(r=>`<rect x="${r.bbox[0]}" y="${r.bbox[1]}" width="${r.bbox[2]}" height="${r.bbox[3]}"/>`).join('')}</svg>`:""}`:""}</div><figcaption>${scanFresh?"Annotated preview · visual assistance":"Scan preview"}</figcaption></figure></div><p class="qr-scan-announcement" role="status" aria-live="polite">${esc(anim?.kind==="receipt_scan"?anim.label:scanFresh?"Visual regions saved. Review the transcript and highlighted fields.":"Ready for the first-line AI visual scan.")}</p>${scan?`<div class="qr-fields">${scan.regions.map((r,i)=>`<article class="${r.requires_review?"review":""} ${anim?.kind==="receipt_scan" && i>(anim.index||0)?"pending":""}"><span>${esc(r.field.replaceAll('_',' '))}</span><strong>${esc(r.displayed_value||"Missing · requires human review")}</strong><small>${r.requires_review?"Human review required":"Preserved transcript · review against original"}</small></article>`).join('')}</div><details><summary>Processing manifest and original hash</summary><dl class="qr-metadata"><dt>Original SHA-256</dt><dd>${esc(scan.input_sha256)}</dd><dt>Source evidence</dt><dd>${esc(scan.source_evidence_id)}</dd><dt>Visual engine</dt><dd>OpenCV ${esc(scan.engine.version)} · evidence v${scan.evidence_version}</dd><dt>Processing</dt><dd>${esc(scan.processing.join(' → '))}</dd><dt>Saved at</dt><dd>${esc(scan.at)}</dd></dl><ul>${scan.warnings.map(w=>`<li>${esc(w)}</li>`).join('')}</ul></details>`:""}<details><summary>Accessible receipt transcript</summary><p class="qr-transcript">${esc(receipt?.revisions.at(-1).text||"No transcript available.")}</p></details></section>`;
+  const marketView=market?`<section id="qr-marketplace" class="qr-market-section"><h3>Synthetic Marketplace response</h3><p>${esc(market.reason)}</p><div class="qr-table-scroll" tabindex="0" aria-label="Marketplace evidence comparison"><table><thead><tr><th>Field</th><th>Receipt / linked context</th><th>Marketplace record</th><th>Result</th></tr></thead><tbody>${market.comparisons.map(v=>`<tr><th>${esc(v.field.replaceAll('_',' '))}</th><td>${esc(v.receipt||"Missing")}</td><td>${esc(v.marketplace||"Unavailable")}</td><td class="${v.status.toLowerCase()}">${esc(v.status)}</td></tr>`).join('')}</tbody></table></div><p class="field-hint">${esc(market.source_id)} · exact purchase only · no external request</p></section>`:"";
+  const handoff=pipe.handoff?`<section class="qr-resolution-card handoff"><h3>Human review is owned and open</h3><dl><dt>Current owner</dt><dd>${esc(actorName(c.owner))}</dd><dt>Receiving queue</dt><dd>${esc(pipe.handoff.queue)} · ${esc(actorName(pipe.handoff.destination))}</dd><dt>Next review</dt><dd>${date(c.next_review)}</dd><dt>Missing evidence</dt><dd>${esc(pipe.handoff.missing_evidence.join(', '))}</dd></dl><p>${esc(pipe.handoff.reason)}</p>${S.tokens.staff?.actor===pipe.handoff.destination && pipe.handoff.status==="REQUESTED"?'<button class="button primary" data-action="acknowledge">Accept human handoff</button>':""}</section>`:"";
+  const outcome=verdictFresh?`<section id="qr-outcome" class="qr-resolution-card ${verdict.outcome.toLowerCase()}"><h3>${verdict.outcome==="LEGITIMATE"?resolution.state==="REFUND_COMPLETED"?"Simulated refund completed":"Legitimate · refund proposed":verdict.outcome==="REJECTED"?"Rejected · no refund":"Uncertain · automation paused"}</h3><p>${esc(verdict.reason)}</p>${resolution?`<p><strong>${money(resolution.amount_minor)}</strong> · ${esc(resolution.state.replaceAll('_',' '))}. ${resolution.state==="REFUND_COMPLETED"?"Synthetic completion saved; no real money moved.":"Money returned is shown only after a completed-refund event."}</p>`:""}${handoff}</section>`:"";
+  return `<section class="qr-operator-panel"><div class="qr-panel-head"><div><span class="eyebrow">AI FIRST-LINE OPERATOR</span><h3>Receipt → Marketplace → Outcome</h3><p>One receipt, one exact purchase, one saved outcome.</p></div><span class="qr-state-pill">Evidence v${c.evidence_version}</span></div><div class="qr-primary-stage"><div><span>CURRENT INVESTIGATION STEP</span><strong aria-live="polite">${esc(stage)}</strong>${!isOwner?`<small>${esc(actorName(c.owner))} owns the actions on this case.</small>`:!receipt?`<small>Request an original receipt from the customer using Case tools.</small>`:""}</div>${primary}</div>${!scanFresh&&scan?note("The evidence changed. Scan and verify the current receipt before taking another decision.","warning"):""}${graph}${receiptView}${marketView}${outcome}<details class="qr-secondary-tools"><summary>Case tools and additional evidence</summary><div class="action-grid"><button class="button secondary" data-modal="task">Request evidence</button><button class="button secondary" data-modal="evidence">Add operator notes</button><button class="button secondary" data-action="export">Export dossier</button></div>${requestList(c)}</details></section>`;
+}
 function staffOverview(c) {
   const f = c.facts,
     a = c.analysis_fresh ? c.analysis?.assessment : null,
     pending = c.handoffs.find((h) => h.status === "REQUESTED");
+  if(c.workflow==="qr_cash")return qrOperatorPanel(c);
   return `<div class="case-context"><div><span class="eyebrow">CUSTOMER’S REPORT</span><p>${esc(c.description)}</p><div class="context-tags"><span class="mono">${esc(c.purchase_id)}</span><span>Second payment claimed: <b>${money(c.reported_amount_minor)} cash</b></span></div></div></div><div class="section-heading"><h3>${icon("search")}Check the source records</h3><span>Read-only · This purchase only</span></div><div class="source-grid">${[
     ["qr", "QR provider", "scan"],
     ["invoice", "Purchase invoice", "receipt"],
@@ -579,6 +665,9 @@ function staffActivity(c) {
   }</section>`;
 }
 function renderLab() {
+  if(!S.staffCase || S.staffCase.workflow==="qr_cash"){
+    $("#lab-body").innerHTML=`<div class="lab-grid"><div><h3>Saved journeys</h3><label class="field"><span>Resume a saved purchase</span><select id="saved-simulation"><option value="">Choose a purchase…</option>${S.sims.map(s=>`<option value="${s.id}" ${s.id===S.sim?.id?"selected":""}>${esc(s.merchant)} · ${esc(s.purchase_id)}</option>`).join('')}</select></label><button class="button secondary" data-action="new-purchase">Start new scenario</button></div><div><h3>Demonstration contract</h3><p class="field-hint">Marketplace and bank records are bounded synthetic fixtures. Receipt annotations are visual assistance. Refund completion is simulated and requires operator approval.</p><a class="companion-link" href="${journeyURL("desk")}" target="_blank" rel="noopener">Open companion view ↗</a></div></div>`;return;
+  }
   const sim = S.sim,
     c = S.staffCase;
   $("#lab-body").innerHTML =
@@ -601,6 +690,7 @@ function render() {
   renderPhone();
   renderDesk();
   renderLab();
+  updateJourneyLinks();
 }
 async function selectCustomerCase(id) {
   S.customerCase = await api("customer", "/cases/" + encodeURIComponent(id));
@@ -621,8 +711,8 @@ async function selectStaffCase(id) {
   S.staffCase = await api("staff", "/cases/" + encodeURIComponent(id));
   S.staffTab = "overview";
   S.selectedEvidence = null;
-  renderDesk();
-  renderLab();
+  renderDesk();renderJourney();
+  renderLab();updateJourneyLinks();
 }
 async function sync(force = false) {
   if (S.polling) {
@@ -671,7 +761,7 @@ async function sync(force = false) {
       renderPhone();
       renderJourney();
     }
-    if (force || deskChanged || !S.staffCase) renderDesk();
+    if (force || deskChanged || !S.staffCase) {renderDesk();renderJourney();}
     if (force || phoneChanged || deskChanged) renderLab();
     $("#sync-state").textContent = "Synced " + clock();
     $("#sync-state").classList.remove("offline");
@@ -698,24 +788,70 @@ async function busy(role, label, fn) {
     render();
   }
 }
-async function caseAction(action, body = {}) {
-  const c = S.staffCase;
-  if (!c) throw Error("Open a case first.");
-  S.staffCase = await mutate("staff", "/cases/" + c.id + "/" + action, {
-    version: c.version,
-    ...body,
+$("#action-dialog").addEventListener("close",()=>{
+  const trigger=S.dialogTrigger?.isConnected?S.dialogTrigger:S.dialogTriggerSelector?document.querySelector(S.dialogTriggerSelector):null;
+  trigger?.focus({preventScroll:true});
+});
+const reducedMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+const revealPause=()=>new Promise(resolve=>setTimeout(resolve,reducedMotion()?0:450));
+async function runQRCheck(kind){
+  await busy("staff",kind==="receipt_scan"?"Scanning receipt…":"Querying Marketplace…",async()=>{
+    const c=S.staffCase;
+    S.qrAnimation={kind,node:kind==="receipt_scan"?"receipt_scan":"purchase_lookup",label:kind==="receipt_scan"?"Preparing original receipt":"AI sends an exact purchase query",index:0};
+    renderDesk();
+    try{
+      await caseAction("check",{kind,evidence_version:c.evidence_version});
+      const labels=kind==="receipt_scan"?["Scanning merchant field","Scanning purchase reference","Scanning item field","Scanning amount field","Scanning cash reference","Scanning timestamp field"]:["AI sends query to Marketplace database","Marketplace returns the order record","Comparing amount and item","Checking QR transaction reference","Corroborating the bank debit","Comparing the cash receipt claim"];
+      const nodes=kind==="receipt_scan"?labels.map(()=>"receipt_scan"):["purchase_lookup","order_match","amount_match","qr_lookup","bank_debit","cash_claim"];
+      for(let i=0;i<labels.length;i++){
+        if(S.staffCase?.id!==c.id)break;
+        S.qrAnimation={kind,node:nodes[i],label:labels[i],index:i};renderDesk();
+        const banner=$("#current-stage");banner.innerHTML=`<span class="qr-stage-kicker">${kind==="receipt_scan"?"RECEIPT SCAN":"MARKETPLACE VERIFICATION"}</span><strong>${labels[i]}</strong>`;
+        const target=kind==='receipt_scan'?document.querySelector('.qr-receipt-pair'):document.querySelector('.graph--qr');
+        if(i===0)target?.scrollIntoView({block:'center',behavior:'instant'});
+        if(kind==='marketplace')document.querySelector(`[data-qr-node="${nodes[i]}"]`)?.scrollIntoView({block:'nearest',inline:'center',behavior:'instant'});
+        await revealPause();
+      }
+    }finally{S.qrAnimation=null;render();}
   });
-  await sync(true);
-  return S.staffCase;
 }
-async function simAction(action, body = {}) {
-  S.sim = await mutate("customer", "/simulations/" + S.sim.id + "/action", {
-    version: S.sim.version,
-    action,
-    ...body,
-  });
-  rememberSelection();
-  S.phone = "flow";
+async function replayQR(){
+  const caseId=S.staffCase?.id,events=S.staffCase?.qr_events||[],token=S.qrReplayToken=(S.qrReplayToken||0)+1;
+  if(S.qrReplay!==null)S.qrReplay=null;
+  for(let i=0;i<=events.length;i++){
+    if(S.staffCase?.id!==caseId || token!==S.qrReplayToken)break;
+    S.qrReplay=i;renderDesk();await revealPause();
+    if(S.qrReplay===null)break;
+  }
+}
+let qrPan=null;
+document.addEventListener("pointerdown",event=>{
+  const viewport=event.target.closest(".qr-board-viewport");
+  if(!viewport||event.target.closest("[data-qr-node]")||event.pointerType!=="mouse")return;
+  qrPan={viewport,x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};
+  viewport.setPointerCapture(event.pointerId);event.preventDefault();
+});
+document.addEventListener("pointermove",event=>{
+  if(!qrPan)return;
+  qrPan.viewport.scrollLeft=qrPan.left+qrPan.x-event.clientX;
+  qrPan.viewport.scrollTop=qrPan.top+qrPan.y-event.clientY;
+});
+document.addEventListener("pointerup",()=>qrPan=null);
+document.addEventListener("keydown",event=>{
+  if((event.key==="Enter"||event.key===" ") && event.target.matches("[data-qr-node]")){
+    event.preventDefault();S.qrSelected=event.target.dataset.qrNode;renderDesk();document.querySelector(`[data-qr-node="${S.qrSelected}"]`)?.focus({preventScroll:true});
+  }
+});
+async function caseAction(action,body={}) {
+  const c=S.staffCase;if(!c)throw Error("Open a case first.");
+  const result=await mutate("staff","/cases/"+c.id+"/"+action,{version:c.version,...(c.workflow==="qr_cash"?{evidence_version:c.evidence_version}:{}),...body});
+  if(S.staffCase?.id===c.id)S.staffCase=result;
+  await sync(true);return result;
+}
+async function simAction(action,body={}) {
+  const sim=S.sim;
+  const result=await mutate("customer","/simulations/"+sim.id+"/action",{version:sim.version,action,...body});
+  if(S.sim?.id===sim.id){S.sim=result;rememberSelection();S.phone="flow";}
   await sync(true);
 }
 async function analyze() {
@@ -755,6 +891,7 @@ function openDialog(
   $("#dialog-error").textContent = "";
   $("#dialog-submit").textContent = label;
   $("#dialog-submit").hidden = !action;
+  S.dialogTrigger=document.activeElement;S.dialogTriggerSelector=focusSelector(document.activeElement);
   $("#action-dialog").showModal();
 }
 function evidenceChoices(c, selected = []) {
@@ -987,7 +1124,7 @@ document.addEventListener("change", async (e) => {
     if (e.target.id === "upload-file") {
       S.file = e.target.files[0] || null;
     }
-    if (e.target.id === "simulation-profile") S.profile = e.target.value;
+    if (e.target.id === "simulation-profile" || e.target.id === "purchase-profile") S.profile = e.target.value;
     if (e.target.id === "staff-identity") {
       S.staffRole = e.target.value;
       await ensureSession("staff", true);
@@ -996,24 +1133,27 @@ document.addEventListener("change", async (e) => {
     }
     if (e.target.id === "saved-simulation" && e.target.value) {
       S.sim = await api("customer", "/simulations/" + e.target.value);
-      rememberSelection();
       S.customerCase = S.sim.case_id
         ? await api("customer", "/cases/" + S.sim.case_id)
         : null;
       S.phone = S.customerCase ? "case" : "flow";
       if (S.customerCase) await selectStaffCase(S.customerCase.id);
-      render();
+      else S.staffCase=null;
+      rememberSelection();render();
     }
   } catch (error) {
     toast(error.message, true);
   }
 });
 document.addEventListener("click", async (e) => {
-  const b = e.target.closest("button");
+  const b = e.target.closest("button, a, [data-qr-node]");
   if (!b || b.disabled) return;
   try {
     if (b.dataset.view) {
-      setView(b.dataset.view);
+      if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey||e.button>0)return;
+      e.preventDefault();
+      setView(b.dataset.view,true);
+      $(b.dataset.view==="phone"?"#phone-content":"#desk").scrollIntoView({block:"start"});
       return;
     }
     if (b.dataset.phoneNav) {
@@ -1048,6 +1188,12 @@ document.addEventListener("click", async (e) => {
       renderDesk();
       return;
     }
+    if(b.dataset.resumeSim){
+      S.sim=await api("customer","/simulations/"+b.dataset.resumeSim);
+      S.customerCase=S.sim.case_id?await api("customer","/cases/"+S.sim.case_id):null;
+      S.staffCase=null;if(S.customerCase)await selectStaffCase(S.customerCase.id);
+      S.phone=S.customerCase?"case":"flow";rememberSelection();render();return;
+    }
     if (b.dataset.customerCase) {
       if (S.busy.customer || S.busy.staff) return;
       await selectCustomerCase(b.dataset.customerCase);
@@ -1055,8 +1201,9 @@ document.addEventListener("click", async (e) => {
     }
     if (b.dataset.staffCase) {
       if (S.busy.staff) return;
-      await selectStaffCase(b.dataset.staffCase);
-      return;
+      if(S.customerCases.some(c=>c.id===b.dataset.staffCase))await selectCustomerCase(b.dataset.staffCase);
+      else {S.customerCase=null;S.sim=null;await selectStaffCase(b.dataset.staffCase);}
+      setView("desk",true);return;
     }
     if (b.dataset.replyTask) {
       S.selectedTask = b.dataset.replyTask;
@@ -1071,7 +1218,14 @@ document.addEventListener("click", async (e) => {
       renderDesk();
       return;
     }
+    if(b.dataset.qrNode){S.qrSelected=b.dataset.qrNode;renderDesk();document.querySelector(`[data-qr-node="${S.qrSelected}"]`)?.focus({preventScroll:true});return;}
+    if(b.dataset.qrZoom){S.qrZoom=b.dataset.qrZoom==="fit"?Math.max(.42,Math.min(1,($("#desk").clientWidth-64)/1200)):Math.max(.42,Math.min(1.4,S.qrZoom+(b.dataset.qrZoom==="in"?.15:-.15)));renderDesk();return;}
+    if(b.dataset.qrReplay){
+      if(b.dataset.qrReplay==="live"){S.qrReplay=null;S.qrReplayToken=(S.qrReplayToken||0)+1;renderDesk();return;}
+      await replayQR();return;
+    }
     if (b.dataset.check) {
+      if(["receipt_scan","marketplace"].includes(b.dataset.check)){await runQRCheck(b.dataset.check);return;}
       await busy(
         "staff",
         "Checking " + b.dataset.check + " source…",
@@ -1081,6 +1235,32 @@ document.addEventListener("click", async (e) => {
         },
       );
       return;
+    }
+    if (b.dataset.qrVerdict) {
+      await busy("staff", "Saving the operator verdict…", async () => {
+        await mutate("staff", "/cases/" + S.staffCase.id + "/qr-action", { version: S.staffCase.version, evidence_version:S.staffCase.evidence_version, action: "verdict", verdict: b.dataset.qrVerdict, reason: "Saved after receipt and Marketplace review." });
+        await sync(true);
+      });
+      return;
+    }
+    if (b.dataset.qrAction) {
+      await busy("staff", b.dataset.qrAction === "handoff" ? "Creating human handoff…" : "Saving simulated refund…", async () => {
+        await mutate("staff", "/cases/" + S.staffCase.id + "/qr-action", { version: S.staffCase.version, evidence_version:S.staffCase.evidence_version, action: b.dataset.qrAction, reason: "Saved from the QR investigation workspace." });
+        await sync(true);
+        if(b.dataset.qrAction==="complete_refund"){
+          for(const [node,label] of [["refund_request","Refund request reaches the synthetic payment service"],["refund_posted","Completed refund returns to the customer"],["customer_notification","Customer receives the saved completion update"]]){
+            S.qrAnimation={kind:"refund",node,label};renderDesk();await revealPause();
+          }
+          S.qrAnimation=null;render();
+        }
+      });
+      return;
+    }
+    if(b.dataset.qrSection){
+      $("#action-dialog").close();setView(b.dataset.qrSection==="customer"?"phone":"desk",true);
+      if(b.dataset.qrSection!=="customer")S.staffTab="overview";
+      render();const target=b.dataset.qrSection==="customer"?$("#phone-content"):$("#qr-"+b.dataset.qrSection)||$("#desk");
+      target.setAttribute("tabindex","-1");target.focus({preventScroll:true});target.scrollIntoView({block:"start"});return;
     }
     if (b.dataset.modal) {
       actionDialog(b.dataset.modal);
@@ -1127,6 +1307,20 @@ document.addEventListener("click", async (e) => {
           simAction("refresh_qr"),
         );
         break;
+      case "observe-debit":
+        await busy("customer", "Loading later bank activity…", () =>
+          simAction("observe_debit"),
+        );
+        break;
+      case "attach-sample-receipt":
+        await busy("customer", "Attaching the receipt…", () =>
+          simAction("attach_sample_receipt"),
+        );
+        break;
+      case "steps":
+        openDialog("Journey steps", $("#journey").innerHTML, null, "", "QR + CASH");break;
+      case "sections":
+        openDialog("Navigate workspace", `<nav class="qr-drawer-links"><button type="button" class="button secondary" data-qr-section="customer">Customer</button><button type="button" class="button secondary" data-qr-section="evidence">Evidence</button><button type="button" class="button secondary" data-qr-section="marketplace">Marketplace</button><button type="button" class="button secondary" data-qr-section="outcome">Outcome</button></nav>`,null,"","QR + CASH");break;
       case "report":
         S.phone = "report";
         renderPhone();
@@ -1192,7 +1386,7 @@ document.addEventListener("click", async (e) => {
       case "help":
         openDialog(
           "You’re inside the whole payment story.",
-          `<div class="help-steps"><p><b>01 · Be the customer.</b> Enter a purchase, try QR, record the cash payment and check the eventual QR result.</p><p><b>02 · Report it.</b> Write your own complaint. The investigator sees the same saved details.</p><p><b>03 · Investigate together.</b> Check sources, request evidence and exchange real case messages. Customer replies invalidate old assessments.</p><p><b>04 · Follow the outcome.</b> Save a cited review. For the repayment stage, use the clearly marked simulation control, then check the record.</p></div>${note("All purchases and records are fictional. The learned text model was trained on synthetic examples; record support is assessed separately. No real transfers are executed.")}`,
+          `<div class="help-steps"><p><b>01 · Customer.</b> Create a purchase, press Pay with QR, see the unconfirmed result, and record cash. Keep the issued receipt.</p><p><b>02 · Evidence.</b> Observe the later bank debit, attach the receipt, review its transcript and file the complaint.</p><p><b>03 · Operator.</b> Scan the receipt with OpenCV visual region detection, then query the synthetic Marketplace records for this exact purchase.</p><p><b>04 · Outcome.</b> Matching records propose a refund requiring operator approval. Rejection sends an explanation. Uncertainty pauses automation and saves an owned human handoff.</p></div>${note("No real money moves. OpenCV is not OCR or authentication. A customer receipt is evidence, not source authority.")}`,
           null,
           "",
           "INTERACTIVE LAB",
@@ -1212,7 +1406,8 @@ document.addEventListener("submit", async (e) => {
   try {
     if (form.id === "purchase-form")
       await busy("customer", "Creating your purchase…", async () => {
-        S.sim = await mutate("customer", "/simulations", {
+        S.customerCase=null;S.staffCase=null;
+      S.sim = await mutate("customer", "/simulations", {
           customer_name: f.get("customer_name"),
           merchant: f.get("merchant"),
           item: f.get("item"),
@@ -1232,8 +1427,22 @@ document.addEventListener("submit", async (e) => {
         });
         clearDraft(draft);
       });
+    if(form.id==="receipt-draft-form"){
+      await busy("customer","Saving receipt evidence…",async()=>{
+        const image=f.get("file");const transcript=f.get("transcript");
+        const digest=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",await image.arrayBuffer()))).map(b=>b.toString(16).padStart(2,"0")).join("");
+        const sig="receipt:"+S.sim.id+":"+digest+":"+transcript;
+        const pending=read("tf.receiptPending",null);
+        const op=pending?.signature===sig?pending:{signature:sig,key:crypto.randomUUID(),version:S.sim.version};
+        sessionStorage.setItem("tf.receiptPending",JSON.stringify(op));
+        f.set("version",String(op.version));
+        S.sim=await api("customer","/simulations/"+S.sim.id+"/receipt",{method:"POST",body:f,headers:{"Idempotency-Key":op.key}});
+        sessionStorage.removeItem("tf.receiptPending");S.phone="flow";rememberSelection();clearDraft(draft);await sync(true);
+      });
+    }
     if (form.id === "report-form") {
       await busy("customer", "Submitting your complaint…", async () => {
+        const submittedSim=S.sim.id;
         const result = await mutate(
           "customer",
           "/simulations/" + S.sim.id + "/complaint",
@@ -1241,8 +1450,10 @@ document.addEventListener("submit", async (e) => {
             version: S.sim.version,
             description: f.get("description"),
             receipt_text: f.get("receipt_text"),
+            ...(S.sim.receipt_draft?.id ? { receipt_evidence_id: S.sim.receipt_draft.id } : {}),
           },
         );
+        if(S.sim?.id!==submittedSim){toast('Complaint saved for the submitted purchase. Open it from saved journeys.');return;}
         S.sim = result.simulation;
         S.customerCase = result.case;
         S.phone = "case";
@@ -1253,12 +1464,7 @@ document.addEventListener("submit", async (e) => {
         await sync(true);
         toast("Your complaint is saved as " + result.case.reference + ".");
       });
-      analyze().catch((error) =>
-        toast(
-          "Complaint saved. Assessment could not finish: " + error.message,
-          true,
-        ),
-      );
+
     }
     if (
       form.id === "customer-message-form" ||
@@ -1307,6 +1513,7 @@ document.addEventListener("submit", async (e) => {
       "customer-message-form": "customer-message-error",
       "staff-message-form": "staff-message-error",
       "upload-form": "upload-error",
+      "receipt-draft-form":"receipt-draft-error",
     }[form.id];
     const target = id && document.getElementById(id);
     if (target) target.textContent = error.message;
@@ -1354,38 +1561,40 @@ document.addEventListener("keydown", (e) => {
   nodes[next].focus();
   nodes[next].click();
 });
+async function restoreJourney() {
+  const q=new URLSearchParams(location.search);
+  setView(q.get("view")||"both");
+  S.customerCase=null;S.staffCase=null;S.sim=null;S.qrReplay=null;S.qrSelected=null;
+  const simId=q.get("simulation"),caseId=q.get("case");
+  if(simId)S.sim=await api("customer","/simulations/"+encodeURIComponent(simId));
+  if(caseId){
+    if(S.view==="desk"){
+      await selectStaffCase(caseId);
+      try{S.customerCase=await api("customer","/cases/"+encodeURIComponent(caseId));}catch(error){if(error.status!==404)throw error;}
+    }else S.customerCase=await api("customer","/cases/"+encodeURIComponent(caseId));
+  }
+  if(caseId && simId && (S.customerCase?.simulation_id||S.staffCase?.simulation_id)!==simId)throw Error("This case does not belong to the requested simulation. Open the matching saved journey.");
+  if(S.sim?.case_id && !S.customerCase)S.customerCase=await api("customer","/cases/"+S.sim.case_id);
+  if(S.customerCase){
+    if(!S.sim&&S.customerCase.simulation_id)S.sim=await api("customer","/simulations/"+S.customerCase.simulation_id);
+    await selectStaffCase(S.customerCase.id);
+  }
+  S.phone=S.customerCase?"case":S.sim?"flow":"purchase";
+  updateJourneyLinks();render();
+}
 async function boot() {
   try {
-    await ensureSession("customer");
-    await ensureSession("staff");
-    await sync(true);
-    const selected = localStorage.getItem("tf.activeSim");
-    S.sim =
-      selected === "new"
-        ? null
-        : S.sims.find((s) => s.id === selected) || S.sims[0] || null;
-    const savedCase = S.customerCases.find(
-      (c) => c.id === localStorage.getItem("tf.activeCase"),
-    );
-    if (savedCase || S.sim?.case_id) {
-      S.customerCase =
-        savedCase || (await api("customer", "/cases/" + S.sim.case_id));
-      S.sim = S.customerCase.simulation_id
-        ? S.sims.find((s) => s.id === S.customerCase.simulation_id) || null
-        : null;
-      S.phone = "case";
-      await selectStaffCase(S.customerCase.id);
-    } else S.phone = S.sim ? "flow" : "purchase";
-    S.ready = true;
+    await ensureSession("customer");await ensureSession("staff");await sync(true);
+    await restoreJourney();S.ready=true;
+  } catch(error) {
+    S.sim=null;S.customerCase=null;S.staffCase=null;S.ready=true;
     render();
-  } catch (error) {
-    toast(error.message, true);
-    $("#phone-content").innerHTML =
-      `<div class="phone-empty"><h3>Let’s reconnect.</h3><p>${esc(error.message)}</p><button class="button primary" data-action="retry">Retry connection</button></div>`;
-    $("#desk").innerHTML =
-      '<div class="desk-empty"><h3>Workspace is reconnecting.</h3><p>Start the local server, then retry from the customer app.</p></div>';
+    toast("Requested journey unavailable: "+error.message+" Use Start new scenario or choose a saved journey.",true);
   }
 }
+window.addEventListener("popstate",()=>restoreJourney().catch(error=>{
+  S.sim=null;S.customerCase=null;S.staffCase=null;S.phone="purchase";render();toast(error.message,true);
+}));
 setInterval(() => {
   if (S.ready && !document.hidden) sync();
 }, 3000);
