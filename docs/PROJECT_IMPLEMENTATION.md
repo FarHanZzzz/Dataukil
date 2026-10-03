@@ -410,4 +410,3 @@ The following index is extracted from route decorators in the reviewed applicati
 | GET | `/api/transfer/staff/cases/{ident}/report.html` |
 | GET | `/api/transfer/events` |
 | GET | `/api/transfer/stream` |
-
