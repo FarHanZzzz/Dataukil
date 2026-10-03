@@ -73,6 +73,8 @@ The encoder is frozen; a logistic regression classifier head is actually trained
 
 The separate add-money investigation remains available at `/mfs`, with `/customer/payment` and `/admin/queue` pages, as documented in [docs/ADD_MONEY_INVESTIGATION.md](docs/ADD_MONEY_INVESTIGATION.md).
 
+Copy-ready ElevenLabs narration for each customer-facing, operations, investigation, and demonstration page is available in [docs/ELEVENLABS_PAGE_NARRATION.md](docs/ELEVENLABS_PAGE_NARRATION.md).
+
 Start with [the context index](docs/CONTEXT.md), [runbook](docs/RUNBOOK.md), [implementation handoff](docs/HANDOFF.md), and [ML/data context](docs/ML.md). The supplied [final specification](TraceFix_Final_Track6_Hybrid_and_Master_Prompt.md) is preserved. Archive transaction data was not used for evidence-verifier training.
 
 For live Studio proposals, start Ollama with `qwen3:4b-instruct` installed at `http://127.0.0.1:11434`. Valid provider use is labelled **LIVE AI INVESTIGATION**. Unavailable, timed-out or invalid output produces **DEMO INVESTIGATION — SIMULATED AI TRACE** with a saved fallback event. Private reasoning is not displayed. Model output cannot authorize a correction; the backend rechecks evidence, ownership, posting references, amount and freshness at approval and execution.
