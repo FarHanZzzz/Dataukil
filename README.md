@@ -2,6 +2,8 @@
 
 DataUkil is the website's product name. Existing `tracefix` Python paths, `TRACEFIX_*` settings, session headers/cookies and saved case references remain stable for compatibility.
 
+The [complete implementation inventory](docs/PROJECT_IMPLEMENTATION.md) records the delivered workspaces, backend contracts, AI components and validation. The [AI value and judges guide](docs/AI_VALUE_AND_JUDGES_GUIDE.md) explains the proposed production intelligence, its measurable value and how to present the current prototype accurately.
+
 Every website surface now uses the shared **light theme**: white cards, pale blue backgrounds, slate text and blue actions. The homepage hero uses the supplied landscape image. Customer, QR, Add money, operations, Studio and report pages share the same palette and typography. See [light-theme validation](docs/LIGHT_THEME_VALIDATION.md).
 
 The [master build prompt](docs/MASTER_BUILD_PROMPT.md) is the authoritative scope. DataUkil is a local **synthetic prototype**: payment and correction records are fictional. Persistent bank-to-upay transfers, the AI Investigation Studio and approved sandbox repairs now run alongside the unified QR + cash investigation and the add-money walkthrough pulled from `main`.
