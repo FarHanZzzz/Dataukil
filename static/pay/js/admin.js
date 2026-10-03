@@ -57,7 +57,9 @@ async function mountWorkspace(app, ident) {
   stage.append(graphRoot, replayBar, empty);
   const ws = h('div', { class: 'ws' }, top, queueEl, stage, inspector, logEl);
   app.append(ws);
-  document.body.classList.toggle('queue-collapsed', window.innerWidth < 1600);
+  // Keep the payment queue visible on ordinary desktop screens; collapse it only when the
+  // graph needs the full canvas at compact laptop widths. Narrow layouts use the Queue drawer.
+  document.body.classList.toggle('queue-collapsed', window.innerWidth < 1360);
 
   const graph = new Graph(graphRoot, {
     onSelect: (id) => {

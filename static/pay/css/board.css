@@ -1,0 +1,132 @@
+/* DataUkil investigation workspace chrome. The graph module remains behaviorally untouched. */
+.surface-admin:not(:has(.rep)){
+  --bg:#01040F;
+  --canvas:#02071A;
+  --node:#0C2148;
+  --node-2:#07152C;
+  --border:#1B4C80;
+  --border-soft:#112448;
+  --text:#FFFFFF;
+  --text-2:#D3E5FF;
+  --text-3:#9DBDEB;
+  --mint:#4DA3FF;
+  --cyan:#8FD3FF;
+  --ok:#7FE3C3;
+  --wait:#F4C26B;
+  --bad:#FF8A94;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.surface-admin:not(:has(.rep)) .ws{background:var(--bg)}
+.surface-admin:not(:has(.rep)) .ws-top{
+  background:rgba(1,4,15,.94);
+  border-bottom-color:var(--border-soft);
+  box-shadow:0 1px 0 rgba(143,211,255,.06) inset,0 8px 24px rgba(0,0,0,.16);
+  backdrop-filter:blur(14px);
+}
+.surface-admin:not(:has(.rep)) .brand{gap:10px;color:#fff}
+.surface-admin:not(:has(.rep)) .brand-mark{width:24px;height:24px;border-radius:0;background:#0C2C78;border-color:var(--mint);color:var(--mint);box-shadow:0 0 12px rgba(77,163,255,.22)}
+.surface-admin:not(:has(.rep)) .brand-mark .ic{width:15px;height:15px}
+.surface-admin:not(:has(.rep)) .brand-name strong{font-family:var(--font-display);font-size:17px;letter-spacing:.08em;text-transform:uppercase}
+.surface-admin:not(:has(.rep)) .brand-name small{display:block;margin-top:1px;color:var(--text-3);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+.surface-admin:not(:has(.rep)) .top-case{gap:12px}
+.surface-admin:not(:has(.rep)) .top-case .ref{color:var(--cyan);font-size:12px}
+.surface-admin:not(:has(.rep)) .top-case .amt{color:#fff;font-size:14px}
+.surface-admin:not(:has(.rep)) .top-case .muted{color:var(--text-3);font-size:12px}
+.surface-admin:not(:has(.rep)) .top-case .sep{background:var(--border)}
+.surface-admin:not(:has(.rep)) .top-actions{gap:6px}
+.surface-admin:not(:has(.rep)) .sim-t{color:var(--text-3);font-size:11px}
+.surface-admin:not(:has(.rep)) .conn-chip{color:var(--text-2);font-size:11px}
+.surface-admin:not(:has(.rep)) .who{border-left-color:var(--border-soft);color:var(--text-3);font-size:11px}
+.surface-admin:not(:has(.rep)) .ws-top .btn--primary,
+.surface-admin:not(:has(.rep)) .ws-top .btn--ghost{
+  min-height:36px;border-radius:4px;border-color:var(--border);background:rgba(12,44,120,.42);color:var(--text-2);font-size:11px;letter-spacing:.02em;
+}
+.surface-admin:not(:has(.rep)) .ws-top .btn--primary{border-color:var(--mint);color:#fff;background:rgba(12,44,120,.72);box-shadow:inset 0 1px 0 rgba(143,211,255,.24),0 0 18px rgba(77,163,255,.08)}
+.surface-admin:not(:has(.rep)) .ws-top .btn--primary:hover:not(:disabled),
+.surface-admin:not(:has(.rep)) .ws-top .btn--ghost:hover{background:#10265E;border-color:var(--cyan);color:#fff}
+.surface-admin:not(:has(.rep)) .ws-top .btn--primary:disabled{background:rgba(16,38,94,.48);color:var(--text-3);border-color:var(--border)}
+
+.surface-admin:not(:has(.rep)) .ws-queue,
+.surface-admin:not(:has(.rep)) .ws-inspect,
+.surface-admin:not(:has(.rep)) .ws-log{background:rgba(2,7,26,.96);border-color:var(--border-soft)}
+.surface-admin:not(:has(.rep)) .q-head{padding:12px 10px;border-color:var(--border-soft);background:rgba(4,13,42,.72)}
+.surface-admin:not(:has(.rep)) .q-title{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2)}
+.surface-admin:not(:has(.rep)) .q-count{background:#0C2C78;color:var(--cyan);border:1px solid var(--border);padding:2px 7px}
+.surface-admin:not(:has(.rep)) .q-row{border-radius:4px;padding:12px 10px}
+.surface-admin:not(:has(.rep)) .q-row:hover{background:#07152C;border-color:var(--border-soft)}
+.surface-admin:not(:has(.rep)) .q-row.is-active{background:#0C2148;border-color:var(--mint);box-shadow:inset 3px 0 var(--mint)}
+.surface-admin:not(:has(.rep)) .q-ref{color:var(--cyan);font-size:11px}
+.surface-admin:not(:has(.rep)) .q-amt{font-size:12px}
+.surface-admin:not(:has(.rep)) .q-time{color:var(--text-3);font-size:10px}
+.surface-admin:not(:has(.rep)) .q-empty{color:var(--text-3);font-size:12px;line-height:1.55}
+
+.surface-admin:not(:has(.rep)) .ws-stage{background:var(--canvas)}
+.surface-admin:not(:has(.rep)) .graph{background-color:var(--canvas);background-image:radial-gradient(circle,rgba(143,211,255,.15) 1px,transparent 1.3px);background-size:22px 22px}
+.surface-admin:not(:has(.rep)) .graph-toolbar,
+.surface-admin:not(:has(.rep)) .graph-legend{background:rgba(2,7,26,.9);border-color:var(--border);box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.surface-admin:not(:has(.rep)) .tb{color:var(--text-2);border-radius:4px}
+.surface-admin:not(:has(.rep)) .tb:hover{background:#0C2C78;color:#fff}
+.surface-admin:not(:has(.rep)) .tb.is-on{color:var(--cyan);background:rgba(77,163,255,.12)}
+.surface-admin:not(:has(.rep)) .tb-sep{background:var(--border-soft)}
+.surface-admin:not(:has(.rep)) .gframe{border-color:rgba(51,99,160,.72);background:rgba(7,21,44,.42);border-radius:8px}
+.surface-admin:not(:has(.rep)) .gframe-title{color:var(--text-2);font-size:10px;letter-spacing:.12em}
+.surface-admin:not(:has(.rep)) .gframe-count{color:var(--text-3);font-size:9px}
+.surface-admin:not(:has(.rep)) .gframe-toggle{color:var(--text-3);border-radius:4px}
+.surface-admin:not(:has(.rep)) .gframe-toggle:hover{background:#0C2C78;color:#fff}
+.surface-admin:not(:has(.rep)) .gnode{background:linear-gradient(135deg,rgba(12,33,72,.96),rgba(7,21,44,.96));border-color:#245A8D;border-radius:6px;box-shadow:0 1px 0 rgba(143,211,255,.09) inset,0 8px 20px -12px rgba(0,0,0,.8)}
+.surface-admin:not(:has(.rep)) .gnode:hover{border-color:var(--cyan);box-shadow:0 0 0 1px rgba(143,211,255,.16),0 10px 24px -12px rgba(0,0,0,.9)}
+.surface-admin:not(:has(.rep)) .gnode.is-inspecting{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(143,211,255,.3),0 0 26px rgba(77,163,255,.16)}
+.surface-admin:not(:has(.rep)) .gnode.st-completed{border-color:rgba(127,227,195,.62)}
+.surface-admin:not(:has(.rep)) .gnode.st-failed{border-color:rgba(255,138,148,.7)}
+.surface-admin:not(:has(.rep)) .gnode.st-running{border-color:var(--cyan);box-shadow:0 0 22px rgba(143,211,255,.16)}
+.surface-admin:not(:has(.rep)) .ghub{background:#07152C;border-color:var(--border);border-radius:6px;box-shadow:0 8px 20px rgba(0,0,0,.3)}
+.surface-admin:not(:has(.rep)) .ghub.is-running{border-color:var(--cyan);box-shadow:0 0 24px rgba(143,211,255,.16)}
+.surface-admin:not(:has(.rep)) .ghub.is-concluded{border-color:rgba(127,227,195,.75)}
+
+.surface-admin:not(:has(.rep)) .ws-inspect{border-left-color:var(--border-soft)}
+.surface-admin:not(:has(.rep)) .insp-tabs{padding:0 10px;background:rgba(4,13,42,.7);border-color:var(--border-soft)}
+.surface-admin:not(:has(.rep)) .insp-tab{padding:16px 11px 13px;color:var(--text-3);font-size:11px;letter-spacing:.02em}
+.surface-admin:not(:has(.rep)) .insp-tab:hover{color:#fff}
+.surface-admin:not(:has(.rep)) .insp-tab.is-on{color:#fff;border-bottom-color:var(--cyan);background:rgba(77,163,255,.08)}
+.surface-admin:not(:has(.rep)) .insp-body{padding:18px 16px}
+.surface-admin:not(:has(.rep)) .insp-h{font-size:18px;letter-spacing:-.01em}
+.surface-admin:not(:has(.rep)) .insp-h2{color:var(--cyan);font-size:10px;letter-spacing:.13em}
+.surface-admin:not(:has(.rep)) .kv>div{padding:10px 0;border-color:var(--border-soft);font-size:12px}
+.surface-admin:not(:has(.rep)) .kv dt{color:var(--text-3)}
+.surface-admin:not(:has(.rep)) .kv dd{color:var(--text-2)}
+.surface-admin:not(:has(.rep)) .node-state,.surface-admin:not(:has(.rep)) .obs,.surface-admin:not(:has(.rep)) .hyp,.surface-admin:not(:has(.rep)) .plan{background:#07152C;border-color:var(--border);border-radius:6px}
+.surface-admin:not(:has(.rep)) .node-state-ic,.surface-admin:not(:has(.rep)) .hist-ic,.surface-admin:not(:has(.rep)) .check-ic{background:#0C2C78}
+.surface-admin:not(:has(.rep)) .obs-id{color:var(--cyan)}
+.surface-admin:not(:has(.rep)) .check-row:hover{background:#0C2148}
+.surface-admin:not(:has(.rep)) .mode-chip{background:#0C2148;border-color:var(--border);border-radius:4px}
+.surface-admin:not(:has(.rep)) .meter{background:#10265E}
+.surface-admin:not(:has(.rep)) .meter i{background:var(--cyan)}
+.surface-admin:not(:has(.rep)) .concl{background:rgba(127,227,195,.08);border-color:rgba(127,227,195,.45)}
+.surface-admin:not(:has(.rep)) .raw pre{background:#01040F;border-color:var(--border-soft)}
+
+.surface-admin:not(:has(.rep)) .ws-log{border-top-color:var(--border-soft)}
+.surface-admin:not(:has(.rep)) .log-head{padding:9px 12px;border-color:var(--border-soft);background:rgba(4,13,42,.72);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2)}
+.surface-admin:not(:has(.rep)) .log-row{border-radius:4px;font-size:11px;padding:6px 8px}
+.surface-admin:not(:has(.rep)) .log-row:hover{background:#07152C}
+.surface-admin:not(:has(.rep)) .log-t{color:var(--text-3);font-size:10px}
+.surface-admin:not(:has(.rep)) .log-tag{font-size:9px}
+.surface-admin:not(:has(.rep)) .log-text{color:var(--text-2)}
+
+@media(min-width:1041px){
+  .surface-admin:not(:has(.rep)) .ws{grid-template-rows:64px minmax(0,1fr) auto}
+  .surface-admin:not(:has(.rep)) .ws-top{min-height:64px}
+}
+@media(min-width:1360px) and (max-width:1599px){
+  .surface-admin:not(:has(.rep)) .ws{grid-template-columns:180px minmax(0,1fr) 320px}
+}
+@media(max-width:1040px){
+  .surface-admin:not(:has(.rep)) .ws-top{background:rgba(1,4,15,.97)}
+  .surface-admin:not(:has(.rep)) .am-mobile-nav{background:rgba(2,7,26,.96);border-color:var(--border-soft)}
+  .surface-admin:not(:has(.rep)) .am-mobile-button{border-radius:4px;color:var(--text-3)}
+  .surface-admin:not(:has(.rep)) .am-mobile-button[aria-pressed=true]{background:#0C2148;border-color:var(--border);color:var(--cyan)}
+  .surface-admin:not(:has(.rep)) .am-board-menu>summary{border-radius:4px;background:#07152C;border-color:var(--border);color:var(--text-2)}
+  .surface-admin:not(:has(.rep)) .am-board-menu>div{background:#02071A;border-color:var(--border);border-radius:6px}
+  .surface-admin:not(:has(.rep)) .am-queue-dialog[open]{background:#01040F;border-color:var(--border);border-radius:8px}
+}
