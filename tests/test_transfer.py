@@ -408,6 +408,14 @@ def test_qr_routes_cannot_act_on_add_money_cases(client):
     assert 'tx_' not in json.dumps(listed)
 
 
+def test_surface_pages_are_served(client):
+    for path in ('/customer/payment', '/customer/payment/pay_x', '/customer/cases/case_x', '/admin/queue', '/admin/cases/case_x', '/mfs'):
+        r = client.get(path)
+        assert r.status_code == 200 and 'text/html' in r.headers['content-type'], path
+    r = client.get('/demo', follow_redirects=False)
+    assert r.status_code in (302, 307) and r.headers['location'] == '/mfs'
+
+
 def test_run_summary_reports_walkthrough_phase(client):
     s = story(client, 'worker_fault')
     h = s['presenter']['headers']

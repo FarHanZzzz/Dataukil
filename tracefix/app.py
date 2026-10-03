@@ -161,19 +161,29 @@ def customer_root():
     return RedirectResponse('/customer/payment')
 
 
-@app.get('/customer/{rest:path}')
-def customer_page(rest:str):
-    return FileResponse(PAY_PAGES/'customer.html')
-
-
 @app.get('/admin')
 def admin_root():
     return RedirectResponse('/admin/queue')
 
 
+@app.get('/customer/{rest:path}')
+def customer_page(rest:str):
+    return FileResponse(PAY_PAGES/'customer.html')
+
+
 @app.get('/admin/{rest:path}')
 def admin_page(rest:str):
     return FileResponse(PAY_PAGES/'admin.html')
+
+
+@app.get('/mfs')
+def mfs_page():
+    return FileResponse(PAY_PAGES/'mfs.html')
+
+
+@app.get('/demo')
+def demo_page():
+    return RedirectResponse('/mfs')
 
 
 @app.post('/api/session')
