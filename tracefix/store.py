@@ -26,6 +26,8 @@ def initialize():
         CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, case_id TEXT, actor TEXT, action TEXT, at TEXT, version INTEGER, detail TEXT);
         CREATE TABLE IF NOT EXISTS demo(key TEXT PRIMARY KEY, value TEXT);
         ''')
+        from .transfer import schema as transfer_schema  # additive tx_* tables for the add-money investigation
+        transfer_schema.ensure(db)
         if not db.execute('SELECT 1 FROM cases LIMIT 1').fetchone():
             for c in seed_cases():
                 db.execute('INSERT INTO cases VALUES (?,?)',(c['id'],json.dumps(c,ensure_ascii=False)))

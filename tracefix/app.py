@@ -8,11 +8,13 @@ import re
 import io
 import base64
 from fastapi import FastAPI, Request, Response, HTTPException, UploadFile, File, Form
-from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 from . import store
+from .auth import read_session
 from .domain import now, uid, evidence, current_text, facts, fresh, customer_view
+from .transfer import FAMILY as TRANSFER_FAMILY, router as transfer_router, start_ticker, stop_ticker
 
 ROOT=Path(__file__).resolve().parents[1]
 ROLES={'customer':'customer_1','other_customer':'customer_2','staff':'staff_1','other_staff':'staff_2','judge':'judge_1'}
@@ -22,11 +24,16 @@ MAX_FILE=2*1024*1024
 @asynccontextmanager
 async def lifespan(app):
     store.initialize()
-    yield
+    ticker = start_ticker()
+    try:
+        yield
+    finally:
+        await stop_ticker(ticker)
 
 
 app=FastAPI(title='TraceFix synthetic investigation workspace',lifespan=lifespan)
 app.mount('/static',StaticFiles(directory=ROOT/'static'),name='static')
+app.include_router(transfer_router)
 
 
 @app.middleware('http')
@@ -38,29 +45,27 @@ async def headers(request,call_next):
     response=await call_next(request)
     response.headers['X-Content-Type-Options']='nosniff'
     response.headers['Referrer-Policy']='no-referrer'
-    response.headers['Content-Security-Policy']="default-src 'self'; img-src 'self' blob: data:; style-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    response.headers['Content-Security-Policy']="default-src 'self'; img-src 'self' blob: data:; style-src 'self' 'sha256-yhlpZVZMy2vXExwTGihUWVSrOxyhMuvj+Ygg7pyBWek='; script-src 'self'; connect-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     if request.url.path.startswith('/api'):
         response.headers['Cache-Control']='no-store'
     return response
 
 
 def session(request):
-    token=request.cookies.get('tracefix_session','')
-    with store.connect() as db:
-        r=db.execute('SELECT * FROM sessions WHERE token=?',(token,)).fetchone()
-    if not r or r['expires'] < now():
-        raise HTTPException(401,'Choose a predefined demo session first.')
-    return dict(r)
+    return read_session(request)
 
 
 def authorize(s,c,staff=False):
     if not c:
         raise HTTPException(404,'Record not found.')
+    if c.get('family')==TRANSFER_FAMILY:
+        # Add-money incidents have their own role-scoped API; the QR case routes must never act on them.
+        raise HTTPException(409,'This incident is managed in the add-money workspace.')
     if staff and s['role']!='staff':
         raise HTTPException(403,'Investigator permission required.')
     if s['role']=='customer' and c['customer_id']!=s['actor']:
         raise HTTPException(404,'Record not found.')
-    if s['role']=='judge':
+    if s['role'] in ('judge','presenter'):
         raise HTTPException(403,'Use an investigator or customer session for case work.')
 
 
@@ -184,10 +189,10 @@ def lookup(reference:str,request:Request):
 @app.get('/api/cases')
 def cases(request:Request):
     s=session(request)
-    if s['role']=='judge':
+    if s['role'] in ('judge','presenter'):
         raise HTTPException(403,'Use demo controls in this session.')
     with store.connect() as db:
-        cs=[json.loads(r['body']) for r in db.execute('SELECT body FROM cases')]
+        cs=[c for c in (json.loads(r['body']) for r in db.execute('SELECT body FROM cases')) if c.get('family')!=TRANSFER_FAMILY]
     if s['role']=='customer':
         return [customer_view(c) for c in cs if c['customer_id']==s['actor']]
     return [c | dict(analysis_fresh=fresh(c),facts=facts(c),overdue=c['next_review']<now())
