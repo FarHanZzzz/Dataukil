@@ -23,7 +23,7 @@ const S = {
   analysisMode:params.get('mode') || 'live', presentationPaused:false, presentationCursor:0
 };
 const BN = {
- 'Customer dashboard':'গ্রাহক ড্যাশবোর্ড','Operations center':'অপারেশনস কেন্দ্র','QR + cash demo lab':'QR + নগদ ডেমো','Add-money walkthrough':'টাকা যোগ করার ডেমো',
+ 'Customer dashboard':'গ্রাহক ড্যাশবোর্ড','Operations center':'অপারেশনস কেন্দ্র','QR + cash demo lab':'QR + নগদ ডেমো',
  'Synthetic environment':'সিমুলেটেড পরিবেশ','Refresh':'রিফ্রেশ','Your payments, clearly explained.':'আপনার লেনদেনের প্রতিটি ধাপ দেখুন।',
  'Send a bank → upay transfer':'ব্যাংক → উপায় ট্রান্সফার করুন','New synthetic transfer':'নতুন সিমুলেটেড ট্রান্সফার',
  'Demo customer name':'ডেমো গ্রাহকের নাম','Amount (BDT)':'পরিমাণ (টাকা)','Demo scenario':'ডেমো পরিস্থিতি',
@@ -154,7 +154,7 @@ function updateShell() {
   $('#language-wrap').hidden=S.page!=='customer';$('#identity-wrap').hidden=S.page==='customer';
   $('#language').value=S.lang;$('#identity').value=S.role;$('#avatar').textContent=S.page==='customer'?'C':S.role==='staff'?'O1':'O2';
   $('#breadcrumb').textContent=tr(S.page==='customer'?'Customer dashboard':S.page==='operations'?'Operations center':S.page==='studio'?'Operations / AI Investigation Studio':'Operations / Case workspace');
-  const navLabels={customer:'Customer dashboard',operations:'Operations center',demo:'QR + cash demo lab',mfs:'Add-money walkthrough'};
+  const navLabels={customer:'Customer dashboard',operations:'Operations center',demo:'QR + cash demo lab'};
   $$('.sidebar nav a').forEach(a=>{a.classList.toggle('active',a.dataset.nav===(S.page==='customer'?'customer':'operations'));if(navLabels[a.dataset.nav])a.lastChild.textContent=tr(navLabels[a.dataset.nav]);});
   $('#refresh-page').textContent='↻ '+tr('Refresh');$('.top-status').lastChild.textContent=' '+tr('Synthetic environment');
 }
