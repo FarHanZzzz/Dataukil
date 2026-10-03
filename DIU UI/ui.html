@@ -1,0 +1,1218 @@
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus - Override Sequence</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<style>
+body {
+font-family: 'Rajdhani', sans-serif;
+background-color: #01040F;
+color: #ffffff;
+overflow-x: hidden;
+}
+.font-mono {
+font-family: 'JetBrains Mono', monospace;
+}
+/* Sci-fi metallic text gradient - electric blue chrome */
+.text-metallic {
+background: linear-gradient(180deg, #ffffff 0%, #CDE8FF 30%, #8FD3FF 46%, #0A1E5C 50%, #1F4FD8 54%, #4DA3FF 78%, #8FD3FF 100%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+-webkit-text-stroke: 1px rgba(143, 211, 255, 0.35);
+filter: drop-shadow(0px 8px 18px rgba(2,6,30,0.9)) drop-shadow(0px 0px 28px rgba(60, 130, 255, 0.35));
+}
+/* Hide scrollbar for clean UI */
+::-webkit-scrollbar {
+width: 4px;
+}
+::-webkit-scrollbar-track {
+background: #01040F;
+}
+::-webkit-scrollbar-thumb {
+background: #4DA3FF;
+opacity: 0.5;
+}
+@keyframes mountain-breathe {
+0% { transform: scale(1); }
+100% { transform: scale(1.06); }
+}
+@keyframes scan {
+0% { transform: translateX(-100%); }
+100% { transform: translateX(100%); }
+}
+/* --- New Features CSS --- */
+/* Reveal Animation */
+.reveal {
+opacity: 0;
+transform: translateY(30px);
+filter: blur(10px);
+transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+filter 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+will-change: opacity, transform, filter;
+}
+.reveal.active {
+opacity: 1;
+transform: translateY(0);
+filter: blur(0px);
+}
+/* Flashlight Glow Effect for Cards */
+.glow-card {
+position: relative;
+}
+.glow-card::before {
+content: "";
+position: absolute;
+inset: 0;
+background: radial-gradient(800px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px), rgba(77, 163, 255, 0.08), transparent 40%);
+z-index: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+opacity: 0;
+border-radius: inherit;
+}
+.glow-card::after {
+content: "";
+position: absolute;
+inset: -1px;
+border-radius: inherit;
+background: radial-gradient(400px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px), rgba(77, 163, 255, 0.8), transparent 40%);
+-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+-webkit-mask-composite: xor;
+mask-composite: exclude;
+padding: 1px;
+z-index: 1;
+pointer-events: none;
+transition: opacity 0.3s ease;
+opacity: 0;
+}
+.glow-card:hover::before,
+.glow-card:hover::after {
+opacity: 1;
+}
+</style><meta name="disabled-font-classes" content="font-roboto,font-montserrat,font-poppins,font-playfair,font-instrument-serif,font-merriweather,font-bricolage,font-manrope,font-space-grotesk,font-work-sans,font-pt-serif,font-geist-mono,font-space-mono,font-quicksand,font-nunito,font-newsreader,font-google-sans-flex,font-oswald,font-dm-sans,font-cormorant"><meta name="aura-font-heading-class" content="font-jakarta"><meta name="aura-font-body-class" content="font-geist"><meta name="aura-font-heading-label" content="Jakarta"><meta name="aura-font-body-label" content="Geist"><link id="all-fonts-link-font-jakarta" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-jakarta">.font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif !important; }</style><link id="all-fonts-link-font-geist" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-geist">.font-geist { font-family: 'Geist', sans-serif !important; }</style>
+</head>
+  <body class="antialiased selection:bg-[#2563FF]/40 selection:text-white relative">
+    <!-- Fixed Backgrounds -->
+    <canvas id="webgl-canvas" class="fixed inset-0 z-0 pointer-events-none w-full h-full"></canvas>
+
+    <!-- Hero mountain (blue duotone, scrolls away with the hero) -->
+    <div class="absolute top-0 left-0 w-full h-[118vh] z-[1] pointer-events-none overflow-hidden" style="mix-blend-mode: screen; -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 26%, #000 70%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0%, #000 26%, #000 70%, transparent 100%);">
+      <div id="hero-mountain" class="absolute inset-0" style="background: url('mountain_blue.webp') 50% 82% / cover no-repeat; animation: mountain-breathe 40s ease-in-out infinite alternate; transform-origin: 50% 80%;"></div>
+      <!-- keep the left (text) side deep black for contrast, and the very edges dark -->
+      <div class="absolute inset-0" style="background: linear-gradient(90deg, rgba(0,2,10,0.92) 0%, rgba(0,2,10,0.55) 34%, rgba(0,2,10,0) 62%), linear-gradient(270deg, rgba(0,2,10,0.7) 0%, rgba(0,2,10,0) 30%);"></div>
+    </div>
+
+    <!-- Background flowing light streaks -->
+    <svg class="fixed inset-0 w-full h-full pointer-events-none z-[1]" viewBox="0 0 100 100" preserveAspectRatio="none" style="opacity:.9">
+      <defs>
+          <linearGradient id="streak-a" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#8FD3FF" stop-opacity="0"></stop>
+              <stop offset="50%" stop-color="#4DA3FF" stop-opacity="1"></stop>
+              <stop offset="100%" stop-color="#2563FF" stop-opacity="0"></stop>
+          </linearGradient>
+          <linearGradient id="streak-b" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2563FF" stop-opacity="0"></stop>
+              <stop offset="50%" stop-color="#8FD3FF" stop-opacity="1"></stop>
+              <stop offset="100%" stop-color="#4DA3FF" stop-opacity="0"></stop>
+          </linearGradient>
+      </defs>
+
+      <!-- Streak 1 -->
+      <path d="M 15,-10 C 15,30 85,70 85,110" fill="none" stroke="url(#streak-a)" stroke-opacity="0.12" stroke-width="0.12"></path>
+      <path d="M 15,-10 C 15,30 85,70 85,110" pathLength="100" fill="none" stroke="#4DA3FF" stroke-opacity="0.10" stroke-width="0.9" stroke-linecap="round" stroke-dasharray="16 84">
+          <animate attributeName="stroke-dashoffset" from="100" to="0" dur="22s" repeatCount="indefinite"></animate>
+      </path>
+      <path d="M 15,-10 C 15,30 85,70 85,110" pathLength="100" fill="none" stroke="#9AD7FF" stroke-opacity="0.85" stroke-width="0.16" stroke-linecap="round" stroke-dasharray="16 84">
+          <animate attributeName="stroke-dashoffset" from="100" to="0" dur="22s" repeatCount="indefinite"></animate>
+      </path>
+
+      <!-- Streak 2 -->
+      <path d="M 85,-10 C 85,40 20,60 20,110" fill="none" stroke="url(#streak-b)" stroke-opacity="0.12" stroke-width="0.12"></path>
+      <path d="M 85,-10 C 85,40 20,60 20,110" pathLength="100" fill="none" stroke="#3B7BFF" stroke-opacity="0.10" stroke-width="0.9" stroke-linecap="round" stroke-dasharray="22 78">
+          <animate attributeName="stroke-dashoffset" from="100" to="0" dur="30s" repeatCount="indefinite"></animate>
+      </path>
+      <path d="M 85,-10 C 85,40 20,60 20,110" pathLength="100" fill="none" stroke="#6FB4FF" stroke-opacity="0.8" stroke-width="0.16" stroke-linecap="round" stroke-dasharray="22 78">
+          <animate attributeName="stroke-dashoffset" from="100" to="0" dur="30s" repeatCount="indefinite"></animate>
+      </path>
+
+      <!-- Streak 3 -->
+      <path d="M 50,-10 C 65,30 35,60 50,110" fill="none" stroke="url(#streak-a)" stroke-opacity="0.10" stroke-width="0.1"></path>
+      <path d="M 50,-10 C 65,30 35,60 50,110" pathLength="100" fill="none" stroke="#5AA2FF" stroke-opacity="0.09" stroke-width="0.7" stroke-linecap="round" stroke-dasharray="10 90">
+          <animate attributeName="stroke-dashoffset" from="100" to="0" dur="17s" repeatCount="indefinite"></animate>
+      </path>
+      <path d="M 50,-10 C 65,30 35,60 50,110" pathLength="100" fill="none" stroke="#BFE3FF" stroke-opacity="0.8" stroke-width="0.13" stroke-linecap="round" stroke-dasharray="10 90">
+          <animate attributeName="stroke-dashoffset" from="100" to="0" dur="17s" repeatCount="indefinite"></animate>
+      </path>
+    </svg>
+
+    <div class="fixed inset-0 z-[1] pointer-events-none opacity-[0.12] mix-blend-overlay" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+
+    <div class="fixed inset-0 z-[1] pointer-events-none mix-blend-overlay opacity-[0.12]" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(120, 180, 255, 0.10) 2px, rgba(120, 180, 255, 0.10) 4px); background-size: 100% 4px;"></div>
+
+    <div class="fixed inset-0 z-[1] pointer-events-none" style="background: radial-gradient(ellipse at 50% 38%, transparent 0%, rgba(0,2,10,0.45) 58%, rgba(0,1,6,0.95) 100%);"></div>
+
+    <!-- Fixed HUD Framing -->
+    
+    
+
+    <!-- Fixed HUD Elements -->
+    <div id="bg-orange-bottom" class="fixed bottom-0 left-0 w-3/4 h-[75vh] z-[1] opacity-[0.05] pointer-events-none" style="background: linear-gradient(to top right, rgba(37,99,255,0.85) 0%, rgba(37,99,255,0.2) 55%, rgba(37,99,255,0) 100%); clip-path: polygon(0 100%, 0 20%, 80% 100%);"></div>
+
+    <!-- Navigation -->
+    <div id="bg-darkorange-bottom" class="fixed bottom-0 left-0 w-2/3 h-[66vh] z-[1] opacity-[0.05] pointer-events-none" style="background: linear-gradient(to top right, rgba(20,60,190,0.9) 0%, rgba(30,90,255,0.3) 60%, rgba(30,90,255,0) 100%); clip-path: polygon(0 100%, 0 40%, 60% 100%);"></div><div id="bg-orange-topleft" class="fixed top-0 left-0 w-64 h-full z-[1] opacity-[0.04] pointer-events-none" style="background: linear-gradient(to bottom, rgba(77,163,255,0.9) 0%, rgba(37,99,255,0.35) 50%, rgba(37,99,255,0) 100%); clip-path: polygon(0 0, 100% 0, 40% 100%, 0 100%);"></div><nav class="fixed top-0 left-0 right-0 z-[40] bg-[#01040F]/80 backdrop-blur-md border-b border-[#4DA3FF]/10">
+      <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <!-- Logo -->
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 border border-[#4DA3FF] flex items-center justify-center relative overflow-hidden bg-[#0C2C78]/50">
+            <div class="w-1.5 h-1.5 bg-[#2563FF] relative z-10 shadow-[0_0_8px_#4DA3FF]"></div>
+          </div>
+          <span class="uppercase text-xl font-medium text-white tracking-widest font-jakarta">nexus</span>
+        </div>
+
+        <!-- Links (Desktop) -->
+        <div class="hidden md:flex items-center gap-8 text-xs font-mono tracking-widest uppercase text-[#D3E5FF]">
+          <a href="#" class="hover:text-[#4DA3FF] transition-colors font-geist">
+            Features
+          </a>
+          <a href="#" class="hover:text-[#4DA3FF] transition-colors font-geist">
+            Developer
+          </a>
+          <a href="#" class="hover:text-[#4DA3FF] transition-colors font-geist">
+            Platform
+          </a>
+          <a href="#" class="hover:text-[#4DA3FF] transition-colors flex items-center gap-1 font-geist">
+            Docs
+            <span class="text-[#2563FF] mb-1 font-geist">[34]</span>
+          </a>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-4">
+          <a href="#" class="text-xs font-mono uppercase tracking-widest hover:text-[#4DA3FF] hidden sm:block text-[#D3E5FF] font-geist">
+            Auth_Req
+          </a>
+
+          <!-- Sci-Fi Button (MD Style) -->
+          <a href="#" class="group relative flex items-center justify-center px-6 py-2.5 cursor-pointer overflow-hidden bg-[#10265E]/40 border border-white/5 backdrop-blur-sm shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+            <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-[#4DA3FF] transition-all group-hover:w-[6px] group-hover:bg-white shadow-[0_0_10px_rgba(77, 163, 255,0.5)]"></div>
+            <div class="absolute right-0 top-0 bottom-0 w-[3px] bg-[#4DA3FF] transition-all group-hover:w-[6px] group-hover:bg-white shadow-[0_0_10px_rgba(77, 163, 255,0.5)]"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-[#4DA3FF]/0 via-[#4DA3FF]/10 to-[#4DA3FF]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <span class="relative z-10 text-white font-mono text-xs tracking-widest uppercase flex items-center gap-2 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all font-geist">
+              Initialize
+              <iconify-icon icon="solar:stars-linear" class="w-4 h-4 opacity-70"></iconify-icon>
+            </span>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="pt-32 relative z-10" id="main-content">
+      <!-- Hero Section -->
+      <section class="min-h-[80vh] flex flex-col lg:flex-row max-w-7xl mr-auto ml-auto pr-6 pl-6 relative items-center justify-center">
+        <!-- Left Content -->
+        <div class="lg:w-1/2 z-10 lg:pt-0 flex flex-col w-full pt-12 items-start">
+          <!-- Top Accent -->
+          <div class="flex flex-col items-start mb-6" id="top-accent">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 border border-[#4DA3FF]/20 bg-[#0C2C78]/30 backdrop-blur-sm mb-4">
+              <span class="text-xs font-mono text-white uppercase tracking-widest bg-[#3B6BFF]/50 px-2 py-0.5 border border-[#3B6BFF]/80 font-geist">
+                Sys_Update
+              </span>
+              <span class="text-xs font-mono text-[#8FD3FF] tracking-widest uppercase font-geist">
+                nexus 4.1 active
+              </span>
+            </div>
+
+            <div class="flex gap-0.5 h-1 w-24 opacity-80">
+              <div class="w-1 bg-[#4DA3FF]"></div>
+              <div class="w-2 bg-[#4DA3FF]"></div>
+              <div class="w-0.5 bg-[#4DA3FF]"></div>
+              <div class="w-3 bg-[#4DA3FF]"></div>
+              <div class="w-1 bg-[#4DA3FF]"></div>
+            </div>
+          </div>
+
+          <div class="text-[#4DA3FF]/80 font-mono text-xs tracking-widest uppercase mb-4 font-geist" id="pre-title" style="letter-spacing: 0.1em;">
+            Sequence Activated
+          </div>
+
+          <h1 class="text-5xl sm:text-6xl lg:text-[5.5rem] uppercase tracking-tight leading-[1.1] mb-6 text-metallic font-jakarta font-medium" id="title-text" style=" filter: blur(0px);">
+            The Ultimate
+            <br>
+            Defense Grid
+          </h1>
+
+          <p class="leading-relaxed uppercase text-sm tracking-wide font-mono max-w-xl mb-10 text-[#D3E5FF] font-geist">
+            Nexus is the paramount secure tactical terminal, utilized by field
+            agents to intercept, transmit, and decode encrypted data.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <!-- Main Sci-Fi CTA -->
+            <a href="#" class="group relative flex items-center justify-center px-8 py-3.5 w-full sm:w-auto cursor-pointer overflow-hidden bg-[#10265E]/40 border border-white/5 backdrop-blur-sm shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+              <div class="absolute left-0 top-0 bottom-0 w-[4px] bg-[#4DA3FF] transition-all group-hover:w-[8px] group-hover:bg-white shadow-[0_0_10px_rgba(77, 163, 255,0.5)]"></div>
+              <div class="absolute right-0 top-0 bottom-0 w-[4px] bg-[#4DA3FF] transition-all group-hover:w-[8px] group-hover:bg-white shadow-[0_0_10px_rgba(77, 163, 255,0.5)]"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-[#4DA3FF]/0 via-[#4DA3FF]/10 to-[#4DA3FF]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <span class="relative z-10 text-white font-mono text-xs tracking-widest uppercase flex items-center gap-2 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all font-geist">
+                Engage Sequence
+                <iconify-icon icon="solar:alt-arrow-right-linear" class="w-4 h-4"></iconify-icon>
+              </span>
+            </a>
+
+            <!-- Secondary CTA -->
+            <a href="#" class="w-full sm:w-auto bg-[#01040F]/50 backdrop-blur-sm border border-[#7FA6E6]/40 px-8 py-3.5 text-xs font-mono tracking-widest uppercase flex justify-center items-center hover:text-[#4DA3FF] hover:border-[#4DA3FF]/40 transition-colors text-[#D3E5FF] font-geist">
+              System Scan
+            </a>
+          </div>
+        </div>
+
+        <!-- Right: UPAY QR scanner pod (3D) -->
+        <div class="lg:w-1/2 aspect-square max-w-[500px] lg:max-w-[700px] mx-auto lg:mt-0 flex w-full mt-16 relative items-center justify-center">
+          <div class="absolute w-[75%] h-[75%] rounded-full bg-[#2F6BFF] blur-[110px] opacity-[0.16] pointer-events-none animate-[pulse_6s_ease-in-out_infinite]"></div>
+          <div class="absolute w-[92%] h-[92%] rounded-full border border-[#4DA3FF]/10 pointer-events-none"></div>
+          <div class="absolute w-[72%] h-[72%] rounded-full border border-dashed border-[#4DA3FF]/15 pointer-events-none"></div>
+          <model-viewer id="upay-pod" src="upay_pod.glb" alt="UPAY QR scanner pod" interaction-prompt="none" shadow-intensity="0" exposure="1.1" camera-orbit="290deg 72deg auto" field-of-view="22deg" style="width:100%;height:100%;background:transparent;--poster-color:transparent;"></model-viewer>
+        </div>
+      </section>
+
+      <!-- Stats Section -->
+      <section class="bg-gradient-to-b from-[#030B26]/70 to-[#02071A]/60 backdrop-blur-[3px] mt-32 relative">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[100%] h-[1px] bg-gradient-to-r from-transparent via-[#4DA3FF]/50 to-transparent pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-6 pt-24 text-center relative z-10">
+          <div class="reveal inline-flex px-3 py-1 border border-[#4DA3FF]/20 bg-[#0C2C78]/30 text-xs font-mono text-[#4DA3FF] uppercase tracking-widest mb-8 font-geist">
+            Sys_Stats
+          </div>
+
+          <h2 class="reveal text-2xl sm:text-3xl lg:text-4xl tracking-widest text-white max-w-3xl mx-auto leading-tight mb-20 uppercase font-jakarta font-medium">
+            Global syndicate of agents committed to fortifying the neural
+            architecture
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center border-t border-b border-[#4DA3FF]/10 py-12">
+            <div class="reveal text-center md:text-left">
+              <p class="text-4xl tracking-tight mb-2 text-[#4DA3FF] font-jakarta font-medium">
+                3.8+ MM
+              </p>
+              <p class="text-xs font-mono uppercase tracking-widest text-[#D3E5FF] font-geist">
+                Packets Secured
+              </p>
+            </div>
+
+            <div class="reveal flex flex-wrap justify-center gap-8 items-center opacity-70 text-white font-mono uppercase tracking-widest text-sm">
+              <span class="font-geist">Aegis_</span>
+              <span class="flex items-center gap-1 font-geist">
+                <iconify-icon icon="solar:infinity-linear" class="w-5 h-5"></iconify-icon>
+                Cipher
+              </span>
+              <span class="font-geist">Vanguard</span>
+            </div>
+
+            <div class="reveal text-center md:text-right">
+              <p class="text-4xl tracking-tight mb-2 text-[#4DA3FF] font-jakarta font-medium">
+                75+ MM
+              </p>
+              <p class="text-xs font-mono uppercase tracking-widest text-[#D3E5FF] font-geist">
+                Active Relays
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Bento Box -->
+      <section class="max-w-7xl mx-auto px-6 py-32">
+        <div class="reveal mb-12 border-l-[6px] border-[#4DA3FF] pl-6 shadow-[inset_2px_0_10px_rgba(77, 163, 255,0.1)]">
+          <div class="text-xs font-mono text-[#4DA3FF] uppercase tracking-widest mb-4 font-geist">
+            System_Specs
+          </div>
+          <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <h2 class="text-3xl sm:text-4xl tracking-widest max-w-md leading-tight uppercase font-jakarta font-medium">
+              Encrypted Data Transfers
+            </h2>
+            <p class="text-xs font-mono uppercase tracking-widest max-w-sm md:text-right text-[#D3E5FF] font-geist">
+              Verified local hubs. Intercept via DarkNet and Web4.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <!-- Card 1 -->
+          <div class="md:col-span-12 lg:col-span-5 p-8 relative overflow-hidden group glow-card reveal" style="background: linear-gradient(135deg, rgba(8, 26, 92, 0.42) 0%, rgba(2, 8, 32, 0.88) 100%); box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(77, 163, 255, 0.05); border: 1px solid rgba(96, 170, 255, 0.30);">
+            <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 11px);"></div>
+            <div class="absolute top-0 right-0 w-64 h-64 bg-[#2563FF]/5 blur-[80px] group-hover:bg-[#2563FF]/10 transition-colors"></div>
+
+            <div class="relative z-10">
+              <h3 class="text-xl tracking-widest mb-2 uppercase text-white font-jakarta font-medium">
+                Bypass Protocol
+              </h3>
+              <p class="text-xs font-mono uppercase mb-12 max-w-xs leading-relaxed text-[#D3E5FF] font-geist">
+                Analog to digital conversion executed locally from terminal.
+              </p>
+
+              <!-- Mock UI -->
+              <div class="w-full max-w-[280px] mx-auto relative border border-[#4DA3FF]/20 p-4 bg-[#01040F]">
+                <div class="flex flex-col items-center gap-2 relative z-10">
+                  <div class="bg-[#040D2A] border border-[#4DA3FF]/20 p-4 w-full flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 border border-[#4DA3FF]/30 flex items-center justify-center">
+                        <iconify-icon icon="solar:box-linear" class="w-4 h-4 text-[#4DA3FF]"></iconify-icon>
+                      </div>
+                      <span class="font-mono font-medium text-sm text-white font-geist">
+                        SOL
+                      </span>
+                    </div>
+                    <span class="font-mono text-[#D3E5FF] font-geist">0.0</span>
+                  </div>
+
+                  <div class="w-10 h-10 border border-[#4DA3FF] bg-[#01040F] flex items-center justify-center -my-4 relative z-10 shadow-[0_0_10px_rgba(77, 163, 255,0.2)]">
+                    <iconify-icon icon="solar:transfer-vertical-linear" class="w-5 h-5 text-[#4DA3FF]"></iconify-icon>
+                  </div>
+
+                  <div class="bg-[#040D2A] border border-[#4DA3FF]/20 p-4 w-full flex items-center justify-between opacity-50">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 border border-[#2563FF]/50 flex items-center justify-center">
+                        <iconify-icon icon="solar:wad-of-money-linear" class="w-4 h-4 text-[#2563FF]"></iconify-icon>
+                      </div>
+                      <span class="font-mono font-medium text-sm text-white font-geist">
+                        USDC
+                      </span>
+                    </div>
+                    <span class="font-mono text-[#D3E5FF] font-geist">0.0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-12">
+                <a href="#" class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#4DA3FF] hover:text-white transition-colors font-geist">
+                  Execute_Write
+                  <iconify-icon icon="solar:arrow-right-linear" class="w-4 h-4"></iconify-icon>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="md:col-span-12 lg:col-span-7 p-8 relative overflow-hidden group glow-card reveal" style="background: linear-gradient(135deg, rgba(8, 26, 92, 0.42) 0%, rgba(2, 8, 32, 0.88) 100%); box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(77, 163, 255, 0.05); border: 1px solid rgba(96, 170, 255, 0.30);">
+            <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 11px);"></div>
+            <div class="absolute top-1/2 right-1/4 w-64 h-64 bg-[#2563FF]/5 blur-[80px] group-hover:bg-[#2563FF]/10 transition-colors"></div>
+            <div class="relative z-10 h-full flex flex-col">
+              <div class="flex justify-between items-start mb-8">
+                <div>
+                  <h3 class="text-xl tracking-widest mb-2 uppercase text-white font-jakarta font-medium">
+                    Live Network Feed
+                  </h3>
+                  <p class="text-xs font-mono uppercase max-w-sm text-[#D3E5FF] font-geist">
+                    Ping relays for minimal latency.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Mock Chart Area -->
+              <div class="flex-1 relative mt-auto pt-10 border-b border-[#4DA3FF]/10 pb-4">
+                <!-- Chart Line -->
+                <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                  <path d="M0,80 Q20,60 40,70 T80,30 T100,10" fill="none" stroke="#4DA3FF" stroke-width="0.5" class="drop-shadow-[0_0_5px_rgba(77, 163, 255,0.5)]"></path>
+                  <path d="M0,80 Q20,60 40,70 T80,30 T100,10 L100,100 L0,100 Z" fill="url(#grad)" opacity="0.1"></path>
+                  <defs>
+                    <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#4DA3FF"></stop>
+                      <stop offset="100%" stop-color="transparent"></stop>
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                <!-- Tooltips -->
+                <div class="absolute top-[20%] left-[60%] flex flex-col items-center">
+                  <div class="bg-[#4DA3FF] w-1.5 h-1.5 rounded-sm shadow-[0_0_5px_#4DA3FF] mb-2"></div>
+                  <div class="bg-[#01040F] border border-[#4DA3FF]/30 p-2 text-center min-w-[120px]">
+                    <p class="text-xs font-mono uppercase text-white mb-1 font-geist">
+                      Synapse
+                    </p>
+                    <p class="text-xs font-mono text-[#4DA3FF] font-geist">$480.5 USDC</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="md:col-span-12 lg:col-span-7 p-8 relative overflow-hidden h-[350px] glow-card reveal" style="background: linear-gradient(135deg, rgba(8, 26, 92, 0.42) 0%, rgba(2, 8, 32, 0.88) 100%); box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(77, 163, 255, 0.05); border: 1px solid rgba(96, 170, 255, 0.30);">
+            <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 11px);"></div>
+            <div class="absolute top-1/2 left-1/4 w-32 h-32 bg-[#2563FF]/10 blur-[60px] rounded-full"></div>
+
+            <div class="relative z-10 flex flex-col h-full justify-between">
+              <div class="w-16 h-16 border-2 border-[#4DA3FF] flex items-center justify-center bg-[#01040F] shadow-[0_0_15px_rgba(77, 163, 255,0.2)] mb-8">
+                <iconify-icon icon="solar:global-linear" class="w-8 h-8 text-[#4DA3FF]"></iconify-icon>
+              </div>
+              <div class="">
+                <h3 class="text-xl tracking-widest mb-2 uppercase text-white font-jakarta font-medium">
+                  Cross-Grid Linkage
+                </h3>
+                <p class="text-xs font-mono uppercase text-[#D3E5FF] font-geist">
+                  Sync archives across sector boundaries.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="md:col-span-12 lg:col-span-5 p-8 relative overflow-hidden h-[350px] glow-card reveal" style="background: linear-gradient(135deg, rgba(8, 26, 92, 0.42) 0%, rgba(2, 8, 32, 0.88) 100%); box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(77, 163, 255, 0.05); border: 1px solid rgba(96, 170, 255, 0.30);">
+            <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 11px);"></div>
+            <div class="relative z-10 w-full md:w-2/3">
+              <h3 class="text-xl tracking-widest mb-2 uppercase text-white font-jakarta font-medium">
+                24/7 Command Support
+              </h3>
+              <p class="text-xs font-mono uppercase text-[#D3E5FF] font-geist">
+                Direct channel to central intelligence.
+              </p>
+            </div>
+
+            <div class="absolute -right-10 top-1/2 -translate-y-1/2 w-64 h-64 border border-[#4DA3FF]/20 rounded-full flex items-center justify-center">
+              <div class="w-48 h-48 border border-dashed border-[#4DA3FF]/30 rounded-full flex items-center justify-center rotate-45">
+                <div class="w-32 h-32 border border-[#4DA3FF]/20 rounded-full flex items-center justify-center">
+                  <div class="w-2 h-2 bg-[#3B6BFF] rounded-sm shadow-[0_0_10px_#3B6BFF]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Keycard Section -->
+      <section class="max-w-7xl mx-auto px-6 py-16">
+        <div class="p-8 md:p-16 flex flex-col lg:flex-row items-center gap-16 relative overflow-hidden" style="background: linear-gradient(135deg, rgba(8, 26, 92, 0.42) 0%, rgba(2, 8, 32, 0.88) 100%); box-shadow: inset 0 0 30px rgba(77, 163, 255, 0.05); border: 1px solid rgba(96, 170, 255, 0.30);">
+          <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 11px);"></div>
+
+          <div class="reveal w-full lg:w-1/2 relative z-10 border-l-[6px] border-[#4DA3FF] pl-8">
+            <div class="text-xs font-mono text-[#4DA3FF] uppercase tracking-widest mb-6 font-geist">
+              Clearance_Badge
+            </div>
+
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl uppercase tracking-widest mb-12 max-w-md leading-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] font-jakarta font-medium">
+              Level 5 Identification Badge
+            </h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-12">
+              <div class="">
+                <div class="w-8 h-8 mb-4 border border-[#4DA3FF]/40 flex items-center justify-center text-[#4DA3FF]">
+                  <iconify-icon icon="solar:shield-keyhole-linear" class="w-4 h-4"></iconify-icon>
+                </div>
+                <p class="text-xs font-mono uppercase leading-relaxed text-[#D3E5FF] font-geist">
+                  Keep under strict surveillance until authorized.
+                </p>
+              </div>
+              <div>
+                <div class="w-8 h-8 mb-4 border border-[#4DA3FF]/40 flex items-center justify-center text-[#4DA3FF]">
+                  <iconify-icon icon="solar:bolt-linear" class="w-4 h-4"></iconify-icon>
+                </div>
+                <p class="text-xs font-mono uppercase leading-relaxed text-[#D3E5FF] font-geist">
+                  Quantum-speed tunneling via Mainline networks.
+                </p>
+              </div>
+            </div>
+
+            <a href="#" class="group relative flex items-center justify-center px-8 py-3 w-max cursor-pointer overflow-hidden bg-[#10265E]/40 border border-white/5 backdrop-blur-sm shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+              <div class="absolute left-0 top-0 bottom-0 w-[4px] bg-[#4DA3FF] transition-all group-hover:w-[8px] group-hover:bg-white shadow-[0_0_10px_rgba(77, 163, 255,0.5)]"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-[#4DA3FF]/0 via-[#4DA3FF]/10 to-[#4DA3FF]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <span class="relative z-10 text-white font-mono text-xs tracking-widest uppercase flex items-center gap-2 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] font-geist">
+                Issue Badge
+                <iconify-icon icon="solar:arrow-right-linear" class="w-4 h-4"></iconify-icon>
+              </span>
+            </a>
+          </div>
+
+          <!-- Right Visual (Keycard) -->
+          <div class="reveal w-full lg:w-1/2 flex justify-center lg:justify-end relative z-10">
+            <div class="w-[300px] h-[480px] bg-[#01040F] border-2 border-[#4DA3FF]/50 p-8 relative overflow-hidden shadow-[0_0_30px_rgba(77, 163, 255,0.2)] transform transition-transform hover:scale-105 duration-500">
+              <!-- Top details -->
+              <div class="flex justify-between items-start relative z-10 border-b border-[#4DA3FF]/30 pb-4">
+                <span class="text-[#4DA3FF] text-[10px] font-mono uppercase tracking-widest font-geist">
+                  Auth_ID
+                  <br>
+                  0x774-B
+                </span>
+                <iconify-icon icon="solar:rss-linear" class="w-5 h-5 text-[#4DA3FF] rotate-90"></iconify-icon>
+              </div>
+
+              <!-- Main text -->
+              <div class="mt-12 relative z-10">
+                <h3 class="text-4xl tracking-widest uppercase text-white font-jakarta font-medium">
+                  nexus
+                </h3>
+              </div>
+
+              <div class="mt-8 border-l-[4px] border-[#3B6BFF] pl-4 relative z-10">
+                <p class="text-[10px] font-mono uppercase tracking-widest text-[#D3E5FF] font-geist">
+                  Clearance Level
+                </p>
+                <p class="text-xs font-mono text-[#3B6BFF] uppercase tracking-widest mt-1 font-geist">
+                  Alpha_1
+                </p>
+              </div>
+
+              <!-- Barcode -->
+              <div class="absolute bottom-24 left-8 right-8 flex gap-[2px] h-8 opacity-60">
+                <div class="w-1 bg-[#4DA3FF]"></div>
+                <div class="w-2 bg-[#4DA3FF]"></div>
+                <div class="w-0.5 bg-[#4DA3FF]"></div>
+                <div class="w-3 bg-[#4DA3FF]"></div>
+                <div class="w-1 bg-[#4DA3FF]"></div>
+                <div class="w-2 bg-[#4DA3FF]"></div>
+                <div class="w-0.5 bg-[#4DA3FF]"></div>
+                <div class="w-1 bg-[#4DA3FF]"></div>
+                <div class="w-4 bg-[#4DA3FF]"></div>
+                <div class="w-1 bg-[#4DA3FF]"></div>
+                <div class="w-2 bg-[#4DA3FF]"></div>
+                <div class="w-0.5 bg-[#4DA3FF]"></div>
+              </div>
+
+              <!-- Bottom details -->
+              <div class="absolute bottom-8 left-8 right-8 flex justify-between items-end relative z-10 mt-auto pt-32">
+                <span class="text-[#4DA3FF] font-mono tracking-widest text-[10px] uppercase font-geist">
+                  K. Vance
+                </span>
+                <div class="w-4 h-4 border border-[#4DA3FF] bg-[#0C2C78]/50"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section class="max-w-4xl mx-auto px-6 py-24">
+        <div class="reveal text-center mb-16">
+          <div class="inline-flex px-3 py-1 border border-[#4DA3FF]/20 bg-[#0C2C78]/30 text-xs font-mono text-[#4DA3FF] uppercase tracking-widest mb-6 font-geist">
+            Data_Logs
+          </div>
+          <h2 class="text-2xl sm:text-3xl uppercase tracking-widest text-white font-jakarta font-medium">
+            Network Logs
+          </h2>
+
+          <div class="flex justify-center gap-8 mt-10 border-b border-[#4DA3FF]/10">
+            <button class="pb-4 text-xs font-mono uppercase tracking-widest text-[#4DA3FF] border-b-2 border-[#4DA3FF] font-geist">
+              Core
+            </button>
+            <button class="pb-4 text-xs font-mono uppercase tracking-widest hover:text-[#4DA3FF] text-[#D3E5FF] font-geist">
+              Network
+            </button>
+            <button class="pb-4 text-xs font-mono uppercase tracking-widest hover:text-[#4DA3FF] text-[#D3E5FF] font-geist">
+              Hardware
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <div class="reveal flex flex-col">
+            <button class="flex items-center justify-between py-5 border-b border-[#4DA3FF]/10 text-left text-xs font-mono uppercase tracking-widest hover:text-[#4DA3FF] transition-colors text-[#D3E5FF] font-geist">
+              System Parameters?
+              <iconify-icon icon="solar:alt-arrow-down-linear" class="w-4 h-4"></iconify-icon>
+            </button>
+
+            <!-- Active Item -->
+            <button class="flex items-center justify-between py-5 px-4 my-2 bg-[#040D2A] border border-[#4DA3FF] shadow-[inset_0_0_10px_rgba(77, 163, 255,0.2)] text-left text-xs font-mono uppercase tracking-widest text-[#4DA3FF] font-geist">
+              Firewall Status?
+              <iconify-icon icon="solar:alt-arrow-right-linear" class="w-4 h-4"></iconify-icon>
+            </button>
+
+            <button class="flex items-center justify-between py-5 border-b border-[#4DA3FF]/10 text-left text-xs font-mono uppercase tracking-widest hover:text-[#4DA3FF] transition-colors text-[#D3E5FF] font-geist">
+              Legacy Uplink?
+              <iconify-icon icon="solar:alt-arrow-down-linear" class="w-4 h-4"></iconify-icon>
+            </button>
+            <button class="flex items-center justify-between py-5 border-b border-[#4DA3FF]/10 text-left text-xs font-mono uppercase tracking-widest hover:text-[#4DA3FF] transition-colors text-[#D3E5FF] font-geist">
+              Data Restoration?
+              <iconify-icon icon="solar:alt-arrow-down-linear" class="w-4 h-4"></iconify-icon>
+            </button>
+          </div>
+
+          <div class="glow-card reveal p-8 h-full min-h-[250px]" style="background: linear-gradient(135deg, rgba(8, 26, 92, 0.42) 0%, rgba(2, 8, 32, 0.88) 100%); box-shadow: inset 0 0 20px rgba(77, 163, 255, 0.05); border: 1px solid rgba(96, 170, 255, 0.30);">
+            <div class="relative z-10 h-full">
+              <p class="text-xs font-mono uppercase tracking-wider leading-loose text-[#D3E5FF] font-geist">
+                &gt;&gt; Analyzing security vector...
+                <br>
+                <br>
+                Nexus utilizes quantum-grade shielding to guarantee complete
+                safety of data. Access vectors are masked locally. Compromise
+                probability: 0.0003%.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Section -->
+      <section class="py-32 relative text-center overflow-hidden border-t border-[#4DA3FF]/10">
+        <div class="max-w-3xl mx-auto px-6 relative z-10">
+          <h2 class="reveal text-3xl md:text-5xl uppercase tracking-widest mb-16 text-white font-jakarta font-medium">
+            Access Mainframe
+          </h2>
+
+          <div class="relative w-full h-[200px] mb-12 flex justify-center items-center pointer-events-none">
+            <div class="absolute w-[80%] h-px bg-[#4DA3FF]/20"></div>
+
+            <div class="absolute left-[15%] w-10 h-10 border border-[#4DA3FF]/30 bg-[#040D2A] flex items-center justify-center">
+              <div class="w-3 h-3 bg-[#3B6BFF]/80 rounded-sm"></div>
+            </div>
+
+            <div class="relative w-24 h-24 border-[3px] border-[#4DA3FF] z-10 flex items-center justify-center bg-[#01040F] shadow-[0_0_30px_rgba(77, 163, 255,0.3)]">
+              <div class="w-8 h-8 bg-[#4DA3FF] rounded-sm rotate-45"></div>
+            </div>
+
+            <div class="absolute right-[15%] w-10 h-10 border border-[#4DA3FF]/30 bg-[#040D2A] flex items-center justify-center">
+              <iconify-icon icon="solar:hamburger-menu-linear" class="w-4 h-4 text-[#4DA3FF]"></iconify-icon>
+            </div>
+          </div>
+
+          <!-- Input group -->
+          <div class="reveal w-full max-w-md mx-auto relative mb-6">
+            <div class="flex items-center bg-[#040D2A] border border-[#4DA3FF]/40 p-1 pl-4 focus-within:border-[#4DA3FF] transition-colors shadow-[inset_0_0_10px_rgba(0,0,0,0.8)]">
+              <input type="text" placeholder="ENTER COM_CODE..." class="bg-transparent border-none outline-none flex-1 text-xs font-mono text-[#4DA3FF] placeholder-[#7FA6E6] uppercase tracking-widest">
+              <button class="bg-[#01040F] border border-[#4DA3FF] text-[#4DA3FF] px-6 py-3 text-[10px] font-mono tracking-widest uppercase hover:bg-[#0C2C78]/50 transition-colors font-geist">
+                Execute
+              </button>
+            </div>
+          </div>
+        </div>
+      </section><section class="py-24 relative overflow-hidden border-t border-[#4DA3FF]/10 bg-[#01040F]/55 backdrop-blur-[2px]">
+      <div class="absolute inset-0 pointer-events-none opacity-[0.02]" style="background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 11px);"></div>
+      
+      <div class="max-w-7xl mx-auto px-6 relative z-10">
+        <!-- Header -->
+        <div class="reveal flex flex-col items-center text-center mb-20">
+          <div class="inline-flex px-3 py-1 border border-[#4DA3FF]/20 bg-[#0C2C78]/30 text-xs font-mono text-[#4DA3FF] uppercase tracking-widest mb-6 font-geist shadow-[inset_0_0_8px_rgba(77, 163, 255,0.2)]">
+            Network_Topology
+          </div>
+          <h2 class="text-3xl md:text-5xl uppercase tracking-tight text-white font-jakarta font-medium mb-6">
+            Synchronized Terminals
+          </h2>
+          <p class="text-xs font-mono uppercase tracking-widest text-[#D3E5FF] max-w-2xl font-geist leading-relaxed opacity-80">
+            Global relays maintaining quantum-level encryption and real-time synchronization across the mainframe architecture.
+          </p>
+        </div>
+
+        <!-- Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- Card 1 -->
+          <div class="glow-card reveal p-8 bg-[#040D2A]/90 backdrop-blur-md border border-[#4DA3FF]/20 hover:border-[#4DA3FF]/60 transition-all duration-500 group relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(77, 163, 255,0.05)]">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-[#2563FF]/5 blur-[40px] group-hover:bg-[#2563FF]/20 transition-colors duration-500"></div>
+            
+            <!-- Corner Accents -->
+            <div class="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+            <div class="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+            <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+            <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+
+            <div class="relative z-10 flex flex-col h-full">
+              <div class="flex justify-between items-start mb-16">
+                <div class="w-12 h-12 border border-[#4DA3FF]/30 flex items-center justify-center bg-[#01040F] text-[#4DA3FF] group-hover:scale-110 group-hover:border-[#4DA3FF] transition-all duration-300 shadow-[0_0_10px_rgba(77, 163, 255,0.1)]">
+                  <iconify-icon icon="lucide:server" class="w-6 h-6"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-2 bg-[#01040F] border border-[#4DA3FF]/20 px-2 py-1">
+                  <div class="w-1.5 h-1.5 rounded-full bg-[#4DA3FF] shadow-[0_0_5px_#4DA3FF] animate-[pulse_2s_ease-in-out_infinite]"></div>
+                  <span class="text-[10px] font-mono text-[#4DA3FF] uppercase tracking-widest font-geist">Active</span>
+                </div>
+              </div>
+              
+              <h3 class="text-2xl tracking-tight uppercase text-white font-jakarta font-medium mb-3">
+                Tokyo_Relay
+              </h3>
+              <p class="text-xs font-mono uppercase text-[#D3E5FF] mb-10 font-geist leading-relaxed opacity-80">
+                Primary Asian-Pacific junction. Handling 42% of cross-grid packet routing and intercept distribution.
+              </p>
+              
+              <div class="mt-auto space-y-3 border-t border-[#4DA3FF]/10 pt-6">
+                <div class="flex justify-between items-center text-[10px] font-mono uppercase tracking-widest text-[#D3E5FF] font-geist">
+                  <span>Integrity_Level</span>
+                  <span class="text-[#4DA3FF]">99.9%</span>
+                </div>
+                <div class="w-full h-1 bg-[#01040F] border border-[#4DA3FF]/20 overflow-hidden relative">
+                  <div class="absolute top-0 left-0 h-full w-[99%] bg-[#4DA3FF] shadow-[0_0_8px_#4DA3FF]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="glow-card reveal p-8 bg-[#040D2A]/90 backdrop-blur-md border border-[#4DA3FF]/20 hover:border-[#4DA3FF]/60 transition-all duration-500 group relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(77, 163, 255,0.05)]">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-[#2563FF]/5 blur-[40px] group-hover:bg-[#2563FF]/20 transition-colors duration-500"></div>
+            
+            <div class="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+            <div class="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+            <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+            <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+
+            <div class="relative z-10 flex flex-col h-full">
+              <div class="flex justify-between items-start mb-16">
+                <div class="w-12 h-12 border border-[#4DA3FF]/30 flex items-center justify-center bg-[#01040F] text-[#4DA3FF] group-hover:scale-110 group-hover:border-[#4DA3FF] transition-all duration-300 shadow-[0_0_10px_rgba(77, 163, 255,0.1)]">
+                  <iconify-icon icon="lucide:cpu" class="w-6 h-6"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-2 bg-[#01040F] border border-[#4DA3FF]/20 px-2 py-1">
+                  <div class="w-1.5 h-1.5 rounded-full bg-[#4DA3FF] shadow-[0_0_5px_#4DA3FF] animate-[pulse_2s_ease-in-out_infinite]"></div>
+                  <span class="text-[10px] font-mono text-[#4DA3FF] uppercase tracking-widest font-geist">Active</span>
+                </div>
+              </div>
+              
+              <h3 class="text-2xl tracking-tight uppercase text-white font-jakarta font-medium mb-3">
+                Frankfurt_Node
+              </h3>
+              <p class="text-xs font-mono uppercase text-[#D3E5FF] mb-10 font-geist leading-relaxed opacity-80">
+                Central European logic processor. Executes quantum decryption and continuous cryptographic key rotation.
+              </p>
+              
+              <div class="mt-auto space-y-3 border-t border-[#4DA3FF]/10 pt-6">
+                <div class="flex justify-between items-center text-[10px] font-mono uppercase tracking-widest text-[#D3E5FF] font-geist">
+                  <span>Integrity_Level</span>
+                  <span class="text-[#4DA3FF]">98.4%</span>
+                </div>
+                <div class="w-full h-1 bg-[#01040F] border border-[#4DA3FF]/20 overflow-hidden relative">
+                  <div class="absolute top-0 left-0 h-full w-[98.4%] bg-[#4DA3FF] shadow-[0_0_8px_#4DA3FF]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="glow-card reveal p-8 bg-[#040D2A]/90 backdrop-blur-md border border-[#4DA3FF]/20 hover:border-[#4DA3FF]/60 transition-all duration-500 group relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(77, 163, 255,0.05)]">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-[#2563FF]/5 blur-[40px] group-hover:bg-[#2563FF]/20 transition-colors duration-500"></div>
+            
+            <div class="absolute top-0 left-0 w-4 h-4 border-t border-l border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+            <div class="absolute top-0 right-0 w-4 h-4 border-t border-r border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+            <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+            <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-[#4DA3FF]/50 transition-all duration-300 group-hover:w-6 group-hover:h-6 group-hover:border-[#4DA3FF]"></div>
+
+            <div class="relative z-10 flex flex-col h-full">
+              <div class="flex justify-between items-start mb-16">
+                <div class="w-12 h-12 border border-[#4DA3FF]/30 flex items-center justify-center bg-[#01040F] text-[#4DA3FF] group-hover:scale-110 group-hover:border-[#4DA3FF] transition-all duration-300 shadow-[0_0_10px_rgba(77, 163, 255,0.1)]">
+                  <iconify-icon icon="lucide:network" class="w-6 h-6"></iconify-icon>
+                </div>
+                <div class="flex items-center gap-2 bg-[#01040F] border border-[#4DA3FF]/20 px-2 py-1">
+                  <div class="w-1.5 h-1.5 rounded-full bg-[#4DA3FF] shadow-[0_0_5px_#4DA3FF] animate-[pulse_2s_ease-in-out_infinite]"></div>
+                  <span class="text-[10px] font-mono text-[#4DA3FF] uppercase tracking-widest font-geist">Active</span>
+                </div>
+              </div>
+              
+              <h3 class="text-2xl tracking-tight uppercase text-white font-jakarta font-medium mb-3">
+                NA_East_Cluster
+              </h3>
+              <p class="text-xs font-mono uppercase text-[#D3E5FF] mb-10 font-geist leading-relaxed opacity-80">
+                High-bandwidth data aggregation. Maintains direct multi-channel uplink to orbital defense grid relays.
+              </p>
+              
+              <div class="mt-auto space-y-3 border-t border-[#4DA3FF]/10 pt-6">
+                <div class="flex justify-between items-center text-[10px] font-mono uppercase tracking-widest text-[#D3E5FF] font-geist">
+                  <span>Integrity_Level</span>
+                  <span class="text-[#4DA3FF]">99.1%</span>
+                </div>
+                <div class="w-full h-1 bg-[#01040F] border border-[#4DA3FF]/20 overflow-hidden relative">
+                  <div class="absolute top-0 left-0 h-full w-[99.1%] bg-[#4DA3FF] shadow-[0_0_8px_#4DA3FF]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Bottom Status -->
+        <div class="reveal mt-16 flex justify-center relative z-10">
+          <div class="inline-flex items-center gap-4 border border-[#4DA3FF]/30 bg-[#040D2A]/60 px-6 py-3 backdrop-blur-sm shadow-[inset_0_0_10px_rgba(77, 163, 255,0.1)]">
+            <iconify-icon icon="lucide:shield-check" class="w-5 h-5 text-[#4DA3FF]"></iconify-icon>
+            <span class="text-xs font-mono uppercase tracking-widest text-white font-geist">
+              All sectors reporting nominal status
+            </span>
+            <div class="flex gap-1 ml-4">
+              <div class="w-1 h-3 bg-[#4DA3FF] opacity-100"></div>
+              <div class="w-1 h-3 bg-[#4DA3FF] opacity-80"></div>
+              <div class="w-1 h-3 bg-[#4DA3FF] opacity-60"></div>
+              <div class="w-1 h-3 bg-[#4DA3FF] opacity-40"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+      <!-- Footer -->
+      <footer class="relative border-t border-[#4DA3FF]/10 pt-20 pb-10 overflow-hidden bg-gradient-to-b from-[#01040F]/40 to-[#020618]/90">
+        <div class="absolute bottom-[-5%] left-1/2 -translate-x-1/2 text-[20vw] tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#4DA3FF]/[0.05] to-transparent pointer-events-none select-none leading-none w-full text-center uppercase font-jakarta font-medium">
+          nexus
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
+            <div class="md:col-span-2">
+              <h3 class="text-sm font-mono uppercase font-semibold tracking-widest text-white mb-4 font-geist">
+                Prime Directive Protocol
+              </h3>
+              <p class="text-xs font-mono uppercase tracking-widest max-w-sm mb-8 leading-relaxed text-[#D3E5FF] font-geist">
+                Strategic covert data architecture.
+              </p>
+              <div class="flex gap-4">
+                <a href="#" class="w-10 h-10 border border-[#4DA3FF]/30 bg-[#040D2A] flex items-center justify-center hover:border-[#4DA3FF] transition-colors hover:text-[#4DA3FF] text-[#D3E5FF]">
+                  <iconify-icon icon="solar:hashtag-linear" class="w-4 h-4"></iconify-icon>
+                </a>
+                <a href="#" class="w-10 h-10 border border-[#4DA3FF]/30 bg-[#040D2A] flex items-center justify-center hover:border-[#4DA3FF] transition-colors hover:text-[#4DA3FF] text-[#D3E5FF]">
+                  <iconify-icon icon="solar:camera-linear" class="w-4 h-4"></iconify-icon>
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <ul class="space-y-4 font-mono text-xs uppercase tracking-widest">
+                <li>
+                  <a href="#" class="hover:text-[#4DA3FF] transition-colors text-[#D3E5FF] font-geist">
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="text-[#4DA3FF] font-medium border-l-[3px] border-[#4DA3FF] pl-2 font-geist">
+                    Dev_Core
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="hover:text-[#4DA3FF] transition-colors text-[#D3E5FF] font-geist">
+                    Platform
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <ul class="space-y-4 font-mono text-xs uppercase tracking-widest">
+                <li>
+                  <a href="#" class="text-white font-medium hover:text-[#4DA3FF] font-geist">
+                    Security
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="text-white font-medium hover:text-[#4DA3FF] font-geist">
+                    Support
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="text-white font-medium hover:text-[#4DA3FF] font-geist">
+                    Comms
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-[#4DA3FF]/10 text-[10px] font-mono uppercase tracking-widest text-[#D3E5FF]">
+            <p class="font-geist">SYS.DATE: 2026 // NEUROCORP</p>
+            <div class="flex gap-6 mt-4 md:mt-0">
+              <a href="#" class="hover:text-[#4DA3FF] transition-colors font-geist">
+                Privacy_Log
+              </a>
+              <a href="#" class="hover:text-[#4DA3FF] transition-colors font-geist">
+                Terms_Def
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <script>
+      // --- WebGL Blue Aurora Light-Beam Background ---
+      const canvas = document.getElementById('webgl-canvas');
+      const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
+
+      if (gl) {
+          // Render near native resolution (capped by pixel budget) so the thin beam core stays razor sharp
+          const MAX_PIXELS = 2300000;
+          function resizeCanvas() {
+              const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+              let w = window.innerWidth * dpr, h = window.innerHeight * dpr;
+              const k = Math.min(1, Math.sqrt(MAX_PIXELS / (w * h)));
+              canvas.width = Math.max(2, Math.floor(w * k));
+              canvas.height = Math.max(2, Math.floor(h * k));
+              gl.viewport(0, 0, canvas.width, canvas.height);
+          }
+          window.addEventListener('resize', resizeCanvas);
+          resizeCanvas();
+
+          const vertexShaderSource = `
+              attribute vec2 position;
+              void main() {
+                  gl_Position = vec4(position, 0.0, 1.0);
+              }
+          `;
+
+          const fragmentShaderSource = `
+              precision highp float;
+              uniform vec2 u_resolution;
+              uniform float u_time;
+
+              float hash(vec2 st) {
+                  return fract(sin(dot(st, vec2(12.9898, 78.233))) * 43758.5453123);
+              }
+
+              float noise(vec2 st) {
+                  vec2 i = floor(st);
+                  vec2 f = fract(st);
+                  float a = hash(i);
+                  float b = hash(i + vec2(1.0, 0.0));
+                  float c = hash(i + vec2(0.0, 1.0));
+                  float d = hash(i + vec2(1.0, 1.0));
+                  vec2 u = f * f * (3.0 - 2.0 * f);
+                  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+              }
+
+              float fbm(vec2 st) {
+                  float value = 0.0;
+                  float amplitude = 0.5;
+                  for (int i = 0; i < 4; i++) {
+                      value += amplitude * noise(st);
+                      st = st * 2.02 + vec2(3.1, 1.7);
+                      amplitude *= 0.5;
+                  }
+                  return value;
+              }
+
+              // Smooth gaussian falloff (per channel)
+              vec3 G(vec3 d, float s) { return exp(-(d * d) / (2.0 * s * s)); }
+
+              void main() {
+                  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+                  float aspect = u_resolution.x / u_resolution.y;
+                  vec2 p = uv * 2.0 - 1.0;
+                  p.x *= aspect;
+                  float t = u_time;
+
+                  // ---------- Deep near-black base ----------
+                  vec3 deep = vec3(0.000, 0.002, 0.012);
+                  vec3 rise = vec3(0.001, 0.006, 0.030);
+                  vec3 col = mix(rise, deep, smoothstep(-1.0, 1.0, p.y));
+
+                  // ---------- Beam geometry (gentle sway + heat-shimmer) ----------
+                  float shimmer = 0.0035 * sin(p.y * 5.0 + t * 0.7) + 0.0018 * sin(p.y * 13.0 - t * 1.3);
+                  float bx = -0.1 + 0.03 * sin(t * 0.22) + shimmer;
+                  float dx = p.x - bx;
+                  float d = abs(dx);
+
+                  // Energy packets travelling along the beam
+                  float e1 = pow(0.5 + 0.5 * sin(p.y * 2.4 - t * 0.85), 5.0);
+                  float e2 = pow(0.5 + 0.5 * sin(p.y * 1.3 + t * 0.50 + 1.7), 7.0);
+                  float energy = 0.88 + 0.75 * e1 + 0.45 * e2;
+
+                  // Soft taper at the extremes
+                  float taper = (0.45 + 0.55 * smoothstep(-1.35, -0.35, p.y)) * (1.0 - 0.35 * smoothstep(0.5, 1.4, p.y));
+
+                  // ---------- Chromatic multi-scale bloom ----------
+                  float w = 0.0020 * (1.0 + 0.55 * e1);                    // core half-width
+                  vec3 dd = vec3(abs(dx - 0.0028), d, abs(dx + 0.0028));   // R/G/B sampled at tiny offsets -> prismatic fringe
+
+                  vec3 coreL = (w * w) / (dd * dd + w * w);                // lorentzian = realistic glare tail
+                  vec3 beam = vec3(0.0);
+                  beam += coreL * vec3(0.95, 1.00, 1.15) * 1.15;
+                  beam += G(dd, 0.0060) * vec3(0.55, 0.85, 1.20) * 0.85;
+                  beam += G(dd, 0.0200) * vec3(0.22, 0.55, 1.05) * 0.60;
+                  beam += G(dd, 0.0600) * vec3(0.10, 0.34, 0.98) * 0.38;
+                  beam += G(dd, 0.1600) * vec3(0.05, 0.20, 0.82) * 0.24;
+                  beam += G(dd, 0.4200) * vec3(0.02, 0.10, 0.50) * 0.16;
+
+                  float pulse = 0.94 + 0.06 * sin(t * 0.6);
+                  vec3 add = beam * energy * taper * pulse;
+
+                  // ---------- Volumetric light shafts (fine vertical striations inside the haze) ----------
+                  float sh1 = fbm(vec2(dx * 16.0, p.y * 0.5 - t * 0.10));
+                  float sh2 = noise(vec2(dx * 58.0 + 3.0, p.y * 0.9 - t * 0.22));
+                  float shafts = smoothstep(0.38, 0.88, sh1 * 0.7 + sh2 * 0.3) * exp(-d * 3.0);
+                  add += shafts * vec3(0.10, 0.34, 0.95) * 0.30 * taper;
+
+                  // ---------- Slow domain-warped smoke, kept restrained ----------
+                  vec2 q = vec2(fbm(p * 1.1 + vec2(0.0, t * 0.020)),
+                                fbm(p * 1.1 + vec2(5.2, 1.3) - vec2(0.0, t * 0.016)));
+                  float haze = fbm(p * 1.25 + 1.8 * q + vec2(t * 0.012, -t * 0.030));
+                  float smoke = smoothstep(0.25, 0.95, haze) * exp(-d * 1.8);
+                  add += smoke * mix(vec3(0.07, 0.24, 0.95), vec3(0.16, 0.78, 1.0), smoothstep(0.35, 0.9, haze)) * 0.17;
+
+                  // ---------- Anamorphic lens-flare streak + hotspot ----------
+                  float fy = 0.10 + 0.06 * sin(t * 0.19);
+                  float dy = p.y - fy;
+                  float streak = exp(-abs(dy) * 70.0) * exp(-d * 0.9);
+                  add += streak * vec3(0.10, 0.38, 1.00) * 0.34 * (0.85 + 0.15 * sin(t * 0.9));
+                  add += exp(-(d * d + dy * dy) / (2.0 * 0.022 * 0.022)) * vec3(0.70, 0.92, 1.00) * 0.55;
+                  add += exp(-(d * d + dy * dy) / (2.0 * 0.090 * 0.090)) * vec3(0.12, 0.40, 1.00) * 0.30;
+
+                  // ---------- Dust motes: drift upward, ignite inside the beam ----------
+                  vec2 gp = vec2(p.x * 24.0, p.y * 24.0 - t * 0.35);
+                  vec2 cell = floor(gp);
+                  vec2 f = fract(gp) - 0.5;
+                  float r = hash(cell);
+                  vec2 off = (vec2(hash(cell + 1.7), hash(cell + 4.3)) - 0.5) * 0.6;
+                  float star = step(0.955, r) * smoothstep(0.11, 0.0, length(f - off));
+                  float tw = 0.55 + 0.45 * sin(t * (0.8 + 2.2 * hash(cell + 9.1)) + r * 40.0);
+                  float lit = 1.0 + 7.0 * exp(-d * 7.0);                   // motes brighten in the light shaft
+                  add += star * tw * lit * mix(vec3(0.55, 0.78, 1.0), vec3(1.0), hash(cell + 2.2)) * 0.8;
+
+                  // Extra fine sparks hugging the beam (faster, tighter)
+                  vec2 sp = vec2(dx * 60.0, p.y * 60.0 - t * 1.1);
+                  vec2 sc = floor(sp);
+                  vec2 sf = fract(sp) - 0.5;
+                  float sr = hash(sc + 11.0);
+                  float spark = step(0.93, sr) * smoothstep(0.10, 0.0, length(sf - (vec2(hash(sc + 3.0), hash(sc + 7.0)) - 0.5) * 0.5));
+                  spark *= exp(-d * 9.0) * (0.5 + 0.5 * sin(t * 3.0 + sr * 60.0));
+                  add += spark * vec3(0.75, 0.93, 1.0) * 1.4;
+
+                  // ---------- Filmic shoulder: hot areas bloom toward white, never clip harshly ----------
+                  add = 1.0 - exp(-add * 1.35);
+                  col += add * 0.95;
+
+                  // Vignette + static dither (no banding in the long gradients)
+                  col *= 1.0 - 0.5 * dot(uv - 0.5, uv - 0.5) * 1.6;
+                  col += (hash(gl_FragCoord.xy) - 0.5) / 255.0;
+
+                  gl_FragColor = vec4(col, 1.0);
+              }
+          `;
+
+          function compileShader(gl, source, type) {
+              const shader = gl.createShader(type);
+              gl.shaderSource(shader, source);
+              gl.compileShader(shader);
+              if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                  console.error(gl.getShaderInfoLog(shader));
+              }
+              return shader;
+          }
+
+          const vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
+          const fragmentShader = compileShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
+
+          const program = gl.createProgram();
+          gl.attachShader(program, vertexShader);
+          gl.attachShader(program, fragmentShader);
+          gl.linkProgram(program);
+
+          const positionBuffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+              -1.0, -1.0,  1.0, -1.0, -1.0,  1.0,
+              -1.0,  1.0,  1.0, -1.0,  1.0,  1.0
+          ]), gl.STATIC_DRAW);
+
+          const positionLocation = gl.getAttribLocation(program, 'position');
+          gl.enableVertexAttribArray(positionLocation);
+          gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+          gl.useProgram(program);
+
+          const timeLocation = gl.getUniformLocation(program, 'u_time');
+          const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const startTime = performance.now();
+          function render() {
+              const elapsed = (performance.now() - startTime) / 1000;
+              gl.uniform1f(timeLocation, reduceMotion ? 12.0 : elapsed);
+              gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+              gl.drawArrays(gl.TRIANGLES, 0, 6);
+              if (!reduceMotion) requestAnimationFrame(render);
+          }
+          render();
+      }
+
+      // --- GSAP Animations Boot Sequence ---
+      document.addEventListener("DOMContentLoaded", () => {
+          gsap.set("#bg-orange-bottom", { xPercent: -100, yPercent: 100 });
+          gsap.set("#bg-darkorange-bottom", { xPercent: -100, yPercent: 100 });
+          gsap.set("#bg-orange-topleft", { xPercent: -100 });
+
+          gsap.set("#hud-elements > div, #frame-container > div", { opacity: 0 });
+          gsap.set("#top-accent", { opacity: 0, y: -20 });
+          gsap.set("#pre-title", { opacity: 0, letterSpacing: "0.5em" });
+          gsap.set("#title-text", { opacity: 0, scale: 1.1, filter: "blur(10px)" });
+
+          const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+          tl.to("#bg-orange-topleft", { xPercent: 0, duration: 1.2 })
+            .to("#bg-orange-bottom", { xPercent: 0, yPercent: 0, duration: 1.5 }, "-=1.0")
+            .to("#bg-darkorange-bottom", { xPercent: 0, yPercent: 0, duration: 1.5 }, "-=1.2")
+            .to("#frame-container > div", {
+              opacity: 1,
+              duration: 1,
+              stagger: 0.1,
+              ease: "power2.inOut"
+            }, "-=1.0")
+            .to("#hud-elements > div", {
+              opacity: 1,
+              duration: 0.1,
+              stagger: { each: 0.05, from: "random" }
+            }, "-=0.5")
+            .to("#hud-elements > div", {
+              opacity: 0.5,
+              duration: 0.05,
+              yoyo: true,
+              repeat: 3,
+              stagger: { each: 0.02, from: "random" }
+            }, "-=0.2")
+            .to("#top-accent", {
+              opacity: 1,
+              y: 0,
+              duration: 0.8
+            }, "-=0.2")
+            .to("#pre-title", {
+              opacity: 1,
+              letterSpacing: "0.1em",
+              duration: 1
+            }, "-=0.4")
+            .to("#title-text", {
+              opacity: 1,
+              scale: 1,
+              filter: "blur(0px)",
+              duration: 1.5,
+              ease: "expo.out"
+            }, "-=0.2");
+            
+            // --- Interactive Flashlight Cards ---
+            const glowCards = document.querySelectorAll('.glow-card');
+            glowCards.forEach(card => {
+                card.addEventListener('mousemove', e => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
+
+            // --- Scroll Reveal Animations ---
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: "0px 0px -50px 0px"
+            };
+            
+            const revealObserver = new IntersectionObserver((entries) => {
+                let delay = 0;
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add('active');
+                        }, delay);
+                        delay += 100; // Stagger effect
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.reveal').forEach((el) => {
+                revealObserver.observe(el);
+            });
+      });
+    </script>
+
+    <!-- file:// fallback: browsers block fetching local .glb files, so use the embedded copy -->
+    <script>
+      if (location.protocol === 'file:') {
+        const s = document.createElement('script');
+        s.src = 'upay_pod.js';
+        s.onload = () => { document.getElementById('upay-pod').src = window.UPAY_POD_GLB; };
+        document.body.appendChild(s);
+      }
+    </script>
+  
+</body></html>
