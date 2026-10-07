@@ -2,8 +2,13 @@
 
 ## Start the existing workspace
 
+**Easiest on Windows:** double-click `run.bat` in `D:\dataukil`.
+Do **not** double-click `run.ps1` — Windows often opens `.ps1` files in Notepad.
+
 ```powershell
 cd D:\dataukil
+.\run.bat
+# or:
 .\run.ps1 -Restart
 ```
 

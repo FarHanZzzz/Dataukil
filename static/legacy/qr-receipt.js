@@ -30,11 +30,40 @@ window.QRReceipt=(()=>{
     return {src:processed?`data:image/png;base64,${scan.clean_preview_base64}`:state.view==='annotated'&&scan?`data:image/png;base64,${scan.preview_base64}`:record.src,
       overlay:processed&&state.view==='annotated',width:scan?.image_width||900,height:scan?.image_height||1500};
   }
+  function integrityPanel(record){
+    if(!record.receipt?.blob)return '';
+    return `<aside class="qr-integrity" aria-label="Receipt file integrity"><div class="qr-integrity-heading"><strong>Receipt integrity check</strong><span>SHA-256</span></div><p data-integrity-result role="status" aria-live="polite">Checking the uploaded file…</p><dl><dt>Scan source</dt><dd data-integrity-scan>Checking the scan fingerprint…</dd><dt>Image authenticity</dt><dd>Unverified · issuer confirmation required</dd></dl><p class="qr-integrity-scope">This checks whether the file matches the saved upload. It does not detect forgery or prove a payment.</p><details><summary>View file fingerprints</summary><dl><dt>Saved upload</dt><dd><code>${esc(record.receipt.original_hash||'Not recorded')}</code></dd><dt>Computed in this browser</dt><dd><code data-integrity-hash>Checking…</code></dd><dt>OpenCV input</dt><dd><code>${esc(record.scan?.input_sha256||'No scan recorded')}</code></dd></dl></details></aside>`;
+  }
+  async function checkIntegrity(el){
+    const record=records.get(el.dataset.readerKey),state=states.get(el.dataset.readerKey);
+    if(!record?.receipt?.blob || !state || !el.querySelector('[data-integrity-result]'))return;
+    if(!state.integrity || state.integrity.source!==record.src){
+      const source=record.src;
+      state.integrity={source,promise:(async()=>{
+        try{
+          const bytes=Uint8Array.from(atob(record.receipt.blob.base64),c=>c.charCodeAt(0));
+          const digest=await crypto.subtle.digest('SHA-256',bytes);
+          return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+        }catch{return null;}
+      })()};
+    }
+    const digest=await state.integrity.promise;
+    if(!el.isConnected || records.get(el.dataset.readerKey)!==record)return;
+    const expected=record.receipt.original_hash,match=digest && expected && digest===expected;
+    const result=el.querySelector('[data-integrity-result]'),stamp=el.querySelector('[data-integrity-stamp]');
+    const status=!digest?'Browser check unavailable':!expected?'Saved fingerprint unavailable':match?'Matches saved upload':'File fingerprint mismatch';
+    el.querySelector('.qr-integrity').dataset.integrity=match?'match':digest&&expected?'mismatch':'unknown';
+    result.textContent=status;
+    if(stamp){stamp.textContent=status+' · authenticity unverified';stamp.dataset.integrity=match?'match':digest&&expected?'mismatch':'unknown';}
+    el.querySelector('[data-integrity-hash]').textContent=digest||'Unavailable';
+    const scan=record.scan;
+    el.querySelector('[data-integrity-scan]').textContent=!scan?'Run the receipt scan to compare':!scan.input_sha256?'Scan fingerprint unavailable':!digest?'Cannot compare scan fingerprint':scan.input_sha256!==digest?'Scan fingerprint mismatch':scan.evidence_version!==record.c?.evidence_version?'File matches · scan needs an updated review':'OpenCV scanned this same file';
+  }
   function reader(record){
     records.set(record.key,record);
     const state=states.get(record.key)||{view:record.scan?'annotated':'original',zoom:1,selected:[]};states.set(record.key,state);
     const data=viewData(record,state),scan=record.scan;
-    return `<div class="qr-reader" data-reader-key="${esc(record.key)}"><div class="qr-reader-toolbar"><div class="qr-reader-tabs" role="group" aria-label="Receipt view">${['original','processed','annotated'].map(view=>`<button type="button" class="button quiet small" data-receipt-view="${view}" aria-pressed="${state.view===view}" ${view!=='original'&&!scan||view==='processed'&&scan?.manifest_version!==2?'disabled':''}>${view[0].toUpperCase()+view.slice(1)}</button>`).join('')}</div><div class="qr-reader-tools" role="group" aria-label="Receipt zoom"><button type="button" class="button quiet small" data-receipt-zoom="out" aria-label="Zoom receipt out">−</button><button type="button" class="button quiet small" data-receipt-zoom="in" aria-label="Zoom receipt in">+</button><button type="button" class="button quiet small" data-receipt-zoom="fit">Fit</button><button type="button" class="button secondary small" data-receipt-enlarge>View larger</button></div></div><div class="qr-reader-scroll" tabindex="0" aria-label="Receipt image; use zoom controls to read details" data-scroll="receipt"><div class="qr-paper-canvas" style="width:${state.zoom*100}%"><img src="${data.src}" alt="${state.view==='original'?'Immutable original receipt':'Processed receipt; visual regions are advisory'}">${scan?.manifest_version===2?`<svg class="qr-region-overlay" viewBox="0 0 ${data.width} ${data.height}" aria-hidden="true" ${data.overlay?'':'hidden'}>${scan.regions.map((region,i)=>`<g data-region="${esc(region.id)}"><rect x="${region.bbox[0]}" y="${region.bbox[1]}" width="${region.bbox[2]}" height="${region.bbox[3]}"/><text x="${region.bbox[0]}" y="${Math.max(14,region.bbox[1]-3)}">${i+1}</text></g>`).join('')}</svg>`:''}<span class="qr-scan-beam" hidden aria-hidden="true"></span></div></div><div class="qr-reader-downloads"><button type="button" class="button quiet small" data-receipt-download="original">Download original</button>${scan?'<button type="button" class="button quiet small" data-receipt-download="annotated">Download annotated preview</button>':''}</div></div>`;
+    return `<div class="qr-reader" data-reader-key="${esc(record.key)}"><div class="qr-reader-toolbar"><div class="qr-reader-tabs" role="group" aria-label="Receipt view">${['original','processed','annotated'].map(view=>`<button type="button" class="button quiet small" data-receipt-view="${view}" aria-pressed="${state.view===view}" ${view!=='original'&&!scan||view==='processed'&&scan?.manifest_version!==2?'disabled':''}>${view[0].toUpperCase()+view.slice(1)}</button>`).join('')}</div><div class="qr-reader-tools" role="group" aria-label="Receipt zoom"><button type="button" class="button quiet small" data-receipt-zoom="out" aria-label="Zoom receipt out">−</button><button type="button" class="button quiet small" data-receipt-zoom="in" aria-label="Zoom receipt in">+</button><button type="button" class="button quiet small" data-receipt-zoom="fit">Fit</button><button type="button" class="button secondary small" data-receipt-enlarge>View larger</button></div></div><div class="qr-reader-scroll" tabindex="0" aria-label="Receipt image; use zoom controls to read details" data-scroll="receipt"><div class="qr-paper-canvas" style="width:${state.zoom*100}%"><img src="${data.src}" alt="${state.view==='original'?'Immutable original receipt':'Processed receipt; visual regions are advisory'}">${scan?.manifest_version===2?`<svg class="qr-region-overlay" viewBox="0 0 ${data.width} ${data.height}" aria-hidden="true" ${data.overlay?'':'hidden'}>${scan.regions.map((region,i)=>`<g data-region="${esc(region.id)}"><rect x="${region.bbox[0]}" y="${region.bbox[1]}" width="${region.bbox[2]}" height="${region.bbox[3]}"/><text x="${region.bbox[0]}" y="${Math.max(14,region.bbox[1]-3)}">${i+1}</text></g>`).join('')}</svg>`:''}<span class="qr-scan-beam" hidden aria-hidden="true"></span>${record.receipt?.blob?'<span class="qr-integrity-stamp" data-integrity-stamp>Checking file integrity · authenticity unverified</span>':''}</div></div><div class="qr-reader-downloads"><button type="button" class="button quiet small" data-receipt-download="original">Download original</button>${scan?'<button type="button" class="button quiet small" data-receipt-download="annotated">Download annotated preview</button>':''}</div>${integrityPanel(record)}</div>`;
   }
   function render(c,receipt,readOnly=false){
     const scan=c.qr_pipeline?.receipt_scan;
@@ -55,7 +84,7 @@ window.QRReceipt=(()=>{
     el.querySelectorAll('[data-receipt-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.receiptView===state.view));
     el.querySelectorAll('[data-region]').forEach(g=>g.classList.toggle('selected',state.selected.includes(g.dataset.region)));
   }
-  function mount(root){root.querySelectorAll('.qr-reader').forEach(refreshReader);}
+  function mount(root){root.querySelectorAll('.qr-reader').forEach(el=>{refreshReader(el);checkIntegrity(el);});}
   function reviewPayload(c){
     const d=draft(c),scan=c.qr_pipeline.receipt_scan;
     if(!d.ack)throw Error('Review the highlighted receipt fields and acknowledge missing information first.');

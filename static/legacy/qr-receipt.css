@@ -15,6 +15,19 @@
 .qr-workspace .qr-reader .qr-scan-beam{height:3px;left:0;right:0;animation:none;top:0;background:#245bdb;box-shadow:0 0 14px 3px #245bdb70;z-index:2}
 .qr-workspace .qr-reader [hidden],.qr-workspace .qr-scan-controls [hidden]{display:none!important}
 .qr-workspace .qr-reader-downloads{display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;border-top:1px solid var(--day-line,#d5dfee)}
+.qr-workspace .qr-integrity-stamp{position:absolute;bottom:12px;left:12px;right:12px;padding:10px 12px;border:1px solid #d5dfee;border-radius:8px;background:#fffffff2;color:#52647f;font-size:12px;font-weight:600;line-height:1.5;pointer-events:none}
+.qr-workspace .qr-integrity{padding:16px;border-top:1px solid var(--day-line,#d5dfee);background:#f7faff;font-size:13px;line-height:1.6}
+.qr-workspace .qr-integrity-heading{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+.qr-workspace .qr-integrity-heading span{font-size:11px;color:#52647f}
+.qr-workspace .qr-integrity [data-integrity-result]{font-weight:700;margin:8px 0;color:#52647f}
+.qr-workspace .qr-integrity[data-integrity=match] [data-integrity-result],.qr-workspace .qr-integrity-stamp[data-integrity=match]{color:#08715a}
+.qr-workspace .qr-integrity[data-integrity=mismatch] [data-integrity-result],.qr-workspace .qr-integrity-stamp[data-integrity=mismatch]{color:#a92e38}
+.qr-workspace .qr-integrity dl{margin:10px 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:8px 12px}
+.qr-workspace .qr-integrity dt{color:#52647f}
+.qr-workspace .qr-integrity dd{margin:0;overflow-wrap:anywhere}
+.qr-workspace .qr-integrity code{font-size:11px;overflow-wrap:anywhere}
+.qr-workspace .qr-integrity-scope{color:#52647f;margin:12px 0}
+.qr-workspace .qr-integrity summary{cursor:pointer;color:#245bdb}
 .qr-workspace .qr-field-review{display:block;max-height:770px;overflow:auto;overscroll-behavior:contain;padding-right:4px;min-width:0}
 .qr-workspace .qr-review-heading{padding:0 0 16px}
 .qr-workspace .qr-review-heading h4{font-size:20px;margin:8px 0}

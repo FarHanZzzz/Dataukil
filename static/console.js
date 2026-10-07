@@ -17,10 +17,11 @@ const S = {
   caseId:caseMatch?.[1], tokens:JSON.parse(sessionStorage.getItem('tf.consoleTokens') || '{}'),
   lang:localStorage.getItem('tf.language') || 'en', txId:params.get('transaction') || localStorage.getItem('tf.currentTransfer'),
   case:null, tx:null, run:null, runs:[], transactions:[], cases:[], scenarios:[], overview:null,
-  tab:'overview', drafts:{}, busy:false, auto:false, selectedPhase:null, selectedEvent:null,
+  tab:'overview', drafts:{}, busy:false, auto:false, paymentAdvancing:false, selectedPhase:null, selectedEvent:null,
   zoom:1, panX:0, panY:0, follow:true, expanded:true, replay:false, replayCursor:0, replayPaused:true,
   speed:1, replayTimer:null, abort:null, streamId:null, pollTimer:null, modal:null, filter:'unresolved', search:'', dialogSubmit:null,
-  analysisMode:params.get('mode') || 'live', presentationPaused:false, presentationCursor:0
+  analysisMode:params.get('mode') || 'live', presentationPaused:false, presentationCursor:0,
+  ready:false, liveRefreshing:false
 };
 const BN = {
  'Customer dashboard':'গ্রাহক ড্যাশবোর্ড','Operations center':'অপারেশনস কেন্দ্র','QR + cash demo lab':'QR + নগদ ডেমো','Add-money walkthrough':'টাকা যোগ করার ডেমো',
@@ -132,7 +133,12 @@ async function api(path,options={},again=false) {
   const r=await fetch(path,{...options,headers:{'X-TraceFix-Session':token,...options.headers}});
   if(r.status===401 && !again){await session(S.role,true);return api(path,options,true);}
   if(!r.ok){const p=await r.json().catch(()=>({detail:r.statusText}));const e=Error(typeof p.detail==='string'?p.detail:JSON.stringify(p.detail));e.status=r.status;throw e;}
-  return r.status===204?null:r.json();
+  const data=r.status===204?null:await r.json();
+  if(options.method && !['GET','HEAD','OPTIONS'].includes(options.method.toUpperCase())) {
+    // Tell other dashboard tabs to fetch their own authorized, saved records.
+    try{localStorage.setItem('tf.workspaceUpdate',newKey());}catch{ /* polling also works without storage */ }
+  }
+  return data;
 }
 async function write(path,payload) {
   // A lost response can be retried with the identical key and payload.
@@ -184,6 +190,29 @@ function renderPage() {
   if(conversationScroll!==undefined && $('.conversation'))$('.conversation').scrollTop=conversationScroll;
   wireGraph();applyGraphTransform();
 }
+function renderLivePage() {
+  if(S.page!=='operations' || !$('#queue-rows')){renderPage();return;}
+  // Keep the search field, open filter and table scroll positions intact.
+  const next=document.createElement('template');next.innerHTML=overviewPage();
+  for(const selector of ['.metric-grid','#queue-rows','#recent-transfer-rows']) {
+    const current=$(selector),updated=$(selector,next.content);
+    if(current && updated)current.innerHTML=updated.innerHTML;
+  }
+}
+async function syncWorkspace() {
+  if(!S.ready || S.liveRefreshing || S.busy || S.auto || S.paymentAdvancing || $('#dialog').open || S.replay || document.hidden)return;
+  S.liveRefreshing=true;
+  try {
+    await refresh(false);
+    if(!S.busy && !S.auto && !S.paymentAdvancing && !$('#dialog').open && !S.replay)renderLivePage();
+    if(S.run?.status==='RUNNING' && S.streamId!==S.run.id)connectStream(S.run.id);
+  }catch(e){$('#sync-status').textContent='Connection interrupted · Retrying automatically';}
+  finally{S.liveRefreshing=false;}
+}
+function startLiveSync() {
+  clearInterval(S.pollTimer);
+  S.pollTimer=setInterval(syncWorkspace,S.page==='studio'?3000:2000);
+}
 function evidenceCategory(e,index=1) {
   if(e.kind==='customer_supplied'&&index===0)return 'Customer Statement';
   return e.category || (e.kind?.startsWith('mock_')?'Confirmed System Record':e.kind==='customer_supplied'?'Customer Evidence':'External Record');
@@ -227,20 +256,24 @@ function customerPayment() {
     '<div class="info-grid"><div><small>FROM</small><strong>'+esc(t.source_account)+'</strong></div><div><small>TO UPAY</small><strong>'+esc(t.destination_wallet)+'</strong></div><div><small>STARTED</small><strong>'+date(t.initiated_at)+'</strong></div></div>'+
     pipeline(t)+
     paymentStage(t,current,last,next)+
-    '<div class="heading-actions">'+(t.can_advance?(S.auto?button('pause-auto','Pause simulation'):button('auto-payment',t.step===6?'Check late confirmation':'Run payment stages','primary'))+button('advance','Advance one stage','secondary','',S.auto):'')+
+    '<div class="heading-actions">'+(t.can_advance?(S.auto?button('pause-auto','Pause simulation'):button('auto-payment',t.step===6?'Check late confirmation':'Run payment stages','primary','',S.paymentAdvancing))+button('advance','Advance one stage','secondary','',S.auto||S.paymentAdvancing):'')+
     (t.step>=2?button('complaint',t.case_id?'Track your case':'Report an issue','secondary'):'')+'</div>'+
     '<div class="info-grid"><div><small>'+esc(tr('Bank balance'))+'</small><strong>'+money(t.balances.BANK)+'</strong></div><div><small>'+esc(tr('Wallet balance'))+'</small><strong>'+money(t.balances.WALLET)+'</strong></div><div><small>'+esc(tr('Synthetic balances'))+'</small><strong>BDT · Sandbox</strong></div></div>'+
     '<details class="record-details"><summary>'+esc(tr('Saved payment timeline'))+' ('+t.timeline.length+')</summary><ul class="timeline">'+t.timeline.map(e=>'<li><time>'+date(e.timestamp)+'</time><p>'+esc(customerText(e.text))+'</p></li>').join('')+'</ul></details>';
 }
 function paymentStage(t,current,last,next) {
-  const running=S.auto && t.can_advance;
+  const running=S.paymentAdvancing || S.auto && t.can_advance;
   const finished=['SUCCEEDED','CORRECTED'].includes(t.state);
   const mode=running?'running':finished?'complete':t.can_advance?'paused':'attention';
   const stateText=running?'Simulation running':finished?'Confirmed outcome':t.can_advance?'Simulation paused':'Awaiting verification';
+  const stageIndex=Math.max(0,t.pipeline.findIndex(n=>n.id===t.current_stage));
   const stages=t.pipeline.map((n,i)=>'<span class="stage-tick '+esc(n.status)+(n.id===t.current_stage?' current':'')+'" title="'+esc(tr(n.title)+': '+tr(label(n.status)))+'"><span>'+(n.status==='completed'?'✓':i+1)+'</span></span>').join('');
-  return '<section class="stage-callout stage-'+mode+'" aria-label="'+esc(tr('Payment stage activity'))+'">'+
-    '<div class="stage-head"><span class="stage-live"><i></i>'+esc(tr(stateText))+'</span><span>'+esc(tr('Stage'))+' '+(t.step+1)+' / '+t.pipeline.length+'</span></div>'+
-    '<div class="stage-motion" aria-hidden="true"><span class="stage-endpoint">▤</span><span class="stage-wire"><i></i></span><span class="stage-core">'+(finished?'✓':running?'↗':'◈')+'</span><span class="stage-wire"><i></i></span><span class="stage-endpoint">▣</span></div>'+
+  const bankIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 8 9-5 9 5M3 9h18M5 10v8m7-8v8m7-8v8M3 21h18M3 18h18"/></svg>';
+  const walletIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 8V5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h15V8H5a1.5 1.5 0 0 1 0-3"/><path d="M20 12h-6v5h6"/><circle cx="16" cy="14.5" r=".7" fill="currentColor"/></svg>';
+  const mark=finished&&!running?'<path d="m5 12 4 4 10-10"/>':'<path d="M5 12h14m-6-6 6 6-6 6"/>';
+  return '<section class="stage-callout stage-'+mode+'" aria-label="'+esc(tr('Payment stage activity'))+'" aria-busy="'+running+'">'+
+    '<div class="stage-head"><span class="stage-live" role="status"><i aria-hidden="true"></i>'+esc(tr(stateText))+'</span><span class="stage-count">'+esc(tr('Stage'))+' '+(stageIndex+1)+' / '+t.pipeline.length+'</span></div>'+
+    '<div class="stage-motion" aria-hidden="true"><span class="stage-endpoint">'+bankIcon+'</span><span class="stage-wire"><i></i></span><span class="stage-core"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+mark+'</svg></span><span class="stage-wire"><i></i></span><span class="stage-endpoint">'+walletIcon+'</span></div>'+
     '<h3>'+esc(tr(current?.title || 'Customer'))+'</h3><div class="stage-track" aria-label="'+esc(tr('Saved stage progress'))+'">'+stages+'</div>'+
     '<div class="stage-explanation"><div><small>'+esc(tr('Why this stage?'))+'</small><p>'+esc(customerText(current?.purpose))+'</p></div><div><small>'+esc(tr('What was found'))+'</small><p>'+esc(customerText(last?.text))+'</p></div><div><small>'+esc(tr('What happens next'))+'</small><p>'+esc(tr(next))+'</p></div></div>'+
     '<div class="stage-receipt"><span>↳ '+t.timeline.length+' '+esc(tr('Saved events'))+'</span><time>'+date(last?.timestamp)+'</time></div></section>';
@@ -282,9 +315,9 @@ function overviewPage() {
   const o=S.overview;
   return heading('OPERATIONS / OVERVIEW','Every incident. A clear next action.','Live counts from persistent cases, investigations and eligibility checks.', '<a class="button primary" href="/customer">↗ Start a transfer</a>')+
     '<div class="metric-grid">'+[['open','Open cases',''],['investigating','Investigating',''],['awaiting_evidence','Awaiting evidence','amber'],['repair_eligible','Repair eligible','green'],['handoff','Handoff','amber'],['resolved','Resolved','green']].map(([k,t,color])=>'<div class="metric '+color+'"><small>'+t+'</small><strong>'+o.counts[k]+'</strong><div class="metric-line"><i></i></div></div>').join('')+'</div>'+
-    card('Case inbox','<div class="table-tools"><input type="search" name="search" placeholder="Search case, transaction or customer" value="'+esc(S.search)+'" aria-label="Search cases"><select name="filter" aria-label="Case filter">'+[['unresolved','Unresolved cases'],['all','All cases'],['INVESTIGATING','Investigating'],['WAITING_EVIDENCE','Awaiting evidence'],['REPAIR_ELIGIBLE','Repair eligible'],['ESCALATED','Handoff'],['RESOLVED','Resolved']].map(([v,t])=>'<option value="'+v+'" '+(S.filter===v?'selected':'')+'>'+t+'</option>').join('')+'</select></div><div class="table-wrap"><table><thead><tr><th>CASE / TRANSACTION</th><th>ISSUE / CUSTOMER</th><th>AMOUNT</th><th>STATE</th><th>AGE</th><th>PRIORITY</th><th>OWNER</th><th>LAST EVENT</th></tr></thead><tbody id="queue-rows">'+queueRows()+'</tbody></table></div>',badge('CURRENT','Persistent · server-derived'))+
+    card('Case inbox','<div class="table-tools"><input type="search" name="search" placeholder="Search case, transaction or customer" value="'+esc(S.search)+'" aria-label="Search cases"><select name="filter" aria-label="Case filter">'+[['unresolved','Unresolved cases'],['all','All cases'],['INVESTIGATING','Investigating'],['WAITING_EVIDENCE','Awaiting evidence'],['REPAIR_ELIGIBLE','Repair eligible'],['ESCALATED','Handoff'],['RESOLVED','Resolved']].map(([v,t])=>'<option value="'+v+'" '+(S.filter===v?'selected':'')+'>'+t+'</option>').join('')+'</select></div><div class="table-wrap"><table><thead><tr><th>CASE / TRANSACTION</th><th>ISSUE / CUSTOMER</th><th>AMOUNT</th><th>STATE</th><th>AGE</th><th>PRIORITY</th><th>OWNER</th><th>LAST EVENT</th></tr></thead><tbody id="queue-rows">'+queueRows()+'</tbody></table></div>',badge('CURRENT','Live · server-derived'))+
     '<div class="spotlight-grid"><section class="spotlight"><p class="eyebrow">FEATURED PATH 01 / ৳1,000</p><h3>A verified duplicate, safely corrected.</h3><p>Two confirmed bank debits, one intended wallet credit. Review the cited recommendation, approve it, then execute one balanced sandbox reversal.</p><a class="button primary small" href="/customer?scenario=duplicate_payment">Start supported repair ↗</a></section><section class="spotlight"><p class="eyebrow">FEATURED PATH 02 / ৳1,000</p><h3>Uncertain evidence, accountable handoff.</h3><p>A timeout and a retry with one known debit. Missing settlement confirmation blocks repair and leads to an owned follow-up.</p><a class="button secondary small" href="/customer?scenario=missing_partner_response">Start uncertain handoff ↗</a></section></div>'+
-    card('Recent synthetic transfers','<div class="table-wrap"><table><thead><tr><th>TRANSACTION</th><th>CUSTOMER</th><th>AMOUNT</th><th>PAYMENT STATE</th><th>CASE</th></tr></thead><tbody>'+S.transactions.slice(0,6).map(t=>'<tr><td class="mono">'+esc(short(t.id))+'</td><td>'+esc(t.customer_name)+'</td><td>'+money(t.amount_minor)+'</td><td>'+badge(t.state)+'</td><td>'+(t.case_id?'<a href="/operations/cases/'+t.case_id+'">Open workspace ↗</a>':'Not reported')+'</td></tr>').join('')+'</tbody></table></div>');
+    card('Recent synthetic transfers','<div class="table-wrap"><table><thead><tr><th>TRANSACTION</th><th>CUSTOMER</th><th>AMOUNT</th><th>PAYMENT STATE</th><th>CASE</th></tr></thead><tbody id="recent-transfer-rows">'+S.transactions.slice(0,6).map(t=>'<tr><td class="mono">'+esc(short(t.id))+'</td><td>'+esc(t.customer_name)+'</td><td>'+money(t.amount_minor)+'</td><td>'+badge(t.state)+'</td><td>'+(t.case_id?'<a href="/operations/cases/'+t.case_id+'">Open workspace ↗</a>':'Not reported')+'</td></tr>').join('')+'</tbody></table></div>');
 }
 function caseHeader() {
   const c=S.case, isStudio=S.page==='studio';
@@ -610,7 +643,12 @@ function tickReplay() {
   },1000/S.speed);
 }
 async function advancePayment() {
-  S.tx=await write('/api/transactions/'+S.tx.id+'/advance',{version:S.tx.version});await refresh();return S.tx;
+  if(S.paymentAdvancing)return S.tx;
+  S.paymentAdvancing=true;renderPage();
+  try {
+    S.tx=await write('/api/transactions/'+S.tx.id+'/advance',{version:S.tx.version});
+    await refresh(false);return S.tx;
+  } finally {S.paymentAdvancing=false;renderPage();}
 }
 async function autoPayment() {
   if(S.auto)return;S.auto=true;renderPage();
@@ -742,7 +780,11 @@ document.addEventListener('submit',async ev=>{
   }finally{S.busy=false;renderPage();if(submit?.isConnected)submit.disabled=false;}
 });
 $('#refresh-page').addEventListener('click',async()=>{try{await refresh();toast('Saved records refreshed.');}catch(e){toast(e.message,true);}});
+window.addEventListener('storage',ev=>{if(ev.key==='tf.workspaceUpdate')syncWorkspace();});
+window.addEventListener('focus',syncWorkspace);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncWorkspace();});
 window.addEventListener('pagehide',()=>{S.abort?.abort();clearInterval(S.pollTimer);stopReplay();S.auto=false;});
+window.addEventListener('pageshow',ev=>{if(ev.persisted && S.ready){startLiveSync();syncWorkspace();}});
 async function init() {
   updateShell();await session();await refresh();
   if(S.page==='studio'){
@@ -753,9 +795,6 @@ async function init() {
       if(id)await openRun(id);
     }
   }
-  S.pollTimer=setInterval(async()=>{
-    if(S.busy||S.auto||$('#dialog').open||S.replay||document.hidden)return;
-    try{await refresh();if(S.run?.status==='RUNNING'&&S.streamId!==S.run.id)connectStream(S.run.id);}catch(e){$('#sync-status').textContent='Connection interrupted · Refresh to retry';}
-  },S.page==='studio'?3000:10000);
+  S.ready=true;startLiveSync();
 }
 init().catch(error=>{toast(error.message,true);$('#content').innerHTML=empty('Workspace unavailable',error.message)+button('retry-init','Reload workspace','primary');$('[data-action="retry-init"]')?.addEventListener('click',()=>location.reload());});

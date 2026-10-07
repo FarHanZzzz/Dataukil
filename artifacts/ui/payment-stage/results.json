@@ -1,0 +1,25 @@
+{
+  "checks": [
+    "Initial stage is 1 / 7",
+    "Header has a separated flex layout",
+    "Manual advance shows an animated loading ring",
+    "Repeated manual advance is disabled while pending",
+    "Automatic advance cannot overlap a pending manual request",
+    "Automatic progression animates the transfer path",
+    "Pending late confirmation remains stage 7 / 7",
+    "Completed delayed transfer stays stage 7 / 7 instead of 8 / 7",
+    "Loading stops after the confirmed outcome",
+    "No page overflow at 320px",
+    "Status and stage counter do not overlap at 320px",
+    "No page overflow at 390px",
+    "Status and stage counter do not overlap at 390px",
+    "No page overflow at 768px",
+    "Status and stage counter do not overlap at 768px",
+    "No page overflow at 1440px",
+    "Status and stage counter do not overlap at 1440px",
+    "A failed request clears loading and allows retry",
+    "Reduced-motion users receive a static loading indicator",
+    "No browser runtime errors"
+  ],
+  "errors": []
+}
