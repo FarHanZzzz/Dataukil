@@ -7,6 +7,7 @@ import { Graph } from './graph.js';
 import { buildModel, STATE_LABEL, HYP_LABEL } from './model.js';
 import { DnaFunnel, DnaLedger, dnaBadge, dnaPlanBlock, reportDataProtection } from './datadna.js';
 import { withRun, rememberPayment, rememberRun, knownRun, siteHeader, flowStrip } from './guide.js';
+import { dnaCounts, dnaFunnel, dnaDecision, permissionCard, investigationStory, DNA_LABEL } from './privacy.js';
 
 const KIND_LABEL = { ledger: 'Authoritative posting source', process: 'Processing stage', branch: 'Related service or check' };
 const PLAN_STATUS = { proposed: 'Awaiting approval', executing: 'Executing', completed: 'Completed', refused: 'Refused', superseded: 'Superseded by new evidence' };
@@ -42,7 +43,7 @@ export async function mount(app, path) {
 async function mountWorkspace(app, ident) {
   const S = {
     ident, snap: null, model: null, events: [], evSeen: new Set(), replay: null, selected: null, tab: 'evidence',
-    auth: null, queue: { items: [], cursor: 0 }, conn: 'live', painted: {}, approveKeys: {}, busy: false, logOpen: true,
+    auth: null, queue: { items: [], cursor: 0 }, conn: 'live', painted: {}, approveKeys: {}, busy: false, privacyBusy: false, logOpen: true,
   };
   const info = sessionInfo();
 
@@ -59,12 +60,12 @@ async function mountWorkspace(app, ident) {
   // DataDNA funnel: every personal-data access shown passing the five gates. Clicking it opens the ledger popup.
   let ledger = null;
   const openLedger = (callId, tab, hop) => {
-    if (!ledger) ledger = new DnaLedger({ model: viewModel(), onClose: () => dnaFunnel && dnaFunnel.focus() });
+    if (!ledger) ledger = new DnaLedger({ model: viewModel(), onClose: () => dnaBand && dnaBand.focus() });
     ledger.setModel(viewModel());
     ledger.open(typeof callId === 'string' ? callId : undefined, tab, hop);
   };
-  const dnaFunnel = ident ? new DnaFunnel({ onOpen: (callId, tab, hop) => openLedger(callId, tab, hop) }) : null;
-  if (dnaFunnel) { stage.classList.add('has-dna'); stage.prepend(dnaFunnel.el); dnaFunnel.watchSize(); }
+  const dnaBand = ident ? new DnaFunnel({ onOpen: (callId, tab, hop) => openLedger(callId, tab, hop) }) : null;
+  if (dnaBand) { stage.classList.add('has-dna'); stage.prepend(dnaBand.el); dnaBand.watchSize(); }
   const ws = h('div', { class: 'ws' }, top, queueEl, stage, inspector, logEl);
   app.append(ws);
   // Keep the payment queue visible on ordinary desktop screens; collapse it only when the
@@ -181,6 +182,7 @@ async function mountWorkspace(app, ident) {
       h('div', { class: 'top-actions' },
         m && m.simMs ? h('span', { class: 'mono sim-t', title: 'Processing clock for this run' + (m.clock.paused ? ' (paused)' : m.clock.speed !== 1 ? ` (x${m.clock.speed})` : '') }, 'T+' + simClock(m.simMs) + (m.clock.paused ? ' paused' : m.clock.speed !== 1 ? ` x${m.clock.speed}` : '')) : null,
         h('span', { class: 'conn-chip conn-chip--' + live[0], title: 'Live connection to the saved event journal' }, h('i'), live[1]),
+        a && a.case ? h('button', { class: 'btn btn--ghost btn--sm dna-status-button', type: 'button', title: 'Open the saved data-access decisions', onclick: () => { S.tab = 'privacy'; paintInspector(); showMobilePane('details'); } }, icon('lock', 15), h('span', { text: `DataDNA ${m?.data_dna_decisions.length || 0}` })) : null,
         start,
         a && a.case ? h('button', { class: 'btn btn--ghost btn--sm' + (S.replay ? ' is-on' : ''), type: 'button', onclick: toggleReplay, 'aria-pressed': String(!!S.replay) }, icon('replay', 16), h('span', { text: S.replay ? 'Exit replay' : 'Replay' })) : null,
         a && a.case ? link(withRun('/admin/cases/' + a.case.id + '/report', a.run.id), { class: 'btn btn--ghost btn--sm' }, icon('doc', 16), h('span', { text: 'Report' })) : null,
@@ -253,7 +255,7 @@ async function mountWorkspace(app, ident) {
     const m = viewModel();
     const body = inspector.querySelector('.insp-body');
     const scroll = body ? body.scrollTop : 0;
-    const tabs = [['evidence', 'Evidence'], ['hypotheses', 'Hypotheses'], ['plan', 'Plan']];
+    const tabs = [['evidence', 'Evidence'], ['hypotheses', 'Hypotheses'], ['privacy', 'DataDNA'], ['plan', 'Plan']];
     const planDot = S.auth && S.auth.plan && S.auth.plan.status === 'proposed' || (m && m.handoff);
     fill(inspector,
       h('div', { class: 'insp-tabs', role: 'tablist' }, tabs.map(([id, text]) => h('button', {
@@ -264,7 +266,7 @@ async function mountWorkspace(app, ident) {
           if (next !== null) { e.preventDefault(); S.tab = tabs[next][0]; paintInspector(); inspector.querySelector('[data-tab="' + S.tab + '"]').focus({ preventScroll: true }); }
         } }, text, id === 'plan' && planDot ? h('i', { class: 'tab-dot', 'aria-label': 'New' }) : null,
       id === 'hypotheses' && m && m.investigation && m.investigation.status === 'running' ? h('i', { class: 'tab-dot tab-dot--live' }) : null))),
-      h('div', { class: 'insp-body', id: 'insp-panel', role: 'tabpanel', 'aria-labelledby': 'insp-tab-' + S.tab, tabindex: '0' }, !m ? null : S.tab === 'evidence' ? evidenceTab(m) : S.tab === 'hypotheses' ? hypothesesTab(m) : planTab(m)));
+      h('div', { class: 'insp-body', id: 'insp-panel', role: 'tabpanel', 'aria-labelledby': 'insp-tab-' + S.tab, tabindex: '0' }, !m ? null : S.tab === 'evidence' ? evidenceTab(m) : S.tab === 'hypotheses' ? hypothesesTab(m) : S.tab === 'privacy' ? privacyTab(m) : planTab(m)));
     inspector.querySelector('.insp-body').scrollTop = scroll;
     if (focusedTab) inspector.querySelector('[data-tab="' + focusedTab + '"]')?.focus({ preventScroll: true });
   }
@@ -295,7 +297,8 @@ async function mountWorkspace(app, ident) {
       h('h4', { text: o.label }),
       h('p', { class: 'obs-sum', text: o.summary }),
       h('p', { class: 'obs-meta' }, h('span', { text: 'Source: ' + o.source }), h('span', { text: 'Scope: ' + o.scope })),
-      h('details', { class: 'raw' }, h('summary', { text: 'Raw record' }), h('pre', { text: JSON.stringify(o.data, null, 2) })));
+      o.data_dna ? h('button', { class: 'dna-observation-link', type: 'button', onclick: () => { S.tab = 'privacy'; paintInspector(); } }, icon('lock', 13), 'View DataDNA access decision') : null,
+      h('details', { class: 'raw' }, h('summary', { text: 'Permitted observation payload' }), h('pre', { text: JSON.stringify(o.data, null, 2) })));
   }
 
   function evidenceTab(m) {
@@ -323,6 +326,8 @@ async function mountWorkspace(app, ident) {
     const c = a && a.case;
     return h('div', { class: 'insp-sec' },
       h('h3', { class: 'insp-h', text: 'Case overview' }),
+      investigationStory(),
+      h('button', { class: 'dna-overview-link', type: 'button', onclick: () => { S.tab = 'privacy'; paintInspector(); } }, icon('lock', 16), h('span', {}, h('strong', { text: 'DataDNA checks each source request' }), h('small', { text: `${m.data_dna_decisions.length} saved decisions · inspect fields and policy reasons` })), icon('arrowRight', 14)),
       p ? kv([['Payment', h('span', { class: 'mono', text: p.reference })], ['Amount', taka(p.amount_minor)], ['From', p.bank_label], ['To', p.wallet_label],
         ['Customer status', p.status === 'COMPLETED' ? 'Wallet credit confirmed' : p.status === 'UNCERTAIN' ? 'Not confirmed yet' : 'Processing'],
         c ? ['Incident', h('span', { class: 'mono', text: c.reference })] : ['Incident', 'None yet'],
@@ -343,11 +348,56 @@ async function mountWorkspace(app, ident) {
         inv ? h('span', { class: 'budget mono', text: `${inv.used}/${inv.budget} checks` }) : null),
       inv ? h('div', { class: 'meter', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': inv.budget, 'aria-valuenow': inv.used }, h('i', { css: { width: Math.min(100, (inv.used / inv.budget) * 100) + '%' } })) : null,
       !inv ? h('p', { class: 'muted', text: 'Hypotheses are plausible, permitted explanations. Each changes only when a returned observation supports it.' }) : null,
+      h('p', { class: 'dna-method-note', text: 'The next check follows the remaining uncertainty. A bank debit proves funding; a wallet posting establishes credit; partner and worker records explain where confirmation or processing stopped.' }),
       h('ul', { class: 'hyps' }, m.hyps.map((x) => h('li', { class: 'hyp hyp--' + x.status },
         h('div', { class: 'hyp-top' }, h('strong', { text: x.title }), pill({ unchecked: 'idle', supported: 'ok', ruled_out: 'wait', unresolved: 'warn' }[x.status], HYP_LABEL[x.status], true)),
         x.rationale ? h('p', { class: 'hyp-why', text: x.rationale }) : null,
         x.cites.length ? h('p', { class: 'cites' }, x.cites.map((id) => cite(id, m))) : null))),
       inv && inv.status === 'concluded' ? h('div', { class: 'concl' }, h('strong', { text: 'Conclusion' }), h('p', { text: inv.summary })) : null);
+  }
+
+  function privacyTab(m) {
+    const metadata = S.auth?.data_dna || {};
+    // Replay must never borrow decisions from the current snapshot.
+    const decisions = S.replay ? m.data_dna_decisions : [...new Map([...(metadata.decisions || []), ...m.data_dna_decisions].map(d => [d.id, d])).values()];
+    const counts = dnaCounts(decisions);
+    const genuine = decisions.filter(d => d.affects_case !== false);
+    const currentInvestigation = S.replay ? m.investigation?.id : metadata.current_investigation_id;
+    const relevant = currentInvestigation ? genuine.filter(d => d.investigation_id === currentInvestigation) : genuine;
+    const pending = S.replay ? relevant.some(d => ['BLOCKED', 'NEEDS_REVIEW'].includes(d.decision)) : metadata.readiness === 'REVIEW_REQUIRED';
+    const readiness = pending ? 'Privacy review required' : !relevant.length ? 'No investigation checks yet' : 'Permitted investigation reads';
+    const probes = [
+      ['unrelated_history', 'Unrelated customer history', 'Outside this case → blocked'],
+      ['external_model', 'Unapproved model recipient', 'Unapproved destination → blocked'],
+      ['missing_basis', 'Missing approved basis', 'Unresolved basis → needs review'],
+    ];
+    const canProbe = !S.replay && !!S.auth?.case && knownRun(S.auth.run.id) === 'active' && !S.privacyBusy;
+    return h('div', { class: 'insp-sec dna-inspector' },
+      h('div', { class: 'dna-title-row' }, h('h3', { class: 'insp-h', text: 'DataDNA access controls' }), pill(pending ? 'warn' : genuine.length ? 'ok' : 'idle', readiness, true)),
+      h('p', { class: 'dna-subtitle', text: 'Supports PDPA compliance work through explicit data-access controls. This is a synthetic policy demonstration, with production assurance still required.' }),
+      dnaFunnel(decisions),
+      h('div', { class: 'dna-counts', 'aria-label': 'Saved data access decision counts' }, Object.keys(DNA_LABEL).map(key => h('div', { class: 'dna-count dna-count--' + key.toLowerCase() }, h('strong', { text: String(counts[key]) }), h('span', { text: DNA_LABEL[key] })))),
+      h('p', { class: 'dna-policy-meta' }, h('span', { class: 'mono', text: metadata.policy_version || 'DNA-DEMO-2026.1' }), ' · Deterministic controls · Linked payment only'),
+      currentInvestigation ? h('p', { class: 'dna-policy-meta', text: 'Readiness refers to the current investigation. The ledger keeps decisions from earlier investigations for review.' }) : null,
+      h('h4', { class: 'insp-h2', text: S.replay ? 'Access decisions at this replay point' : 'Saved access decisions' }),
+      decisions.length ? h('div', { class: 'dna-ledger' }, [...decisions].reverse().map((d, i) => dnaDecision(d, i === 0))) : h('div', { class: 'dna-empty' }, icon('lock', 22), h('strong', { text: 'No retrieval has been evaluated yet' }), h('p', { text: 'Start the investigation to see actual case-scoped decisions. A source check and its field-release decision will appear together in the saved activity journal.' })),
+      h('details', { class: 'dna-probes', open: !decisions.length }, h('summary', { text: 'Demonstrate the policy boundaries' }), h('p', { text: 'These synthetic requests show a denial or review before any source read. They do not change incident evidence or financial eligibility.' }),
+        h('div', { class: 'dna-probe-list' }, probes.map(([probe, title, note]) => h('button', { type: 'button', class: 'dna-probe-button', disabled: !canProbe, onclick: async () => {
+          if (S.privacyBusy) return;
+          S.privacyBusy = true; paintInspector();
+          try {
+            await requireActiveRun(S.auth.run.id);
+            const snap = await post(`/staff/cases/${S.auth.payment.id}/privacy-probe`, { probe }, uuid());
+            takeAuth(snap);
+            for (const event of snap.events || []) onEvent(event);
+            toast('Policy decision saved. The request did not retrieve source data.', 'ok');
+          } catch (e) { toast(e instanceof ApiError ? e.detail : 'Could not save the boundary demonstration.', 'bad'); }
+          finally { S.privacyBusy = false; paint(true); }
+        } }, icon('lock', 14), h('span', {}, h('strong', { text: title }), h('small', { text: note }))))),
+        !S.auth?.case ? h('p', { class: 'muted small', text: 'Available after an owned incident opens.' }) : S.replay ? h('p', { class: 'muted small', text: 'Demonstrations are disabled during replay.' }) : null),
+      permissionCard(),
+      h('details', { class: 'dna-assurance' }, h('summary', { text: 'Why further assurance is still needed' }), h('p', { text: 'A retrieval gate covers one part of processing. Production policy, storage, exports, rights requests, security and decision quality also need accountable review.' }),
+        h('ul', {}, (metadata.audits || []).map(a => h('li', {}, h('strong', { text: a.title }), h('p', { text: a.detail }), h('small', { text: 'Owner: ' + a.owner + ' · Production required' })))), h('p', { text: metadata.next_review || 'The privacy owner reviews the production policy before deployment and when the purpose, recipient or retention rules change.' })));
   }
 
   function planTab(m) {
@@ -375,11 +425,12 @@ async function mountWorkspace(app, ident) {
       blocks.push(h('div', { class: 'plan reveal' },
         h('div', { class: 'plan-top' }, h('strong', { class: 'plan-name', text: plan.label }), pill(status === 'completed' ? 'ok' : status === 'proposed' ? 'warn' : status === 'executing' ? 'probe' : 'idle', PLAN_STATUS[status] || status, true)),
         h('p', { class: 'plan-money' }, icon(plan.moves_money ? 'lock' : 'check', 15), plan.moves_money ? 'This correction moves money. The server revalidates ownership, funding, mapping and replay capability first.' : 'No money moves. This only updates records.'),
+        plan.data_dna ? h('div', { class: 'dna-plan-binding' }, h('strong', { text: 'Privacy conditions for this plan' }), h('p', { text: `Policy ${plan.data_dna.policy_version} · ${plan.data_dna.readiness === 'READY' ? 'Synthetic access checks ready' : 'Privacy review required'}` }), h('ul', {}, (plan.data_dna.constraints || []).map(text => h('li', { text }))), h('small', { text: plan.data_dna.production_review })) : null,
         h('h4', { class: 'insp-h2', text: 'Steps' }),
         h('ol', { class: 'steps' }, plan.steps.map((s) => h('li', { text: s }))),
         h('h4', { class: 'insp-h2', text: 'Eligibility from records checked at proposal' }),
         h('ul', { class: 'elig' }, plan.options.map((o) => h('li', { class: o.eligible ? 'is-yes' : 'is-no' }, h('span', { class: 'elig-ic' }, icon(o.eligible ? 'check' : 'x', 14)),
-          h('div', {}, h('strong', { text: o.label || o.kind }), !o.eligible ? h('small', { text: o.reasons[0] || '' }) : null)))),
+          h('div', {}, h('strong', { text: o.label || ({ RESUME_ORIGINAL: 'Resume original processing', REFRESH_CUSTOMER_STATUS: 'Refresh customer status', MONITOR_ORIGINAL: 'Monitor the original transfer', RETURN_FUNDS: 'Return funds' }[o.kind] || o.kind) }), !o.eligible ? h('small', { text: o.reasons[0] || '' }) : null)))),
         plan.missing_proof && plan.missing_proof.length ? h('p', { class: 'muted small', text: 'Missing proof: ' + plan.missing_proof.join('; ') }) : null,
         h('p', { class: 'muted small mono' }, `Bound to evidence version ${plan.evidence_version}`, plan.observation_ids.length ? ' · ' : '', plan.observation_ids.map((id) => cite(id, m))),
         stale || status === 'superseded' ? h('p', { class: 'warn-box' }, icon('warning', 16), 'The evidence changed after this plan was proposed. It can no longer be approved. Run a new investigation to review the new records.') : null,
@@ -401,13 +452,13 @@ async function mountWorkspace(app, ident) {
     }
     const dnaBlock = dnaPlanBlock(m, openLedger);
     if (!blocks.length) {
-      if (dnaBlock) return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }), h('p', { class: 'muted', text: 'No correction plan yet.' }), dnaBlock);
+      if (dnaBlock) return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }), h('p', { class: 'muted', text: 'No correction plan yet.' }), dnaBlock, permissionCard());
       return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }),
         h('p', { class: 'muted', text: a && a.payment && a.payment.status === 'COMPLETED'
           ? 'No correction is needed. The wallet credit is confirmed in the saved records, so there is nothing to approve.'
-          : 'No plan yet. After an investigation, a supported correction appears here for approval, or an owned handoff if automatic correction is not possible.' }));
+          : 'No plan yet. After an investigation, a supported correction appears here for approval, or an owned handoff if automatic correction is not possible.' }), permissionCard());
     }
-    return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }), blocks, dnaBlock);
+    return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }), blocks, dnaBlock, permissionCard());
   }
 
   // ------------------------------------------------------------------------------------------------ log
@@ -453,7 +504,7 @@ async function mountWorkspace(app, ident) {
   function exitReplay() {
     if (S.replay) clearTimeout(S.replay.timer);
     S.replay = null;
-    if (dnaFunnel) dnaFunnel.reset();
+    if (dnaBand) dnaBand.reset();
     graph.setModel(S.model);
     syncHub(S.model);
     paintReplay();
@@ -463,7 +514,7 @@ async function mountWorkspace(app, ident) {
   function rebuildReplay(i) {
     S.replay.idx = i;
     S.replay.model = buildModel(S.snap, S.events, i);
-    if (dnaFunnel) dnaFunnel.reset();
+    if (dnaBand) dnaBand.reset();
     graph.setModel(S.replay.model);
     syncHub(S.replay.model);
   }
@@ -527,7 +578,7 @@ async function mountWorkspace(app, ident) {
       paintTop();
       paintInspector();
       paintLog();
-      if (dnaFunnel && m) { dnaFunnel.render(m); if (ledger) ledger.setModel(m); }
+      if (dnaBand && m) { dnaBand.render(m); if (ledger) ledger.setModel(m); }
     });
   }
 
@@ -538,11 +589,11 @@ async function mountWorkspace(app, ident) {
 
   // ------------------------------------------------------------------------------------------------ data
   const AUTH_EVENTS = new Set(['INCIDENT_OPENED', 'INVESTIGATION_STARTED', 'INVESTIGATION_CONCLUDED', 'CORRECTION_PROPOSED', 'CORRECTION_APPROVED', 'CORRECTION_COMPLETED',
-    'CORRECTION_BLOCKED', 'HANDOFF_CREATED', 'PAYMENT_COMPLETED', 'CASE_STATUS_CHANGED', 'REPORT_SAVED', 'COMPLAINT_ATTACHED']);
+    'CORRECTION_BLOCKED', 'HANDOFF_CREATED', 'PAYMENT_COMPLETED', 'CASE_STATUS_CHANGED', 'REPORT_SAVED', 'COMPLAINT_ATTACHED', 'DATA_DNA_DECISION']);
 
   function takeAuth(snap) {
     S.auth = { payment: snap.payment, case: snap.case, plan: snap.plan, investigation: snap.investigation, report: snap.report, sandbox_enabled: snap.sandbox_enabled,
-      incident_after_ms: snap.incident_after_ms, run: snap.run };
+      incident_after_ms: snap.incident_after_ms, run: snap.run, data_dna: snap.data_dna };
   }
 
   async function refreshAuth() {
@@ -557,10 +608,10 @@ async function mountWorkspace(app, ident) {
 
   // Funnel animation follows the same saved events as the graph: a request waits at the mouth, then the verdict plays through the gates.
   function dnaFx(fx, m) {
-    if (!dnaFunnel) return;
+    if (!dnaBand) return;
     for (const f of fx) {
-      if (f.type === 'probe-start') { const c = m.checks.find((x) => x.id === f.check); if (c) dnaFunnel.reviewing(c.label); }
-      else if (f.type === 'datadna') dnaFunnel.play(f.call, m);
+      if (f.type === 'probe-start') { const c = m.checks.find((x) => x.id === f.check); if (c) dnaBand.reviewing(c.label); }
+      else if (f.type === 'datadna') dnaBand.play(f.call, m);
     }
   }
 
@@ -590,7 +641,7 @@ async function mountWorkspace(app, ident) {
     S.events = [...S.snap.events];
     S.evSeen = new Set(S.events.map((x) => x.event_id));
     S.model = buildModel(S.snap, S.events);
-    if (dnaFunnel) dnaFunnel.reset();
+    if (dnaBand) dnaBand.reset();
     takeAuth(S.snap);
     graph.setModel(S.model);
     syncHub(S.model);
@@ -627,7 +678,7 @@ async function mountWorkspace(app, ident) {
       }).start();
     } catch (e) {
       empty.hidden = false;
-      if (dnaFunnel) { dnaFunnel.el.hidden = true; stage.classList.remove('has-dna'); }
+      if (dnaBand) { dnaBand.el.hidden = true; stage.classList.remove('has-dna'); }
       fill(empty, h('div', { class: 'empty-card' }, h('h2', { text: 'Record not found' }), h('p', { text: e instanceof ApiError ? e.detail : 'This payment could not be loaded.' }),
         link('/admin/queue', { class: 'btn btn--primary' }, 'Back to the queue')));
     }
@@ -644,7 +695,7 @@ async function mountWorkspace(app, ident) {
   const keys = (ev) => {
     if (ev.target.closest('input, textarea, select') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
     if (ev.key === 'p' || ev.key === 'P') document.body.classList.toggle('presenting');
-    else if ((ev.key === 'd' || ev.key === 'D') && dnaFunnel && S.snap) openLedger();
+    else if ((ev.key === 'd' || ev.key === 'D') && dnaBand && S.snap) openLedger();
     else if (ev.key === 'Escape' && S.selected) { S.selected = null; graph.select(null); }
   };
   document.addEventListener('keydown', keys);
@@ -663,7 +714,7 @@ async function mountWorkspace(app, ident) {
     inbox.stop();
     if (S.replay) clearTimeout(S.replay.timer);
     graph.destroy();
-    if (dnaFunnel) dnaFunnel.destroy();
+    if (dnaBand) dnaBand.destroy();
     if (ledger) ledger.destroy();
     document.removeEventListener('keydown', keys);
     mo.disconnect();
@@ -717,6 +768,10 @@ async function mountReport(app, ident) {
       r.blocked.length ? h('div', {}, h('h3', { text: 'Options not available, and why' }), h('ul', {}, r.blocked.map((b) => h('li', {}, h('strong', { text: b.label + ': ' }), (b.reasons || []).join(' '))))) : null),
       r.data_protection ? sec('Data protection (DataDNA)', reportDataProtection(r.data_protection, snapshot.datadna)) : null,
       sec('Operator ownership', h('p', {}, h('strong', { text: 'Owner: ' }), r.operator.owner), h('p', {}, h('strong', { text: 'Next action: ' }), r.operator.next_action)),
+      r.data_dna ? sec('DataDNA access and remaining assurance', h('p', { text: `${r.data_dna.policy_version} · ${r.data_dna.mode}` }),
+        h('p', { text: 'These saved decisions explain permitted fields, withheld information and the owner of each privacy concern. The demonstration does not certify legal compliance.' }),
+        h('div', { class: 'dna-ledger' }, (r.data_dna.decisions || []).map(d => dnaDecision(d))),
+        h('h3', { text: 'Production assurance owners' }), h('ul', {}, (r.data_dna.audits || []).map(a => h('li', {}, h('strong', { text: a.title + ' — ' + a.owner + ': ' }), a.detail))), h('p', { text: r.data_dna.next_review })) : null,
       sec('Action log', h('ol', { class: 'rep-log' }, r.log.map((l) => h('li', {}, h('time', { class: 'mono', text: hms(l.at) }), h('span', {}, l.text, ' ', cites(l.cites)))))),
       h('footer', { class: 'rep-foot' }, h('p', { text: r.execution_mode }), h('p', { class: 'muted', text: r.disclosure })))));
   app.querySelectorAll('.rep-table').forEach(table => { const wrap = h('div', { class: 'am-report-table', tabindex: '0', role: 'region', 'aria-label': 'Checks performed table' }); table.before(wrap); wrap.append(table); });

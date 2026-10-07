@@ -251,6 +251,8 @@ async function mountProgress(app, id, mode, runId) {
         h('p', { class: 'route' }, h('span', { text: p.bank_label }), icon('arrowRight', 15), h('span', { text: p.wallet_label })),
         h('p', { class: 'mono ref', text: 'Reference ' + p.reference + ' · Started ' + dayTime(p.created_at) })),
       snap.next_step ? h('section', { class: 'next-box' }, icon('activity', 18), h('div', {}, h('strong', { text: 'What happens next' }), h('p', { text: snap.next_step }))) : null,
+      snap.data_dna_summary ? h('section', { class: 'dna-customer-summary' }, icon('lock', 18), h('div', {}, h('strong', { text: 'How this investigation uses data' }), h('p', { text: snap.data_dna_summary.message }),
+        h('small', { text: snap.data_dna_summary.total ? `${snap.data_dna_summary.total} saved access decisions · ${snap.data_dna_summary.minimized} minimized · Synthetic demo policy` : 'Case-scoped policy configured · Synthetic demo' }))) : null,
       mode === 'case' ? null : h('section', { class: 'stepper-sec', 'aria-labelledby': 'prog-h' },
         h('h2', { id: 'prog-h', class: 'sec-h', text: 'Transfer progress' }),
         h('ol', { class: 'stepper' }, snap.stages.map((s) => h('li', { class: 'step is-' + s.state },

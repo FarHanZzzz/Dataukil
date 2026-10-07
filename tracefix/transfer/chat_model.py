@@ -18,8 +18,8 @@ ToolName = Literal[
     'mapping_check', 'worker_error_check',
 ]
 CONFIG_PATH = Path(__file__).resolve().parents[2] / 'runtime' / 'chat-provider.json'
-DEFAULT_API_URL = 'https://api.groq.com/openai/v1'
-DEFAULT_MODEL = 'llama-3.1-8b-instant'
+DEFAULT_API_URL = 'https://api.aiand.com/v1'
+DEFAULT_MODEL = 'deepseek-ai/deepseek-v4-flash'
 
 
 @dataclass(frozen=True)
@@ -29,6 +29,7 @@ class ProviderSettings:
     timeout: float
     response_format: str
     api_key: str = field(repr=False)
+    reasoning_effort: str | None = None
 
 
 class Classification(BaseModel):
@@ -101,7 +102,8 @@ def settings():
         model = os.environ.get('TRACEFIX_CHAT_MODEL', saved.get('model', DEFAULT_MODEL)).strip()
         key = os.environ.get('TRACEFIX_CHAT_API_KEY', saved.get('api_key', '')).strip()
         mode = os.environ.get('TRACEFIX_CHAT_RESPONSE_FORMAT', saved.get('response_format', 'json_object'))
-        timeout = float(os.environ.get('TRACEFIX_CHAT_TIMEOUT', saved.get('timeout', 8)))
+        timeout = float(os.environ.get('TRACEFIX_CHAT_TIMEOUT', saved.get('timeout', 30)))
+        effort = os.environ.get('TRACEFIX_CHAT_REASONING_EFFORT', saved.get('reasoning_effort')) or None
         parts = urlsplit(base)
         port = parts.port
     except (OSError, ValueError, TypeError, AttributeError):
@@ -115,7 +117,9 @@ def settings():
         raise HTTPException(503, 'Set a valid chat API model name on the application server.')
     if not key or len(key) > 512 or any(c.isspace() for c in key) or not key.isascii():
         raise HTTPException(503, 'Set the chat API key on the application server. Keys are never entered in the chatbot.')
-    return ProviderSettings(base, model, timeout, mode, key)
+    if effort not in (None, 'none', 'low', 'medium', 'high', 'max', 'xhigh'):
+        raise HTTPException(503, 'Invalid chat API reasoning effort.')
+    return ProviderSettings(base, model, timeout, mode, key, effort)
 
 
 async def provider_json(path, *, payload=None, timeout=None):
@@ -127,7 +131,9 @@ async def provider_json(path, *, payload=None, timeout=None):
             async with client.stream('POST' if payload is not None else 'GET', config.base_url + path, json=payload,
                                      headers={'Authorization': 'Bearer ' + config.api_key}) as response:
                 if response.status_code in (401, 403):
-                    raise HTTPException(503, 'The selected API provider rejected this key. Use a key issued by that provider or configure its matching API URL.')
+                    raise HTTPException(503, f'Chat API HTTP {response.status_code}: the provider rejected this key or its permissions. Check the issuing service and matching API URL.')
+                if response.status_code == 402:
+                    raise HTTPException(503, 'Chat API HTTP 402: insufficient provider credits. Add credits to your ai& account to use live inference.')
                 if response.status_code == 404:
                     raise HTTPException(503, 'Chat API endpoint or model unavailable. Check the configured API URL and model.')
                 if response.status_code == 429:
@@ -156,11 +162,14 @@ async def completion(prompt, messages, response_type):
     schema = response_type.model_json_schema()
     response_format = (dict(type='json_schema', json_schema=dict(name=response_type.__name__, strict=True, schema=schema))
                        if config.response_format == 'json_schema' else dict(type='json_object'))
-    response = await provider_json('/chat/completions', payload=dict(
+    payload = dict(
         model=config.model, stream=False, response_format=response_format,
         messages=[dict(role='system', content=prompt + '\nReturn JSON matching this schema: ' + json.dumps(schema)), *messages],
         temperature=0, max_tokens=1024,
-    ))
+    )
+    if config.reasoning_effort:
+        payload['reasoning_effort'] = config.reasoning_effort
+    response = await provider_json('/chat/completions', payload=payload)
     try:
         choice = response['choices'][0]
         if choice.get('finish_reason') != 'stop':
@@ -183,10 +192,10 @@ async def status():
     try:
         config = settings()
         model = config.model
-        result = await provider_json('/models', timeout=5)
-        models = [m['id'] for m in result.get('data', []) if isinstance(m, dict) and isinstance(m.get('id'), str)]
-        ready = model in models
-        return dict(ready=ready, model=model, fallback_ready=True,
-                    detail='API model ready; keyword demo fallback is available.' if ready else 'API model unavailable. Keyword demo fallback is ready.')
+        # A public model catalog does not prove key validity, credit or JSON inference support.
+        # Exercise the same transport/schema as messages, without falling back inside this health check.
+        probe = await classify([dict(role='user', content='Hello!')])
+        return dict(ready=not probe.deceptive, model=model, fallback_ready=True,
+                    detail='Live API inference verified; keyword fallback is available.' if not probe.deceptive else 'API classification check failed. Keyword fallback is ready.')
     except HTTPException as exc:
         return dict(ready=False, model=model, fallback_ready=True, detail=exc.detail + ' Keyword demo fallback is ready.')

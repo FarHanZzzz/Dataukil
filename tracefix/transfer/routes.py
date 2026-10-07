@@ -15,10 +15,10 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import PlainTextResponse, StreamingResponse
 
-from .. import store
+from .. import data_dna, store
 from ..auth import read_session
 from ..domain import now, uid
-from . import catalog, correction, datadna, engine, investigation, journal, policy, report
+from . import catalog, correction, datadna, engine, investigation, journal, policy, privacy, report
 
 router = APIRouter(prefix='/api/transfer')
 
@@ -223,7 +223,9 @@ def customer_snapshot(db, payment_id):
     return dict(cursor=cursor, payment=dict(id=p['id'], reference=p['reference'], amount_minor=p['amount_minor'], currency=p['currency'], bank_label=p['bank_label'],
                                             wallet_label=p['wallet_label'], status=p['status'], created_at=p['created_at'], reported=bool(p['reported'])),
                 headline=headline, lead=lead, stages=stages, facts=facts, case=case, next_step=last_next,
-                can_report=bool(uncertain and not p['reported']), timeline=[dict(at=e['occurred_at'], text=e['headline'], kind=e['kind'], sequence=e['sequence']) for e in events if e.get('headline')])
+                can_report=bool(uncertain and not p['reported']),
+                data_dna_summary=data_dna.customer_summary(privacy.decisions(db, p['case_id'])),
+                timeline=[dict(at=e['occurred_at'], text=e['headline'], kind=e['kind'], sequence=e['sequence']) for e in events if e.get('headline')])
 
 
 def owned_payment(db, s, payment_id):
@@ -345,7 +347,7 @@ def staff_snapshot(db, payment):
         payment=dict(id=payment['id'], reference=payment['reference'], amount_minor=payment['amount_minor'], currency=payment['currency'],
                      bank_label=payment['bank_label'], wallet_label=payment['wallet_label'], status=payment['status'], created_at=payment['created_at'],
                      case_id=payment['case_id']),
-        case=case_public(c) if c else None, events=events,
+        case=case_public(c) if c else None, events=events, data_dna=privacy.snapshot(db, c['id'] if c else None),
         plan=correction.plan_public(correction.plan_row(db, plan['id'])) if plan else None,
         investigation=dict(id=inv['id'], status=inv['status'], checks_used=inv['checks_used'], budget=inv['budget'], mode=inv['mode'], mode_label=policy.MODE_LABEL) if inv else None,
         report=dict(version=rep['version'], sha256=rep['sha256'], created_at=rep['created_at']) if rep else None,
@@ -404,6 +406,31 @@ async def start_investigation(ident: str, request: Request):
         resp = dict(investigation_id=inv['id'], status=inv['status'], budget=inv['budget'], mode=inv['mode'])
         idem_put(db, s['actor'], scope, key, digest, resp)
         return resp
+
+
+@router.post('/staff/cases/{ident}/privacy-probe')
+async def demonstrate_privacy_boundary(ident: str, request: Request):
+    """Save a refused synthetic request; do not call a data source or alter incident evidence."""
+    s = need(request, 'staff')
+    key = idem_key(request)
+    p = await body_of(request)
+    kind = p.get('probe', 'unrelated_history')
+    if kind not in ('unrelated_history', 'external_model', 'missing_basis'):
+        raise HTTPException(422, 'Choose unrelated_history, external_model or missing_basis.')
+    with store.transaction() as db:
+        pay = resolve_case(db, ident)
+        if not pay['case_id']:
+            raise HTTPException(409, 'Wait for a case to open before demonstrating a case-scoped data request.')
+        scope, digest = f"privacy-probe:{pay['id']}", digest_of(dict(probe=kind))
+        old = idem_get(db, s['actor'], scope, key, digest)
+        if old:
+            return old
+        case = store.get_case(db, pay['case_id'])
+        run = engine.run_row(db, pay['run_id'])
+        privacy.probe(db, run, case, pay, s['actor'], kind)
+        response = staff_snapshot(db, pay)
+        idem_put(db, s['actor'], scope, key, digest, response)
+        return response
 
 
 @router.post('/staff/cases/{ident}/corrections/{plan_id}/approve')

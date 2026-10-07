@@ -9,7 +9,7 @@ import secrets
 
 from .. import store
 from ..domain import now, uid
-from . import catalog, datadna, journal, policy, tools
+from . import catalog, datadna, journal, policy, privacy, tools
 from .engine import check_budget, customer_update, handler, mutate_case, owner_label, payment_row, run_row, schedule
 
 
@@ -88,11 +88,14 @@ def check_context(db, run, case_id, payment, *, inv=None, actor=None, origin='in
 def complete_check(db, run, case_id, payment, tool, check_id, *, performed=(), investigation_id=None, origin='investigation', ctx=None):
     """Gate and run the read-only tool as of now, preserve the observation, bump the evidence version, announce the result.
 
-    The DataDNA gate sits in front of the tool: a refused call reads nothing, and an allowed call releases only the
-    allow-listed, redacted record. The gate decision is saved as its own journal event next to the check result.
+    Two DataDNA layers sit in front of the tool. The case-scoped access decision (privacy.authorize_check) is saved first and
+    decides whether the source may be read at all; the five-gate review then decides what is released. A refused call reads
+    nothing, and each decision is saved as its own journal event next to the check result.
     """
+    case = store.get_case(db, case_id)
     ctx = ctx or check_context(db, run, case_id, payment, origin=origin)
-    res, dna = datadna.gate_tool(ctx, tool, lambda: tools.run_tool(db, tool, payment, run['clock_ms'], performed), check_id=check_id, sim_ms=run['clock_ms'])
+    access = privacy.authorize_check(db, run, case, payment, tool, ctx['actor'], check_id=check_id, investigation_id=investigation_id)
+    res, dna = datadna.gate_tool(ctx, tool, lambda: tools.run_tool(db, tool, payment, run['clock_ms'], performed, access_decision=access), check_id=check_id, sim_ms=run['clock_ms'])
     if res is None:
         res = datadna.blocked_result(tool, dna)
     c = mutate_case(db, case_id, lambda c: c.__setitem__('evidence_version', c['evidence_version'] + 1), action='observation_recorded')
@@ -100,7 +103,7 @@ def complete_check(db, run, case_id, payment, tool, check_id, *, performed=(), i
     as_of = now()
     obs = dict(id=oid, case_id=case_id, payment_id=payment['id'], tool=tool, label=catalog.TOOLS[tool]['label'], status=res['status'],
                as_of=as_of, as_of_ms=run['clock_ms'], source=res['source'], scope=res['scope'], summary=res['summary'], data=res['data'],
-               evidence_version=c['evidence_version'], investigation_id=investigation_id, origin=origin, check_id=check_id)
+               evidence_version=c['evidence_version'], investigation_id=investigation_id, origin=origin, check_id=check_id, data_dna=access)
     db.execute('INSERT INTO tx_observations(id,case_id,payment_id,run_id,tool,status,as_of_ms,as_of,source,scope,summary,data,evidence_version,investigation_id,origin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                (oid, case_id, payment['id'], run['id'], tool, res['status'], run['clock_ms'], as_of, res['source'], res['scope'], res['summary'],
                 json.dumps(res['data'], ensure_ascii=False), c['evidence_version'], investigation_id, origin))
@@ -157,9 +160,13 @@ def _done(db, step, args):
         return
     run = run_row(db, step['run_id'])
     payment = payment_row(db, inv['payment_id'])
-    performed = [t for t in inv['state']['used'] if t != args['tool']]
+    performed = [r['tool'] for r in db.execute("SELECT DISTINCT tool FROM tx_observations WHERE investigation_id=? AND status='completed'", (inv['id'],))]
     ctx = check_context(db, run, inv['case_id'], payment, inv=inv)
     obs, case = complete_check(db, run, inv['case_id'], payment, args['tool'], args['check_id'], performed=performed, investigation_id=inv['id'], ctx=ctx)
+    if obs['data_dna']['decision'] in ('BLOCKED', 'NEEDS_REVIEW'):
+        return _finish(db, run, inv, case, payment, dict(outcome='handoff', kind=None, cites=[obs['id']],
+            summary='The investigation paused because the requested source access was not permitted. No cause is inferred from withheld data.',
+            next_requirement='Privacy owner must review the saved DataDNA decision and restore a permitted case-scoped request before the investigation resumes.'))
     view = dict(obs=_obs_by_tool(db, inv['case_id'], inv['id']), hyp=inv['state']['hyp'], budget=inv['budget'], used=inv['checks_used'])
     for f in policy.assess(args['tool'], obs, view):
         inv['state']['hyp'][f['hypothesis_id']] = dict(status=f['status'], rationale=f['rationale'], cites=f['cites'])

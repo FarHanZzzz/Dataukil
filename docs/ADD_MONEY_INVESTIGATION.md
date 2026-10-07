@@ -86,6 +86,33 @@ and investigation never read it (`tests/test_transfer.py` scans for that). The s
 The policy in `tracefix/transfer/policy.py` is rules-based and labelled once in the inspector as "Rules-based
 investigation". It cites observation ids for every status change. No model is called.
 
+## Explainable DataDNA controls
+
+The Add money guide and case overview explain the full loop: the configured incident timer detects an unconfirmed
+acknowledgement, the investigator locates the cause through existing case-linked records, the policy proposes a
+supported next action, an operator approves it, and the executor revalidates and verifies the outcome. The timeout is
+a symptom, not a proven failure location; diagnosis does not require running another live transfer. The hypotheses
+panel explains why bank, wallet, partner, mapping and worker checks answer different questions. Operator benefit is
+fewer repeated source queries and less switching between systems, with evidence and next actions together.
+
+The **DataDNA** inspector tab shows the access funnel, four decision counts, and a persisted decision ledger. Each
+entry names the actor, source, case scope, purpose, recipient, assumed basis and policy version; released and withheld
+field names have individual reasons; permission does not imply an unavailable source returned those fields. Concerns show the control taken, owner and status. The ledger stores policy
+metadata rather than source values. Observation cards distinguish their permitted payload from a raw source record.
+The current shared light theme applies to the new panels, walkthrough explanation and customer summary.
+
+The staff-only **Demonstrate the policy boundaries** controls request unrelated history, an unapproved model recipient,
+or a missing approved basis. The gate saves a blocked/review decision before any source read. These are explicitly
+labelled boundary demonstrations, separate from incident evidence and financial eligibility. Replay folds DataDNA
+decisions from saved events up to its selected point; it never reveals future decisions or repeats a source request.
+
+Plan conditions include the policy version and saved decision references. The investigator may read permitted records
+and propose; it has no money-moving tool. Financial eligibility and an explicit operator approval remain separate.
+Customers receive only a safe explanation and summary; reports include the saved access decisions and remaining
+assurance owners. Production requires privacy/legal policy approval, security/access review, lifecycle controls for
+stored copies and exports, and decision-quality assurance. The synthetic basis and deterministic gate demonstrate
+controls supporting PDPA compliance work; they are not legal certification or a production-wide enforcement claim.
+
 ## Reset
 
 `POST /api/transfer/runs` with `replaces` starts a new run identity. Earlier runs stay readable and no existing project

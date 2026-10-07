@@ -129,7 +129,7 @@ export class DnaFunnel {
     const body = svg('path', { class: 'dna-body', d: `M${MOUTH + 8} ${CY - 28} Q${MOUTH - 4} ${CY} ${MOUTH + 8} ${CY + 28} L${OUTLET - 18} ${CY + 12} V${CY - 12} Z`, fill: 'url(#dnaFunnelFill)' });
     const map = svg('svg', { class: 'dna-svg', viewBox: `0 0 ${W} 128`, preserveAspectRatio: 'xMidYMid meet', role: 'img', 'aria-label': 'Five DataDNA gates every add-money data hand-off passes through' },
       defs, body,
-      svg('path', { class: 'dna-flow', d: `M${MOUTH + 6} ${CY} H${OUTLET - 16}` }),
+      svg('path', { class: 'dnl-flow', d: `M${MOUTH + 6} ${CY} H${OUTLET - 16}` }),
       ...gates, this.parts.outlet, this.parts.packet,
       svg('text', { class: 'dna-inlet', x: 6, y: CY - 36 }, 'Data requests'),
       svg('text', { class: 'dna-inlet dna-inlet-out', x: W - 2, y: CY - 22, 'text-anchor': 'end' }, 'Released'));
@@ -155,7 +155,7 @@ export class DnaFunnel {
       }));
     const top = h('button', { class: 'dna-top', type: 'button', 'aria-haspopup': 'dialog', 'aria-label': 'Open the DataDNA ledger: every data hand-off and every privacy concern for this payment', onclick: () => this.onOpen && this.onOpen() },
       h('span', { class: 'dna-brand' },
-        h('span', { class: 'dna-mark' }, helix(22)),
+        h('span', { class: 'dnl-mark' }, helix(22)),
         h('span', { class: 'dna-brand-text' }, h('strong', null, 'DataDNA'), h('small', null, 'Privacy you can enforce'))),
       h('span', { class: 'dna-pipe' }, map),
       h('span', { class: 'dna-side' },
@@ -447,7 +447,7 @@ export function dnaBadge(call, onOpen) {
 
 function concernCard(model, k, call, { showCall = false, onOpenCall = null } = {}) {
   const blocked = k.status === 'blocked';
-  return h('article', { class: `dna-concern dna-concern--${blocked ? 'bad' : 'warn'}` },
+  return h('article', { class: `dnl-concern dna-concern--${blocked ? 'bad' : 'warn'}` },
     h('header', null,
       h('span', { class: 'dna-concern-ic' }, icon(blocked ? 'x' : 'shield', 14)),
       h('strong', null, k.title),
@@ -487,7 +487,7 @@ export function dnaPlanBlock(model, onOpen) {
   if (!d.calls.length && !d.plan) return null;
   const t = d.tally;
   return h('section', { class: 'dna-planblock' },
-    h('header', null, h('span', { class: 'dna-mark dna-mark--sm' }, helix(16)), h('h4', null, 'PDPA compliance plan'),
+    h('header', null, h('span', { class: 'dnl-mark dna-mark--sm' }, helix(16)), h('h4', null, 'PDPA compliance plan'),
       h('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => onOpen(undefined, 'plan') }, 'Open ledger')),
     h('p', { class: 'dna-planblock-sum' }, `${t.total} data calls reviewed: ${t.passed} cleared, ${t.controlled} controlled, ${t.blocked} blocked. ${t.blocked_concerns} blocked concern${t.blocked_concerns === 1 ? '' : 's'} flagged.`),
     planList(d.plan, model),
@@ -556,7 +556,7 @@ export class DnaLedger {
     fill(this.dlg,
       h('div', { class: 'dna-modal' },
         h('header', { class: 'dna-modal-head' },
-          h('span', { class: 'dna-mark' }, helix(24)),
+          h('span', { class: 'dnl-mark' }, helix(24)),
           h('div', { class: 'dna-modal-title' },
             h('h2', { id: 'dna-title' }, 'DataDNA ledger'),
             h('p', null, 'Every data hand-off in this add-money payment and every read the AI made, the five questions each one had to answer, and every privacy concern flagged.')),
@@ -648,14 +648,14 @@ export class DnaLedger {
     let detail;
     if (sel.call) detail = this.callDetail(sel.call);
     else if (sel.st === 'stalled') {
-      detail = h('div', { class: 'dna-empty' },
-        h('span', { class: 'dna-mark dna-mark--lg dna-mark--bad' }, icon('x', 30)),
+      detail = h('div', { class: 'dnl-empty' },
+        h('span', { class: 'dnl-mark dna-mark--lg dna-mark--bad' }, icon('x', 30)),
         h('h3', null, 'No acknowledgement came back'),
         h('p', null, 'There is nothing to review at this hand-off because no data has come back from the wallet partner. The run is waiting on it, which is where the payment stopped.'),
         h('p', null, 'What DataDNA protected meanwhile: the customer was never told the credit was done, and no one has been given a wallet number or account number to chase it. Investigators read masked records through the same five gates.'));
     } else {
-      detail = h('div', { class: 'dna-empty' },
-        h('span', { class: 'dna-mark dna-mark--lg' }, helix(30)),
+      detail = h('div', { class: 'dnl-empty' },
+        h('span', { class: 'dnl-mark dna-mark--lg' }, helix(30)),
         h('h3', null, sel.st === 'active' ? `${sel.title} is next` : `${sel.title} has not been reached`),
         h('p', null, sel.st === 'active' ? 'DataDNA is about to review this hand-off. It will be listed here with its five answers as soon as it is reviewed.' : 'This hand-off comes after the one the payment is waiting on. It will be reviewed when the payment gets here.'));
     }
@@ -672,8 +672,8 @@ export class DnaLedger {
 
   empty() {
     const gates = dnaGates(this.model);
-    return h('div', { class: 'dna-empty' },
-      h('span', { class: 'dna-mark dna-mark--lg' }, helix(30)),
+    return h('div', { class: 'dnl-empty' },
+      h('span', { class: 'dnl-mark dna-mark--lg' }, helix(30)),
       h('h3', null, 'No data has moved yet'),
       h('p', null, 'Every hand-off of the add-money payment and every read the AI makes passes these five questions first, and each is listed here with its answers.'),
       h('ol', { class: 'dna-five' }, gates.map((g) => h('li', null, h('b', null, `${g.n}. ${g.question} ${g.term || ''}`.trim()), h('span', null, g.asks)))));
@@ -715,7 +715,7 @@ export class DnaLedger {
               h('span', { class: 'dna-check-ic' }, icon(k.status === 'ok' ? 'check' : k.status === 'control' ? 'shield' : 'x', 12)),
               h('div', null, h('strong', null, k.label), h('p', null, k.note))))))));
     }));
-    const fields = c.fields && c.fields.length ? h('div', { class: 'dna-fields' },
+    const fields = c.fields && c.fields.length ? h('div', { class: 'dnl-fields' },
       h('h4', null, 'Field-level decision'),
       h('table', null,
         h('thead', null, h('tr', null, ['Field', 'Class', 'Decision', 'Why'].map((x) => h('th', null, x)))),

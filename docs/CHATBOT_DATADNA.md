@@ -5,8 +5,8 @@ Restart an older uvicorn process after updating Python routes; otherwise `/chat`
 
 ## Provider configuration
 
-The chatbot uses an OpenAI-compatible third-party chat API. The default is Groq's
-[`llama-3.1-8b-instant`](https://console.groq.com/docs/model/llama-3.1-8b-instant), selected for low latency.
+The chatbot uses an OpenAI-compatible third-party chat API. The default is ai&'s `deepseek-ai/deepseek-v4-flash`, using the
+[ai& Chat Completions API](https://docs.aiand.com/api/chat-completions/).
 An API key must match its issuing provider. If the key is rejected or the API is unavailable, an explicitly labelled keyword demo takes over automatically.
 Its proposed reads still go through the real DataDNA gates; the assistant remains usable without an API key.
 
@@ -14,11 +14,12 @@ Store server-only configuration in **`runtime/chat-provider.json`**, which is ig
 
 ```json
 {
-  "base_url": "https://api.groq.com/openai/v1",
-  "model": "llama-3.1-8b-instant",
+  "base_url": "https://api.aiand.com/v1",
+  "model": "deepseek-ai/deepseek-v4-flash",
   "api_key": "<key issued by the configured provider>",
-  "timeout": 8,
-  "response_format": "json_object"
+  "timeout": 30,
+  "response_format": "json_object",
+  "reasoning_effort": "none"
 }
 ```
 
@@ -30,17 +31,18 @@ Environment variables override the local configuration file. `.env` is not autom
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `TRACEFIX_CHAT_API_URL` | `https://api.groq.com/openai/v1` | Provider base URL, including its API version path |
-| `TRACEFIX_CHAT_MODEL` | `llama-3.1-8b-instant` | Model offered by that provider |
+| `TRACEFIX_CHAT_API_URL` | `https://api.aiand.com/v1` | Provider base URL, including its API version path |
+| `TRACEFIX_CHAT_MODEL` | `deepseek-ai/deepseek-v4-flash` | Model offered by that provider |
 | `TRACEFIX_CHAT_API_KEY` | No default | Provider-specific server credential |
-| `TRACEFIX_CHAT_TIMEOUT` | `8` | Seconds per model call, from 1 to 180 |
+| `TRACEFIX_CHAT_TIMEOUT` | `30` | Seconds per model call, from 1 to 180 |
+| `TRACEFIX_CHAT_REASONING_EFFORT` | Unset | Optional effort supported by the model; `none` disables DeepSeek Flash reasoning for faster JSON decisions |
 | `TRACEFIX_CHAT_RESPONSE_FORMAT` | `json_object` | JSON object mode, or `json_schema` for models supporting strict schemas |
 
 HTTPS is required for remote providers; loopback HTTP is supported for testing.
 The client ignores proxy environment variables and does not follow redirects with credentials.
-The API protocol follows [Groq's compatibility documentation](https://console.groq.com/docs/openai).
+The API protocol follows [ai&'s compatibility documentation](https://docs.aiand.com/api/chat-completions/).
 JSON mode is combined with strict server-side validation. Optional schema mode follows the provider's
-[structured-output protocol](https://console.groq.com/docs/structured-outputs).
+[structured-output protocol](https://docs.aiand.com/capabilities/structured-outputs/).
 
 Start the application from the repository root:
 
@@ -48,9 +50,8 @@ Start the application from the repository root:
 .venv/bin/python -m uvicorn tracefix.app:app --host 127.0.0.1 --port 8000
 ```
 
-The connection card checks authentication and model availability through the configured provider's `/models`.
-A provider without that endpoint can still receive messages through `/chat/completions`, although its status
-check reports an unavailable endpoint. The chat interface renders and responds even if the API is unavailable.
+The connection card performs a small real classification through `/chat/completions`, checking authentication,
+credit, model availability and valid JSON output. Listing a public model catalog does not mark inference ready. The chat interface renders and responds even if the API is unavailable.
 A keyword demo answers the message when inference fails. No local Ollama service is required for this chatbot.
 
 For access from another device, bind uvicorn to `0.0.0.0` and open `http://<application-host>:8000/chat`.
@@ -90,6 +91,22 @@ Conversation messages and bounded history are sent to the configured third-party
 decisions are also saved locally. The provider never receives actual protected-source results or the API key
 as model conversation content. Missing configuration requires no provider request: demo mode starts immediately.
 
+## Text pipeline and replay
+
+The chatbot uses its own node arrangement, distinct from the bank/connector/wallet graph. Both simulations
+use `journal.emit` and immutable `tx_events`. `CHAT_PIPELINE_STAGE` records reception, customer identity, API
+wait/result or keyword fallback, intent routing, fooled planning, each proposed tool, all five policy checks,
+denial, audit and reply. Normal questions take the support-answer branch without visiting any gate or source.
+API failures retain a visible failure stage and safe reason, followed by the keyword branch.
+
+The browser polls committed stages while inference is running, animates a packet along the corresponding
+links, and pulses the waiting model/planner node. Policy-check packets represent request metadata; the
+protected backend stays unvisited and displays zero reads. Gate denials come from actual DataDNA records.
+The replay clock is a presentation clock (450 ms per stage), separate from saved occurrence timestamps.
+Pause, speed, request selection and replay are browser controls and never rerun inference or protected reads.
+Completed responses retain their event timeline across reloads. Owner checks apply to every pipeline poll,
+and lease filtering prevents stale retries from being mixed into the current request.
+
 ## HTTP contract
 
 All endpoints use the existing transfer bearer session and require customer identity. Conversation ownership
@@ -97,7 +114,8 @@ is checked server-side. A prompt claiming to be staff never changes the actual s
 
 | Method | Path under `/api/transfer` | Request |
 | --- | --- | --- |
-| GET | `/chat/status` | Provider authentication and model availability |
+| GET | `/chat/status` | Real inference probe; no keyword fallback |
+| GET | `/chat/sessions/{id}/pipeline?key=…&after=0` | Owned request’s saved pipeline events after a journal cursor |
 | POST | `/chat/sessions` | `{}` or `{"payment_id":"pay_…"}`; `Idempotency-Key` required |
 | GET | `/chat/sessions/{id}` | Saved owned conversation and its gate decisions |
 | POST | `/chat/sessions/{id}/messages` | `{"message":"…"}`; `Idempotency-Key` required |

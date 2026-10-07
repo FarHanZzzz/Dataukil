@@ -11,7 +11,7 @@
 5. **Complaint evidence:** attach the already-issued sample or another PNG/JPEG, then cite that exact receipt draft when filing the complaint. No receipt is regenerated during attachment.
 6. **Scan:** the operator opens directly to receipt evidence. Scan receipt performs actual OpenCV processing, then reveals saved regions top-to-bottom for approximately six seconds. Skip and Replay scan are presentation-only. Reduced motion displays saved findings immediately.
 7. **Review:** inspect Original, Processed or Annotated; zoom, enlarge, download and select field regions. Acknowledge missing fields and add a review note. Values come from the preserved transcript, not OpenCV text recognition.
-8. **Marketplace:** Verify with Marketplace first saves the current field review, then checks exact-context synthetic order and payment records. The QR board shows the query, returned order, itemization, QR, bank and cash checks.
+8. **DataDNA and Marketplace:** Verify with Marketplace first saves the current field review, then applies a versioned actor/case/purpose/basis/recipient policy before reading the exact synthetic source. The approved field projection excludes unrestricted receipt content and unnecessary identity details. The QR board shows the policy decision, field projection, audit metadata and independent order/payment checks.
 9. **Verdict/resolution:** a corroborated overpayment proposes its exact refundable excess. The owner approves a request and separately posts a synthetic completion. Rejection records an explanation without refund. Uncertainty pauses automation and saves an owned human handoff and next review.
 
 The customer sees QR screen result, cash report, observed debit, receipt, verdict and refund completion as separate facts. A receipt, template recognition or OpenCV result never confers source authority.
@@ -100,8 +100,22 @@ Customer projections hide source catalogs, profiles, raw comparisons, scan/revie
 
 ## Graph, exports and boundaries
 
-The QR-specific topology, renderer and append-only reducer remain in place. Active glowing edges, filled completed nodes, verdict colors and graph replay continue to use saved events. Receipt reveal frames create no backend events.
+The QR topology adds a DataDNA lane between evidence and Marketplace: Purpose & access, Minimum field release, Access decision log. Active edges, completed nodes, verdict colors and graph replay use saved events. Every node explains what it checks, the saved result and its citations. The replayed DataDNA inspector includes only decisions within the replay cursor. Receipt reveal frames create no backend events, and Marketplace reveal uses saved checks rather than invented progress.
 
 Dossiers retain original hashes, revisions, scan/review geometry, source checks, eligibility arithmetic, verdicts, historical resolutions and QR events, stripping image payloads from all manifests/history. Original and annotated preview downloads are separately named.
 
-All reader styles are QR-scoped. The Add money graph assets, topology, camera behavior and controls remain unchanged. See [receipt validation](QR_UI_VALIDATION.md).
+All reader and explanation styles are QR-scoped. See [receipt validation](QR_UI_VALIDATION.md).
+
+## DataDNA access controls and explained plan
+
+`tracefix/data_dna.py` supplies the shared deterministic demonstration policy. Before receipt decoding, the local processor obtains permission for the image, transcript and original hash. Receipt content is local-only; it is not a permitted investigator or external model packet. Before a Marketplace lookup, `record_data_access` records the field names, actor, source, linked case, purpose, synthetic basis, recipient, policy version, retention assumption and concerns. Original values are not copied into that log. The catalog is projected to the approved field names before comparison.
+
+The visible decisions are ALLOWED, MINIMIZED, BLOCKED and NEEDS_REVIEW. Permission to release a field is distinct from source availability: an unavailable source still supplies no evidence. Withheld reads produce uncertainty and an owned next step. The shared staff snapshot and dossier contain the audit metadata; the customer receives a bounded explanation of case-scoped data handling.
+
+Three owner-only actions demonstrate enforcement without accessing another customer's data or changing incident evidence: `privacy_probe` requests unrelated ledger information, `privacy_review_probe` omits the processing basis, and `privacy_recipient_probe` proposes an unapproved external model. They use the same policy evaluator, save decisions marked `demonstration:true, affects_case:false`, and never call a source adapter. They remain visible in replay and exported traces.
+
+The investigation explanation separates the initial customer observations from three possible explanations: duplicate payment, valid split tender and a conflicting receipt/source context. Saved hypotheses follow the actual comparisons and excess calculation; unresolved proof stays unresolved. A failed screen alone does not locate a production gateway failure. This workflow establishes payment duplication from synthetic records; production connector diagnosis would need traces and logs, and this demo runs no financial pilot.
+
+The saved four-step plan identifies each owner: DataDNA approves the evidence request, the investigator compares independent sources, the case owner approves the eligible outcome or owns missing evidence, and the simulation executor records a separate verified completion. Current local-processing and Marketplace grant IDs, evidence version and policy version bind financial actions. A policy change requires a new scan/source review before a pending refund can proceed. Completed refunds remain historical.
+
+The DataDNA panel explains field handling, each concern's control/owner/policy reference and the remaining production assurance: legal policy review, security/access checks, processor arrangements, rights/retention across copies, and decision-quality review. The synthetic service-resolution basis is a fixture assumption requiring institutional legal approval. Neither this policy nor its audit trace certifies PDPA compliance.

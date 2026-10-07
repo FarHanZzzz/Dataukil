@@ -70,8 +70,8 @@ PERSONAL = {'financial', 'payment_ref', 'account_identifier', 'contact', 'identi
 CLASS_LABEL = dict(financial='Transaction amount and posting', payment_ref='Payment or posting reference', account_identifier='Bank account or wallet number (MSISDN)',
                    contact='Phone or email', identity='Name or national ID', ops='Processing state and logs')
 
-PHONE = re.compile(r'(?<!\d)(?:\+?880|0)1\d{9}(?!\d)')
-LONG_DIGITS = re.compile(r'(?<![\d.,])\d{9,}(?![\d.,])')
+PHONE = re.compile(r'(?<![\w])(?:\+?880|0)1\d{9}(?![\w])')
+LONG_DIGITS = re.compile(r'(?<![\w.,])\d{9,}(?![\w.,])')  # not inside an alphanumeric id such as dna_0123456789ab
 EMAIL = re.compile(r'[\w.+-]+@[\w-]+\.[\w.-]+')
 
 
@@ -122,7 +122,7 @@ TOOL_PROFILES = {
     'mapping_check': dict(
         purposes=('resolve_unconfirmed_credit',), source='Connector mapping table', system='Connector mapping table', cross_org=False,
         necessity='required', subject='dynamic', scope='intent', direct_ids=True, maskable=True,
-        fields='dynamic', allow={'verified', 'ambiguous', 'candidates'}),
+        fields='dynamic', allow={'verified', 'ambiguous', 'candidates', 'candidate_count', 'candidate_tokens'}),
     'worker_error_check': dict(
         purposes=('resolve_unconfirmed_credit',), source='Authorized worker logs', system='Credit worker logs', cross_org=False,
         necessity='required', subject='none', scope='intent', direct_ids=True, maskable=True,
@@ -425,12 +425,13 @@ def _release(tool, profile, result):
         cands = data.get('candidates') or []
         facts['candidates'] = len(cands)
         if data.get('verified') and not data.get('ambiguous'):
-            data['candidates'] = [dict(ref=mask_ref(c.get('ref')), label=c.get('label')) for c in cands]
+            # The access policy may already have reduced candidates to opaque tokens; only legacy rows carry a reference to mask.
+            data['candidates'] = [dict(ref=mask_ref(c.get('ref')), label=c.get('label')) if ('ref' in c or 'label' in c) else dict(c) for c in cands]
         else:
             facts['third_party'] = True
             facts['withheld'] = len(cands) * 2
             facts['handling'] = f"Only the count of candidate wallets was released. {len(cands) * 2} identifiers were withheld before they reached the investigation."
-            data['candidates'] = [dict(ref='withheld', label=f'Unverified wallet {i + 1} (holder not disclosed)') for i in range(len(cands))]
+            data['candidates'] = [dict(ref='withheld', label=f'Unverified wallet {i + 1} (holder not disclosed)', **({'token': c['token']} if c.get('token') else {})) for i, c in enumerate(cands)]
     if tool == 'worker_error_check':
         count = 0
 

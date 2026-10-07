@@ -108,7 +108,8 @@ def test_verified_mapping_masks_the_wallet_reference(client):
     with sqlite3.connect(store.DB_PATH) as d:
         real = d.execute('SELECT candidate FROM tx_mappings').fetchone()[0]
         saved = json.loads(d.execute("SELECT data FROM tx_observations WHERE tool='mapping_check'").fetchone()[0])
-    assert saved['candidates'][0]['ref'] != real and '\u2022' in saved['candidates'][0]['ref'] and saved['verified'] is True
+    # The access policy already reduces candidates to opaque tokens; the gate must not bring the real reference back.
+    assert real not in json.dumps(saved) and saved['candidates'][0].get('token') and saved['verified'] is True
 
 
 # ------------------------------------------------------------------ the pure gate

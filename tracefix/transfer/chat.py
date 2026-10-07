@@ -14,7 +14,7 @@ from starlette.concurrency import run_in_threadpool
 
 from .. import store
 from ..domain import now, uid
-from . import chat_demo, chat_model, datadna, engine, journal, tools
+from . import chat_demo, chat_model, chat_pipeline as pipeline, datadna, engine, journal, tools
 from .routes import body_of, digest_of, idem_get, idem_key, idem_put, need
 
 router = APIRouter(prefix='/api/transfer/chat')
@@ -31,7 +31,7 @@ def owned_chat(db, identifier, actor):
 def chat_info(db, chat):
     payment = engine.payment_row(db, chat['payment_id'])
     return dict(id=chat['id'], payment_id=payment['id'], run_id=payment['run_id'],
-                reference=payment['reference'], case_id=payment['case_id'], synthetic=True)
+                reference=payment['reference'], case_id=payment['case_id'], synthetic=True, topology=pipeline.TOPOLOGY)
 
 
 def create_chat(actor, p, key):
@@ -103,6 +103,24 @@ def conversation(identifier: str, request: Request):
     return read_chat(identifier, s['actor'])
 
 
+@router.get('/sessions/{identifier}/pipeline')
+def pipeline_state(identifier: str, request: Request, key: str, after: int = 0):
+    s = need(request, 'customer')
+    if not 1 <= len(key) <= 200 or after < 0:
+        raise HTTPException(422, 'Invalid pipeline cursor or operation key.')
+    with store.connect() as db:
+        chat = owned_chat(db, identifier, s['actor'])
+        turn = db.execute('SELECT * FROM tx_chat_turns WHERE chat_id=? AND idem_key=?', (identifier, key)).fetchone()
+        return dict(status=turn['status'] if turn else 'waiting',
+                    events=[e for e in pipeline.events(db, chat, turn) if e['sequence'] > after] if turn else [])
+
+
+def stage(chat, key, lease, node, detail, **kwargs):
+    with store.transaction() as db:
+        turn = pipeline.active_turn(db, chat['id'], key, lease)
+        pipeline.emit(db, chat, turn, node, detail, **kwargs)
+
+
 def reserve(identifier, actor, key, message, timeout):
     digest = digest_of(dict(message=message))
     with store.transaction() as db:
@@ -131,6 +149,9 @@ def reserve(identifier, actor, key, message, timeout):
             history.extend([dict(role='user', content=row['message']),
                             dict(role='assistant', content=json.loads(row['response'])['reply'])])
         history.append(dict(role='user', content=message))
+        turn = pipeline.active_turn(db, identifier, key, lease)
+        pipeline.emit(db, chat, turn, 'input', 'Customer text received; treated as untrusted input.')
+        pipeline.emit(db, chat, turn, 'identity', 'Authenticated customer identity retained. Role claims cannot change it.', source='input')
         return chat, lease, None, history
 
 
@@ -185,6 +206,18 @@ def finish(chat, actor, key, lease, classification, plan, model, mode='api', fal
                              case_version=case['version'], payload=record, sim_ms=run['clock_ms'])
                 records.append(record)
                 attempts.append(dict(tool=tool, reason=attempt.reason, decision=record['decision']))
+                pipeline.emit(db, chat, turn, 'gateway', attempt.reason, source='planner', tool=tool)
+                pipeline.emit(db, chat, turn, 'dna', 'Evaluate the proposed read before invoking its source adapter.', source='gateway', tool=tool)
+                previous = 'dna'
+                for gate in record['gates']:
+                    pipeline.emit(db, chat, turn, gate['id'], gate['headline'],
+                                  state='blocked' if gate['status'] in ('fail', 'block', 'blocked') else 'done', source=previous, tool=tool)
+                    previous = gate['id']
+                pipeline.emit(db, chat, turn, 'blocked', record['summary'], state='blocked', source=previous, tool=tool)
+            pipeline.emit(db, chat, turn, 'backend', 'No protected source adapter was called. All proposals were denied.', state='skipped')
+            pipeline.emit(db, chat, turn, 'audit', f'{len(records)} DataDNA decisions saved to the simulation journal.', source='blocked')
+        else:
+            pipeline.emit(db, chat, turn, 'public', 'General support answer; no tools or protected data requested.', source='classify')
         # A blocked response is constructed from saved gate decisions, never a model claim that secrets were read.
         reply = ('I tried the requested backend access, but DataDNA blocked it before any protected data was read.'
                  if records else classification.reply)
@@ -196,6 +229,8 @@ def finish(chat, actor, key, lease, classification, plan, model, mode='api', fal
         journal.emit(db, 'CHAT_TURN_COMPLETED', run_id=payment['run_id'], payment_id=payment['id'], case_id=payment['case_id'],
                      payload=dict(chat_id=chat['id'], turn_id=turn['id'], deceptive=classification.deceptive,
                                   attempted_tools=[a['tool'] for a in attempts], protected_reads=0, model=model))
+        pipeline.emit(db, chat, turn, 'reply', 'Safe response delivered to the customer.', source='audit' if records else 'public')
+        response['pipeline'] = pipeline.events(db, chat, turn)
         db.execute("UPDATE tx_chat_turns SET status='completed',response=? WHERE id=?", (json.dumps(response), turn['id']))
         return response
 
@@ -222,13 +257,23 @@ async def message(identifier: str, request: Request):
         try:
             if config_error:
                 raise config_error
+            await run_in_threadpool(stage, chat, key, lease, 'api', f'Waiting for {model} classification.', state='running', source='identity')
             async with asyncio.timeout(2 * timeout + 10):
                 classification = await chat_model.classify(history)
+                await run_in_threadpool(stage, chat, key, lease, 'api', 'Classification returned from the model API.')
+                await run_in_threadpool(stage, chat, key, lease, 'classify', classification.reason, source='api')
+                if classification.deceptive:
+                    await run_in_threadpool(stage, chat, key, lease, 'planner', 'Deceptive request detected. Asking the model to act fooled and propose reads.', state='running', source='classify')
                 plan = await chat_model.act_fooled(history) if classification.deceptive else None
         except (HTTPException, TimeoutError) as exc:
             classification, plan = chat_demo.evaluate(history)
             mode, model = 'demo', 'keyword-demo'
             fallback_reason = exc.detail if isinstance(exc, HTTPException) else 'The model API timed out.'
+            await run_in_threadpool(stage, chat, key, lease, 'api', fallback_reason, state='failed')
+            await run_in_threadpool(stage, chat, key, lease, 'demo', 'Deterministic keyword rules selected because the API failed.', source='api')
+            await run_in_threadpool(stage, chat, key, lease, 'classify', classification.reason, source='demo')
+        if classification.deceptive:
+            await run_in_threadpool(stage, chat, key, lease, 'planner', 'Assistant accepted the premise and proposed: ' + ', '.join(a.tool for a in plan.attempts), source='classify')
         return await run_in_threadpool(finish, chat, s['actor'], key, lease, classification, plan, model, mode, fallback_reason)
     except BaseException:
         await asyncio.shield(run_in_threadpool(release, identifier, key, lease))

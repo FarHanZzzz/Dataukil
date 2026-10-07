@@ -3,6 +3,7 @@ import { get, post, startSession, ApiError } from './api.js';
 import { h, fill, link, navigate, taka, simClock, toast } from './util.js';
 import { icon } from './icons.js';
 import { withRun, journey, siteHeader, flowStrip, investigationPreview, rememberPayment, rememberRun } from './guide.js';
+import { dnaFunnel, investigationStory } from './privacy.js';
 
 const DISCLOSURE = 'Synthetic demo · Fictional BDT and partner records. No real transfers.';
 const SCENARIOS = {
@@ -62,7 +63,12 @@ export async function mount(app, path, requestedRun) {
         h('div', { class: 'mfs-cta' }, nextLink, demoLink), nextNote,
         h('p', { class: 'am-hero-disclosure', text: 'Interactive walkthrough · Fictional money · Progress saved' })), demoCard),
       guideHost,
-      h('section', { class: 'am-workflow-grid' }, runPanel, setup), recent,
+      h('section', { class: 'am-workflow-grid' }, runPanel, setup),
+      h('section', { class: 'dna-walkthrough', 'aria-labelledby': 'dna-walkthrough-title' },
+        h('div', { class: 'dna-walkthrough-intro' }, h('span', { class: 'am-kicker', text: 'Explainable operations + governed data' }), h('h2', { id: 'dna-walkthrough-title', text: 'Every check has a purpose. Every action has an owner.' }),
+          h('p', { text: 'Watch the system move from an unconfirmed payment to source evidence, a privacy-aware recommendation, operator approval and a verified outcome.' })),
+        h('div', { class: 'dna-walkthrough-grid' }, dnaFunnel([], true), investigationStory()),
+        h('p', { class: 'dna-walkthrough-note', text: 'In the workspace, open DataDNA to inspect fields permitted for release, withheld information and policy reasons, or demonstrate a denied request. The current investigation is rules-based; the policy is synthetic and requires institutional approval before production.' })), recent,
       h('footer', { class: 'am-footer' }, h('span', { text: 'DataUkil / Connected by evidence.' }), h('span', { text: DISCLOSURE })))));
 
   for (const s of scenarios) {
