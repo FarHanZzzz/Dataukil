@@ -90,7 +90,7 @@ def fresh(c):
 
 
 def customer_view(c):
-    from . import localization
+    from . import data_dna, localization
     f = facts(c)
     confirmed = []
     if f['qr_confirmed']:
@@ -131,6 +131,7 @@ def customer_view(c):
         incident_id=c.get('incident_id'),transaction_id=c.get('transaction_id'),issue_type=c.get('issue_type','PAID_TWICE'),
         last_verified_update=c.get('last_verified_update'),investigation_stage=c.get('investigation_stage','NOT_STARTED'),
         workflow=c.get('workflow'),customer_observed_debit=bool(c.get('customer_observed_debit')),qr_pipeline=safe_qr,
+        data_dna_summary=data_dna.customer_summary(c.get('data_dna',{}).get('decisions',[])),
         resolution=({k:c['resolution'].get(k) for k in ('action','result','amount_minor','at','synthetic')} if c.get('resolution') else None),synthetic=True)
 
 

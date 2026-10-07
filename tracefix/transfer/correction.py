@@ -9,9 +9,9 @@ import hashlib
 import json
 from datetime import datetime, timedelta, timezone
 
-from .. import store
+from .. import data_dna, store
 from ..domain import now, uid
-from . import catalog, contract, journal
+from . import catalog, contract, journal, privacy
 from . import investigation
 from .engine import (credit_wallet, customer_update, finish_payment, handler, mutate_case, notify, payment_row, run_row, sandbox_enabled,
                      schedule, stage, taka, bump_evidence, owner_label)
@@ -50,16 +50,25 @@ def plan_public(p):
     return dict(plan_id=p['id'], kind=p['kind'], label=spec['label'], status=p['status'], moves_money=spec['money'],
                 steps=PLAN_STEPS.get(p['kind'], []), evidence_version=p['evidence_version'], observation_ids=p['observation_ids'],
                 options=p['eligibility']['options'], missing_proof=p['eligibility'].get('missing_proof', []), outcome=p['outcome'],
-                sandbox_enabled=sandbox_enabled(), approved_by=p['approved_by'], approved_at=p['approved_at'])
+                sandbox_enabled=sandbox_enabled(), approved_by=p['approved_by'], approved_at=p['approved_at'],
+                data_dna=p['eligibility'].get('data_dna'))
 
 
 def _performed(db, case_id):
-    return [r['tool'] for r in db.execute('SELECT DISTINCT tool FROM tx_observations WHERE case_id=?', (case_id,))]
+    return [r['tool'] for r in db.execute("SELECT DISTINCT tool FROM tx_observations WHERE case_id=? AND status='completed'", (case_id,))]
 
 
 def propose(db, run, case, payment, inv, conclusion):
     kind = conclusion['kind']
+    context = privacy.plan_context(db, case['id'], inv['id'])
+    if context['readiness'] != 'READY':
+        return handoff(db, run, case, payment, inv, dict(summary='Source permission is not established; no correction can be proposed.',
+            next_requirement='Privacy owner must resolve the DataDNA decision before operations can propose a correction.'))
+    access = privacy.authorize_check(db, run, case, payment, 'eligibility_check', inv['started_by'], investigation_id=inv['id'], stage='plan_validation')
+    if access['decision'] not in ('ALLOWED', 'MINIMIZED'):
+        return handoff(db, run, case, payment, inv, dict(summary=access['reason'], next_requirement='Privacy owner must review the denied eligibility read.'))
     e = contract.eligibility(db, payment, run['clock_ms'], _performed(db, case['id']))
+    e['data_dna'] = privacy.plan_context(db, case['id'], inv['id'])
     db.execute("UPDATE tx_corrections SET status='superseded' WHERE payment_id=? AND status='proposed'", (payment['id'],))
     plan_id = uid('plan')
     db.execute('INSERT INTO tx_corrections(id,case_id,payment_id,investigation_id,kind,status,label,eligibility,evidence_version,observation_ids,created_ms,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
@@ -100,6 +109,14 @@ def handoff(db, run, case, payment, inv, conclusion):
 
 
 def _blocked_reasons(db, payment, clock, case_id):
+    if privacy.snapshot(db, case_id)['readiness'] != 'READY':
+        return [dict(kind=k, label=v['label'], reasons=['Source access requires privacy review; financial eligibility was not queried.'])
+                for k, v in catalog.CORRECTION_KINDS.items()]
+    case = store.get_case(db, case_id)
+    run = run_row(db, payment['run_id'])
+    access = privacy.authorize_check(db, run, case, payment, 'eligibility_check', case['owner'], stage='handoff_eligibility')
+    if access['decision'] not in ('ALLOWED', 'MINIMIZED'):
+        return [dict(kind=k, label=v['label'], reasons=[access['reason']]) for k, v in catalog.CORRECTION_KINDS.items()]
     e = contract.eligibility(db, payment, clock, _performed(db, case_id))
     return [dict(kind=o['kind'], label=catalog.CORRECTION_KINDS[o['kind']]['label'], reasons=o['reasons']) for o in e['options'] if not o['eligible']]
 
@@ -121,11 +138,20 @@ def approve(db, case_id, plan_id, actor, idem_key, evidence_version):
     if evidence_version != plan['evidence_version'] or case['evidence_version'] != plan['evidence_version']:
         db.execute("UPDATE tx_corrections SET status='superseded' WHERE id=? AND status='proposed'", (plan_id,))
         raise Refused(409, 'The evidence changed after this plan was proposed. Review the new evidence before approving.', persist=True)
+    context = plan['eligibility'].get('data_dna') or {}
+    if context.get('policy_version') != data_dna.POLICY_VERSION or context.get('readiness') != 'READY':
+        db.execute("UPDATE tx_corrections SET status='superseded' WHERE id=? AND status='proposed'", (plan_id,))
+        raise Refused(409, 'The plan has no current DataDNA authorization. Run a new investigation under the current policy before approving.', persist=True)
+    if privacy.plan_context(db, case_id, plan['investigation_id'])['readiness'] != 'READY':
+        raise Refused(409, 'A source access decision requires privacy review. Resolve it before approving this plan.')
     spec = catalog.CORRECTION_KINDS[plan['kind']]
     payment = payment_row(db, plan['payment_id'])
     run = run_row(db, payment['run_id'])
     if spec['money'] and not sandbox_enabled():
         raise Refused(403, 'Correction execution is disabled on this server. Investigation and reporting remain available.')
+    access = privacy.authorize_check(db, run, case, payment, 'eligibility_check', actor, stage='approval_revalidation')
+    if access['decision'] not in ('ALLOWED', 'MINIMIZED'):
+        raise Refused(409, 'DataDNA refused fresh source access: ' + access['reason'], persist=True)
     e = contract.eligibility(db, payment, run['clock_ms'], _performed(db, case_id))
     option = next(o for o in e['options'] if o['kind'] == plan['kind'])
     if not option['eligible']:
@@ -161,7 +187,7 @@ def _start_resume(db, run, payment, plan, case, actor):
 
 
 def _refresh_status(db, run, payment, plan, case, actor):
-    credit = contract.records(db, payment, run['clock_ms'])['credit']
+    credit = contract.records(db, payment, run['clock_ms'], sections={'credit'})['credit']
     finish_payment(db, run, payment_row(db, payment['id']), dict(ref=credit['ref'], attempt_no=credit['attempt_no']), how='ledger confirmation')
     outcome = dict(result='completed', message='Customer status refreshed. No money moved.', posting_ref=credit['ref'])
     db.execute("UPDATE tx_corrections SET status='completed' WHERE id=?", (plan['id'],))

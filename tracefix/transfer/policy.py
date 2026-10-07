@@ -80,6 +80,9 @@ def assess(tool, obs, view):
         if cur.get(hid, {}).get('status', 'unchecked') != status:
             out.append(dict(hypothesis_id=hid, status=status, rationale=why, cites=[oid]))
 
+    if obs['status'] != 'completed' and tool in ('attempt_history_check', 'mapping_check', 'eligibility_check'):
+        return out
+
     if tool == 'bank_record_check' and obs['status'] == 'completed':
         if d['debit_count'] == 1 and d['amount_matches']:
             set_('duplicate', 'ruled_out', 'One bank debit posting exists for this intent; no duplicate funding leg in this scope.')

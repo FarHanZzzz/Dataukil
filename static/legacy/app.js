@@ -221,11 +221,13 @@ async function mutate(role, path, body) {
 }
 function focusSelector(node){
   if(node.id)return '#'+CSS.escape(node.id);
+  if(node.matches('summary')&&node.parentElement.dataset.disclosure)return `[data-disclosure="${CSS.escape(node.parentElement.dataset.disclosure)}"]>summary`;
   const key=['data-action','data-modal','data-check','data-qr-action','data-qr-verdict','data-qr-section','data-qr-zoom','data-qr-node','data-staff-tab','data-customer-tab','data-phone-nav','data-qr-replay'].find(key=>node.hasAttribute(key));
   return key?`[${key}="${CSS.escape(node.getAttribute(key))}"]`:null;
 }
 function snapshot(el) {
   return {
+    disclosures:[...el.querySelectorAll('details[data-disclosure]')].map(n=>({key:n.dataset.disclosure,open:n.open})),
     focus: el.contains(document.activeElement)
       ? {
           id: document.activeElement.id,
@@ -243,6 +245,7 @@ function snapshot(el) {
   };
 }
 function restore(el, s) {
+  for(const old of s.disclosures||[]){const n=el.querySelector(`[data-disclosure="${CSS.escape(old.key)}"]`);if(n)n.open=old.open;}
   for (const old of s.scroll) {
     const n = el.querySelector(`[data-scroll="${old.key}"]`);
     if(n)n.scrollLeft=old.left||0;
@@ -335,7 +338,7 @@ function renderJourney() {
     ["Cash", "Receive the receipt"],
     ["Bank activity", "See the debit"],
     ["Complaint", "Attach evidence"],
-    ["Scan", "AI annotates regions"],
+    ["Scan", "Review visual regions"],
     ["Marketplace", "Cross-check the order"],
     ["Verdict", "Refund or handoff"],
     ["Outcome", "Customer update"],
@@ -589,11 +592,28 @@ function qrComparisonValue(key,value){
   if(key==='item'&&Array.isArray(value))return value.map(row=>`${row[0]} · ${row[1]} × ${money(row[2])} = ${money(row[3])}`).join('; ');
   return String(value);
 }
+function qrDataDNAPanel(c,isOwner) {
+  const events=c.qr_events||[], replay=S.qrReplay!==null;
+  const decisions=replay?events.slice(0,S.qrReplay).filter(e=>e.data_dna).map(e=>e.data_dna):(c.data_dna?.decisions||[]);
+  const counts=Object.fromEntries(['ALLOWED','MINIMIZED','BLOCKED','NEEDS_REVIEW'].map(key=>[key,decisions.filter(d=>d.decision===key).length]));
+  const latest=decisions.at(-1), activeReview=!replay&&c.data_dna?.readiness==='REVIEW_REQUIRED';
+  const decisionCard=d=>`<details class="qr-dna-decision ${esc(d.decision.toLowerCase())}" data-disclosure="dna-${esc(d.id)}"><summary><span><strong>${esc(d.source)}</strong><small>${d.demonstration?'Boundary demonstration · ':''}${date(d.at)} · ${esc(d.actor)}</small></span><b class="qr-dna-badge ${esc(d.decision.toLowerCase())}">${esc(d.decision.replaceAll('_',' '))}</b></summary><p>${esc(d.reason)}</p><dl class="qr-dna-meta"><dt>Purpose</dt><dd>Resolve this payment case</dd><dt>Approved destination</dt><dd>${esc(d.recipient.replaceAll('_',' '))}</dd><dt>Basis</dt><dd>${esc(d.basis_label||'Synthetic assumption; production review required')}</dd><dt>Scope</dt><dd>${esc(d.scope)}</dd><dt>Policy / decision</dt><dd>${esc(d.policy_version)} · ${esc(d.id)}</dd></dl><div class="qr-dna-field-grid"><div><span>FIELDS PERMITTED FOR RELEASE · ${d.released_fields.length}</span><p>${esc(d.released_fields.map(k=>k.replaceAll('_',' ')).join(', ')||'None — source retrieval withheld')}</p></div><div><span>WITHHELD FIELD NAMES · ${d.withheld_fields.length}</span><p>${esc(d.withheld_fields.map(k=>k.replaceAll('_',' ')).join(', ')||'None')}</p></div></div>${(d.concerns||[]).map(issue=>`<article class="qr-dna-concern"><strong>${esc(issue.title)}</strong><p>${esc(issue.action)}</p><small>${esc(issue.owner.replaceAll('_',' '))} · ${esc(issue.status)} · ${esc(issue.policy_ref)}</small></article>`).join('')}<p class="field-hint">Permission is evaluated before retrieval; source availability is checked separately. ${esc(d.retention)}${d.demonstration?' This demonstration does not change incident evidence or financial eligibility.':''}</p></details>`;
+  return `<section id="qr-privacy" class="qr-dna-panel"><div class="qr-dna-heading"><div><span class="eyebrow">DATADNA · BEFORE DATA REACHES THE INVESTIGATOR</span><h3>Every request has a reason and a boundary.</h3><p>Read only what this case needs. Save the access decision before the source check.</p></div><span class="qr-dna-badge ${activeReview?'needs_review':'allowed'}">${replay?'SAVED EVENT REPLAY':activeReview?'Case needs privacy review':decisions.length?'Policy checks recorded':'Ready for a scoped request'}</span></div><div class="qr-dna-funnel" aria-label="DataDNA access funnel"><article><b>01</b><strong>Identify the request</strong><small>Authenticated owner + this purchase</small></article><article><b>02</b><strong>Check permission</strong><small>Purpose + basis + approved destination</small></article><article><b>03</b><strong>Release less data</strong><small>Field projection; identities withheld</small></article><article><b>04</b><strong>Save the decision</strong><small>Actor, policy and handling; no raw values</small></article></div><div class="qr-dna-counts">${Object.entries(counts).map(([key,count])=>`<span class="${key.toLowerCase()}"><b>${count}</b>${key.replaceAll('_',' ').toLowerCase()}</span>`).join('')}</div>${latest?`<p class="qr-dna-latest" role="status"><strong>Latest decision:</strong> ${esc(latest.reason)}</p>`:'<p class="qr-dna-latest">The original image stays in the local receipt processor. Marketplace investigation receives only the approved structured payment fields.</p>'}<details class="qr-dna-trace" data-disclosure="dna-trace-${esc(c.id)}"><summary>Inspect field handling and privacy concerns · ${decisions.length} saved decisions</summary>${decisions.length?decisions.slice().reverse().map(decisionCard).join(''):'<p>Scan the receipt or run a boundary demonstration to create an access decision.</p>'}</details><details class="qr-dna-boundaries" data-disclosure="dna-boundaries-${esc(c.id)}"><summary>Demonstrate a blocked or paused request</summary><p>These requests go through the same server policy. A denied request does not retrieve source data; the demonstration leaves this payment’s evidence unchanged.</p><div class="qr-dna-probes"><button class="button secondary small" data-qr-action="privacy_probe" ${!isOwner||replay?'disabled':''}${disabled('staff')}>Try unrelated customer data</button><button class="button secondary small" data-qr-action="privacy_review_probe" ${!isOwner||replay?'disabled':''}${disabled('staff')}>Try a missing processing basis</button><button class="button secondary small" data-qr-action="privacy_recipient_probe" ${!isOwner||replay?'disabled':''}${disabled('staff')}>Try an unapproved model</button></div></details><details class="qr-dna-assurance" data-disclosure="dna-assurance-${esc(c.id)}"><summary>Permissions, remaining audits and operator benefit</summary><div class="qr-dna-permissions"><article><strong>Investigator</strong><p>Read the permitted case fields, compare proof and propose a plan. No permission to move money or override DataDNA.</p></article><article><strong>Operator</strong><p>Review the cited plan and approve its current eligible amount. Own uncertain cases and their next review.</p></article><article><strong>Privacy and security owners</strong><p>Approve production legal basis, access rules and model recipients; review security, processor contracts, rights and retention across stored copies.</p></article></div><p>DataDNA creates evidence for assurance. Production still needs legal policy review, access and security checks, data lifecycle assurance and decision quality reviews; this synthetic policy is not PDPA certification.</p><p class="qr-dna-benefit"><strong>Operator benefit:</strong> one trace links evidence, withheld fields, concerns and the next action, reducing manual source hunting and repetitive access documentation.</p></details></section>`;
+}
+function qrInvestigationExplanation(c,market) {
+  const saved=market?.investigation;
+  const hypotheses=saved?.hypotheses||[
+    {title:'Both payments exceeded the invoice',status:'NOT_CHECKED',proof:'Need the exact bank posting, confirmed cash and invoice total.'},
+    {title:'QR and cash were a valid split payment',status:'NOT_CHECKED',proof:'Check total paid against the invoice; a receipt alone cannot establish duplication.'},
+    {title:'Receipt or source context conflicts',status:'NOT_CHECKED',proof:'Compare the same merchant, items, timestamp and linked references.'},
+  ];
+  return `<section class="qr-investigation-explainer"><span class="eyebrow">HOW THE INVESTIGATION REACHES ITS CONCLUSION</span><h3>Observe → test explanations → plan a safe response</h3><p>${esc(saved?.observation||'A failed QR screen, a cash receipt and a later observed debit start an investigation. These observations do not identify a failed gateway by themselves.')}</p><div class="qr-hypothesis-list">${hypotheses.map(h=>`<article><div><strong>${esc(h.title)}</strong><span class="qr-hypothesis-state ${h.status.toLowerCase()}">${esc(h.status.replaceAll('_',' '))}</span></div><p>${esc(h.proof)}</p></article>`).join('')}</div><p class="field-hint">${esc(saved?.diagnosis||'The case investigator checks saved source records. A production gateway diagnosis would also need transaction traces and connector logs; this journey runs no financial pilot or retry.')}</p>${saved?.plan?`<details class="qr-explained-plan" data-disclosure="plan-${esc(market.id)}" open><summary>Explain the proposed operational plan</summary><ol>${saved.plan.map(step=>`<li><span class="qr-plan-number">${step.step}</span><div><strong>${esc(step.title)}</strong><p>${esc(step.detail)}</p><small>Owner: ${esc(step.owner===c.owner?actorName(step.owner):step.owner)} · ${esc(step.step===3&&c.qr_pipeline?.verdict?'OPERATOR_VERDICT_SAVED':step.step===4&&c.qr_pipeline?.resolution?.state==='REFUND_COMPLETED'?'COMPLETED':step.status.replaceAll('_',' '))}</small></div></li>`).join('')}</ol><p class="field-hint">Financial eligibility is checked separately from data access. The proposed outcome cites evidence v${c.evidence_version} and policy ${esc(market.data_dna_policy_version||'legacy record')}.</p></details>`:''}</section>`;
+}
 function qrOperatorPanel(c) {
   const pipe=c.qr_pipeline || {},scan=pipe.receipt_scan,market=pipe.marketplace,verdict=pipe.verdict,resolution=pipe.resolution;
   const receipt=[...c.evidence].reverse().find(e=>e.kind==="customer_supplied" && e.blob?.mime?.startsWith("image/"));
-  const scanFresh=scan?.evidence_version===c.evidence_version && scan?.manifest_version===2;
-  const marketFresh=market?.evidence_version===c.evidence_version && scanFresh && market?.status!=="STALE" && market?.review_id===pipe.receipt_review?.id;
+  const scanFresh=scan?.evidence_version===c.evidence_version && scan?.manifest_version===2 && scan?.data_dna_policy_version===c.data_dna?.policy_version;
+  const marketFresh=market?.evidence_version===c.evidence_version && scanFresh && market?.status!=="STALE" && market?.review_id===pipe.receipt_review?.id && market?.data_dna_policy_version===c.data_dna?.policy_version;
   const verdictFresh=verdict?.evidence_version===c.evidence_version && marketFresh && verdict.status==='RECORDED' && verdict.source_result_id===market.id;
   const anim=S.qrAnimation;
   const isOwner=S.tokens.staff?.actor===c.owner;
@@ -606,13 +626,14 @@ function qrOperatorPanel(c) {
   else if(!verdictFresh)primary=`<button class="button primary ${market.outcome.toLowerCase()}" data-qr-verdict="${esc(market.outcome)}" ${isOwner?"":"disabled"}${disabled("staff")}>Record ${market.outcome.toLowerCase()} verdict ${icon("check")}</button>`;
   else if(verdict.outcome==="LEGITIMATE" && resolution?.state!=="REFUND_COMPLETED")primary=`<button class="button primary" data-qr-action="${resolution?.state==="REFUND_REQUESTED"?"complete_refund":"approve_refund"}" ${isOwner?"":"disabled"}${disabled("staff")}>${resolution?.state==="REFUND_REQUESTED"?"Post simulated refund":"Approve simulated refund"} ${icon("cash")}</button>`;
   else if(verdict.outcome==="UNCERTAIN" && !pipe.handoff)primary=`<button class="button primary handoff" data-qr-action="handoff" ${isOwner?"":"disabled"}${disabled("staff")}>Create human handoff ${icon("users")}</button>`;
+  if(S.qrReplay!==null)primary=primary.replace('<button','<button disabled');
   const active=anim?.node;
   const graph=QRGraph.render(c.qr_events || [],{count:S.qrReplay??undefined,zoom:S.qrZoom,selected:S.qrSelected,active});
   const receiptView=QRReceipt.render(c,receipt,!isOwner||resolution?.state==='REFUND_COMPLETED');
   const marketView=market?`<section id="qr-marketplace" class="qr-market-section"><h3>Synthetic Marketplace response</h3><p>${esc(market.reason)}</p><div class="qr-table-scroll" tabindex="0" aria-label="Marketplace evidence comparison"><table><thead><tr><th>Field</th><th>Receipt / linked context</th><th>Marketplace record</th><th>Result</th></tr></thead><tbody>${market.comparisons.map(v=>`<tr><th>${esc(v.field.replaceAll('_',' '))}</th><td>${esc(qrComparisonValue(v.field,v.receipt))}</td><td>${esc(qrComparisonValue(v.field,v.marketplace))}</td><td class="${v.status.toLowerCase()}">${esc(v.status)}</td></tr>`).join('')}</tbody></table></div><p class="field-hint">${esc(market.source_id)} · exact purchase only · no external request</p></section>`:"";
   const handoff=pipe.handoff?`<section class="qr-resolution-card handoff"><h3>Human review is owned and open</h3><dl><dt>Current owner</dt><dd>${esc(actorName(c.owner))}</dd><dt>Receiving queue</dt><dd>${esc(pipe.handoff.queue)} · ${esc(actorName(pipe.handoff.destination))}</dd><dt>Next review</dt><dd>${date(c.next_review)}</dd><dt>Missing evidence</dt><dd>${esc(pipe.handoff.missing_evidence.join(', '))}</dd></dl><p>${esc(pipe.handoff.reason)}</p>${S.tokens.staff?.actor===pipe.handoff.destination && pipe.handoff.status==="REQUESTED"?'<button class="button primary" data-action="acknowledge">Accept human handoff</button>':""}</section>`:"";
   const outcome=verdictFresh||completed?`<section id="qr-outcome" class="qr-resolution-card ${verdict.outcome.toLowerCase()}"><h3>${verdict.outcome==="LEGITIMATE"?resolution.state==="REFUND_COMPLETED"?"Simulated refund completed":"Legitimate · refund proposed":verdict.outcome==="REJECTED"?"Rejected · no refund":"Uncertain · automation paused"}</h3><p>${esc(verdict.reason)}</p>${resolution?`<p><strong>${money(resolution.amount_minor)}</strong> · ${esc(resolution.state.replaceAll('_',' '))}. ${resolution.state==="REFUND_COMPLETED"?"Synthetic completion saved; no real money moved.":"Money returned is shown only after a completed-refund event."}</p>`:""}${handoff}</section>`:"";
-  return `<section class="qr-operator-panel"><div class="qr-panel-head"><div><span class="eyebrow">AI FIRST-LINE OPERATOR</span><h3>Receipt → Marketplace → Outcome</h3><p>One receipt, one exact purchase, one saved outcome.</p></div><span class="qr-state-pill">Evidence v${c.evidence_version}</span></div><div class="qr-primary-stage"><div><span>CURRENT INVESTIGATION STEP</span><strong aria-live="polite">${esc(stage)}</strong>${!isOwner?`<small>${esc(actorName(c.owner))} owns the actions on this case.</small>`:!receipt?`<small>Request an original receipt from the customer using Case tools.</small>`:""}</div>${primary}</div>${!scanFresh&&scan?note(completed?"The completed refund remains historical. New evidence is preserved for follow-up and cannot create another refund.":"The evidence changed. Scan and verify the current receipt before taking another decision.","warning"):""}${marketFresh||anim?.kind==="marketplace"?`${graph}${marketView}${outcome}${receiptView}`:`${receiptView}<details class="qr-graph-preview"><summary>Preview the investigation workflow</summary>${graph}</details>`}<details class="qr-secondary-tools"><summary>Case tools and additional evidence</summary><div class="action-grid"><button class="button secondary" data-modal="task">Request evidence</button><button class="button secondary" data-modal="evidence">Add operator notes</button><button class="button secondary" data-action="export">Export dossier</button></div>${requestList(c)}</details></section>`;
+  return `<section class="qr-operator-panel"><div class="qr-panel-head"><div><span class="eyebrow">GUIDED CASE INVESTIGATOR · SYNTHETIC RULES</span><h3>Receipt → DataDNA → Source proof → Outcome</h3><p>One receipt, one exact purchase, an explained and owned response.</p></div><span class="qr-state-pill">Evidence v${c.evidence_version}</span></div><div class="qr-primary-stage"><div><span>CURRENT INVESTIGATION STEP</span><strong aria-live="polite">${esc(stage)}</strong>${!isOwner?`<small>${esc(actorName(c.owner))} owns the actions on this case.</small>`:!receipt?`<small>Request an original receipt from the customer using Case tools.</small>`:""}</div>${primary}</div>${!scanFresh&&scan?note(completed?"The completed refund remains historical. New evidence is preserved for follow-up and cannot create another refund.":"The evidence changed. Scan and verify the current receipt before taking another decision.","warning"):""}${qrDataDNAPanel(c,isOwner)}${marketFresh||anim?.kind==="marketplace"?`${graph}${qrInvestigationExplanation(c,market)}${marketView}${outcome}${receiptView}`:`${receiptView}${qrInvestigationExplanation(c,null)}<details class="qr-graph-preview"><summary>Preview the investigation workflow</summary>${graph}</details>`}<details class="qr-secondary-tools"><summary>Case tools and additional evidence</summary><div class="action-grid"><button class="button secondary" data-modal="task">Request evidence</button><button class="button secondary" data-modal="evidence">Add operator notes</button><button class="button secondary" data-action="export">Export dossier</button></div>${requestList(c)}</details></section>`;
 }
 function staffOverview(c) {
   const f = c.facts,
@@ -820,19 +841,19 @@ const revealPause=()=>new Promise(resolve=>setTimeout(resolve,reducedMotion()?0:
 async function runQRCheck(kind){
   const payload=kind==='marketplace'?QRReceipt.reviewPayload(S.staffCase):null;
   await busy("staff",kind==="receipt_scan"?"Processing receipt image…":"Querying Marketplace…",async()=>{
-    const c=S.staffCase;
-    S.qrAnimation={kind,node:kind==="receipt_scan"?"receipt_scan":"purchase_lookup",label:kind==="receipt_scan"?"Processing receipt image":"AI sends an exact purchase query",index:0};
+    const c=S.staffCase, previousSequence=(c.qr_events||[]).length;
+    S.qrAnimation={kind,node:"policy_gate",label:"DataDNA checks this case-scoped data request",index:0};
     renderDesk();
     try{
       if(payload)await caseAction('qr-action',payload);
       await caseAction("check",{kind,evidence_version:S.staffCase.evidence_version});
       if(kind==='receipt_scan')await QRReceipt.animate(S.staffCase);
       else{
-        const labels=["AI sends query to Marketplace database","Marketplace returns the order record","Comparing amount and item","Checking QR transaction reference","Corroborating the bank debit","Comparing the cash receipt claim"];
-        const nodes=["purchase_lookup","order_match","amount_match","qr_lookup","bank_debit","cash_claim"];
-        for(let i=0;i<labels.length;i++){
+        const saved=(S.staffCase.qr_events||[]).filter(event=>event.sequence>previousSequence&&['DATA_DNA_DECISION','DATA_FIELDS_RELEASED','ACCESS_AUDIT_SAVED','MARKETPLACE_QUERY_COMPLETED','SOURCE_RETRIEVAL_WITHHELD'].includes(event.kind));
+        const titles={policy_gate:'DataDNA recorded the access decision',field_release:'Minimum field projection approved',privacy_audit:'Access metadata saved for audit',purchase_lookup:'Exact saved Marketplace order checked',order_match:'Merchant and purchase context compared',amount_match:'Amount and itemization compared',qr_lookup:'Exact QR reference compared',bank_debit:'Independent bank debit checked',cash_claim:'Cash receipt claim compared'};
+        for(let i=0;i<saved.length;i++){
           if(S.staffCase?.id!==c.id)break;
-          S.qrAnimation={kind,node:nodes[i],label:labels[i],index:i};renderDesk();
+          S.qrAnimation={kind,node:saved[i].node,label:saved[i].kind==='SOURCE_RETRIEVAL_WITHHELD'?saved[i].detail:titles[saved[i].node]||saved[i].detail,index:i};renderDesk();
           if(!reducedMotion()&&i===0)document.querySelector('.graph--qr')?.scrollIntoView({block:'start',behavior:'instant'});
           await revealPause();
         }
@@ -1253,7 +1274,7 @@ document.addEventListener("click", async (e) => {
       return;
     }
     if(b.dataset.qrNode){S.qrSelected=b.dataset.qrNode;renderDesk();document.querySelector(`[data-qr-node="${S.qrSelected}"]`)?.focus({preventScroll:true});return;}
-    if(b.dataset.qrZoom){S.qrZoom=b.dataset.qrZoom==="fit"?Math.max(.42,Math.min(1,($("#desk").clientWidth-64)/1200)):Math.max(.42,Math.min(1.4,S.qrZoom+(b.dataset.qrZoom==="in"?.15:-.15)));renderDesk();return;}
+    if(b.dataset.qrZoom){S.qrZoom=b.dataset.qrZoom==="fit"?Math.max(.25,Math.min(1,($("#desk").clientWidth-64)/(QRGraph.groups.length*238+10))):Math.max(.25,Math.min(1.4,S.qrZoom+(b.dataset.qrZoom==="in"?.15:-.15)));renderDesk();return;}
     if(b.dataset.qrReplay){
       if(b.dataset.qrReplay==="live"){S.qrReplay=null;S.qrReplayToken=(S.qrReplayToken||0)+1;renderDesk();return;}
       await replayQR();return;
@@ -1288,7 +1309,7 @@ document.addEventListener("click", async (e) => {
       return;
     }
     if (b.dataset.qrAction) {
-      await busy("staff", b.dataset.qrAction === "handoff" ? "Creating human handoff…" : "Saving simulated refund…", async () => {
+      await busy("staff", b.dataset.qrAction.startsWith('privacy_') ? "Evaluating the DataDNA boundary…" : b.dataset.qrAction === "handoff" ? "Creating human handoff…" : "Saving simulated refund…", async () => {
         await mutate("staff", "/cases/" + S.staffCase.id + "/qr-action", { version: S.staffCase.version, evidence_version:S.staffCase.evidence_version, action: b.dataset.qrAction, reason: "Saved from the QR investigation workspace." });
         await sync(true);
         if(b.dataset.qrAction==="complete_refund"){
@@ -1364,7 +1385,7 @@ document.addEventListener("click", async (e) => {
       case "steps":
         openDialog("Journey steps", $("#journey").innerHTML, null, "", "QR + CASH");break;
       case "sections":
-        openDialog("Navigate workspace", `<nav class="qr-drawer-links"><button type="button" class="button secondary" data-qr-section="customer">Customer</button><button type="button" class="button secondary" data-qr-section="evidence">Evidence</button><button type="button" class="button secondary" data-qr-section="marketplace">Marketplace</button><button type="button" class="button secondary" data-qr-section="outcome">Outcome</button></nav>`,null,"","QR + CASH");break;
+        openDialog("Navigate workspace", `<nav class="qr-drawer-links"><button type="button" class="button secondary" data-qr-section="customer">Customer</button><button type="button" class="button secondary" data-qr-section="privacy">DataDNA controls</button><button type="button" class="button secondary" data-qr-section="evidence">Evidence</button><button type="button" class="button secondary" data-qr-section="marketplace">Marketplace</button><button type="button" class="button secondary" data-qr-section="outcome">Outcome</button></nav>`,null,"","QR + CASH");break;
       case "report":
         S.phone = "report";
         renderPhone();

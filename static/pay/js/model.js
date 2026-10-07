@@ -38,10 +38,11 @@ export class TraceModel {
     this.blocked = null;
     this.handoff = null;
     this.report = null;
+    this.data_dna_decisions = [];
     this.clock = { paused: false, speed: 1, clock_ms: 0 };
     this.simMs = 0;
     this.lastSeq = 0;
-    this.rev = { nodes: 0, hyps: 0, log: 0, checks: 0, plan: 0, meta: 0 };
+    this.rev = { nodes: 0, hyps: 0, log: 0, checks: 0, plan: 0, meta: 0, privacy: 0 };
   }
 
   apply(e) {
@@ -56,6 +57,15 @@ export class TraceModel {
       this.rev.log++;
     };
     switch (e.type) {
+      case 'DATA_DNA_DECISION': {
+        const d = p.decision;
+        if (!d || this.data_dna_decisions.some(x => x.id === d.id)) break;
+        this.data_dna_decisions.push(d);
+        this.rev.privacy++;
+        const label = { ALLOWED: 'Allowed', MINIMIZED: 'Minimized', BLOCKED: 'Blocked', NEEDS_REVIEW: 'Needs review' }[d.decision] || d.decision;
+        note('DataDNA', `${label}: ${String(d.source).replaceAll('_', ' ')}. ${d.reason}${d.affects_case === false ? ' Boundary demonstration; incident evidence is unchanged.' : ''}`, d.decision === 'BLOCKED' ? 'bad' : d.decision === 'NEEDS_REVIEW' ? 'warn' : 'info');
+        break;
+      }
       case 'INTENT_CREATED':
         this.setNode(p.node_id, p, e);
         this.payment = { ...this.payment, reference: p.reference, amount_minor: p.amount_minor, bank_label: p.bank_label, wallet_label: p.wallet_label, created_at: e.occurred_at };

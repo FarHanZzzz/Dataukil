@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Red
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 from starlette.concurrency import run_in_threadpool
-from . import store
+from . import data_dna, store
 from .auth import read_session
 from .domain import now, uid, evidence, current_text, facts, fresh, customer_view
 from .transfer import FAMILY as TRANSFER_FAMILY, router as transfer_router, start_ticker, stop_ticker
@@ -172,6 +172,7 @@ def new_evidence(c,e):
 
 def staff_view(db,c):
     return c | dict(facts=facts(c),analysis_fresh=fresh(c),
+       data_dna=data_dna.summary(c.get('data_dna',{}).get('decisions',[])),
        audit=[dict(r) for r in db.execute('SELECT * FROM audit WHERE case_id=? ORDER BY id',(c['id'],))],synthetic=True)
 
 
@@ -581,12 +582,19 @@ async def check(case_id:str,request:Request):
         available=db.execute("SELECT value FROM demo WHERE key='repayment_available'").fetchone()['value']=='true'
         if kind == 'receipt_scan':
             existing=c.get('qr_pipeline',{}).get('receipt_scan')
-            if existing and existing.get('evidence_version')==c['evidence_version'] and existing.get('manifest_version')==2:
+            if existing and existing.get('evidence_version')==c['evidence_version'] and existing.get('manifest_version')==2 and existing.get('data_dna_policy_version')==data_dna.POLICY_VERSION:
                 return
             receipt=next((e for e in reversed(c['evidence']) if e.get('blob') and e['blob']['mime'].startswith('image/') and e.get('kind')=='customer_supplied'),None)
             if not receipt: raise HTTPException(409,'Attach an original receipt image before scanning.')
             from .qr_receipt import annotate
-            from .qr_workflow import emit
+            from .qr_workflow import emit, record_data_access
+            access = record_data_access(c,s['actor'],source='Customer receipt original',
+                fields=['receipt_image_for_local_processing','receipt_transcript','original_hash'],recipient='local_receipt_processor',node='receipt_scan')
+            if access['decision'] not in ('ALLOWED','MINIMIZED'):
+                ch.update(state='UNAVAILABLE',result=access['reason'])
+                ch['states'].append(dict(state='UNAVAILABLE',at=now()))
+                c['checks'].append(ch)
+                return
             emit(c,s['actor'],'RECEIPT_SCAN_STARTED','receipt_scan','active',[receipt['id']])
             from .simulation import get_sim
             sim=get_sim(db,c.get('simulation_id','')) or {}
@@ -599,7 +607,8 @@ async def check(case_id:str,request:Request):
             from .qr_workflow import invalidate_downstream
             invalidate_downstream(c,'A replacement visual scan was saved.')
             pipe['receipt_scan']=dict(evidence_id=receipt['id'],source_evidence_id=receipt['id'],**scan,
-                evidence_version=c['evidence_version'],transcript_revision=receipt['revisions'][-1]['version'])
+                evidence_version=c['evidence_version'],transcript_revision=receipt['revisions'][-1]['version'],
+                data_dna_id=access['id'],data_dna_policy_version=access['policy_version'])
             for region in scan['regions']: emit(c,s['actor'],'RECEIPT_REGION_ANNOTATED','annotated_fields','completed',[receipt['id']],region['field'])
             c['operator_state']='RECEIPT_SCAN_ANNOTATED'
             emit(c,s['actor'],'RECEIPT_SCAN_ANNOTATED','receipt_scan','completed',[receipt['id']])
@@ -781,6 +790,7 @@ def dossier(case_id:str,request:Request):
             return value
         pipeline=without_images(c.get('qr_pipeline',{}))
         lines += ['', '## QR + cash visual assistance and synthetic outcome', 'OpenCV regions are visual assistance, not OCR or receipt authentication. Marketplace and refund records are synthetic. Approval is separate from completed refund.', json.dumps(pipeline,ensure_ascii=False,indent=2), '', '## Append-only QR event history', json.dumps(c.get('qr_events',[]),ensure_ascii=False,indent=2)]
+        lines += data_dna.report_lines(c.get('data_dna',{}).get('decisions',[]))
     body='\n'.join(lines)
     return PlainTextResponse(body,media_type='text/markdown',headers={'Content-Disposition':f'attachment; filename="{c["reference"]}-v{c["version"]}.md"',
          'X-Dossier-SHA256':hashlib.sha256(body.encode()).hexdigest()})

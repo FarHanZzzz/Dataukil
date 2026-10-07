@@ -8,9 +8,9 @@ import hashlib
 import html as _html
 import json
 
-from .. import store
+from .. import data_dna, store
 from ..domain import now, uid
-from . import catalog, journal, policy
+from . import catalog, journal, policy, privacy
 from .engine import bdt, hms, owner_label
 
 DISCLOSURE = 'Simulated partners and fictional BDT. No real accounts, transfers or provider credentials are involved.'
@@ -41,7 +41,7 @@ def build(db, case_id):
     if plan:
         elig = json.loads(plan['eligibility'])
         plan_d = dict(kind=plan['kind'], label=plan['label'], status=plan['status'], approved_by=plan['approved_by'],
-                      outcome=json.loads(plan['outcome']) if plan['outcome'] else None, evidence_version=plan['evidence_version'],
+                      outcome=json.loads(plan['outcome']) if plan['outcome'] else None, evidence_version=plan['evidence_version'], data_dna=elig.get('data_dna'),
                       options=[dict(kind=o['kind'], label=catalog.CORRECTION_KINDS[o['kind']]['label'], eligible=o['eligible'], reasons=o['reasons']) for o in elig['options']])
 
     # Customer symptom and when it appeared (from saved events)
@@ -102,6 +102,9 @@ def build(db, case_id):
             log.append(dict(at=e['occurred_at'], text='Customer report attached to the existing incident.', cites=[]))
         elif t == 'INVESTIGATION_STARTED':
             log.append(dict(at=e['occurred_at'], text=f"Investigation started by {owner_label(p['started_by'])}; {p['budget']} read-only checks authorized.", cites=[]))
+        elif t == 'DATA_DNA_DECISION':
+            d = p['decision']
+            log.append(dict(at=e['occurred_at'], text=f"DataDNA {d['decision']}: {d.get('source_label', d['source'])}. {d['reason']}", cites=[d['id']]))
         elif t in ('CHECK_COMPLETED', 'CHECK_UNAVAILABLE'):
             o = p['observation']
             log.append(dict(at=e['occurred_at'], text=f"{p['label']}: {o['summary']}", cites=[o['id']]))
@@ -129,7 +132,7 @@ def build(db, case_id):
         blocked=unavailable,
         operator=dict(owner=owner_label(case['owner']), next_action=(open_task or {}).get('question') or ('None. The case is resolved.' if case.get('resolution') == 'credit_confirmed' else 'Review the saved evidence.'),
                       next_review=case['next_review']),
-        log=log, execution_mode=policy.MODE_LABEL + ' (a deterministic policy over returned observations; no language model)', disclosure=DISCLOSURE)
+        log=log, data_dna=privacy.snapshot(db, case_id), execution_mode=policy.MODE_LABEL + ' (a deterministic policy over returned observations; no language model)', disclosure=DISCLOSURE)
 
 
 def markdown(r):
@@ -161,6 +164,7 @@ def markdown(r):
     L += ['', '## Operator ownership', f"- Owner: {r['operator']['owner']}", f"- Next action: {r['operator']['next_action']}", f"- Next review: {'none, the case is closed' if r['operator']['next_action'].startswith('None') else hms(r['operator']['next_review']) + ' (Asia/Dhaka)'}",
           '', '## Action log']
     L += [f"- {hms(a['at'])} {a['text']}{cite(a['cites'])}" for a in r['log']]
+    L += data_dna.report_lines(r.get('data_dna', {}).get('decisions', []))
     L += ['', '---', f"Execution mode: {r['execution_mode']}. Evidence version {r['evidence_version']}, case version {r['case_version']}.", r['disclosure'], '']
     return '\n'.join(L)
 
