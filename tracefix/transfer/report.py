@@ -10,7 +10,7 @@ import json
 
 from .. import store
 from ..domain import now, uid
-from . import catalog, journal, policy
+from . import catalog, datadna, journal, policy
 from .engine import bdt, hms, owner_label
 
 DISCLOSURE = 'Simulated partners and fictional BDT. No real accounts, transfers or provider credentials are involved.'
@@ -120,6 +120,14 @@ def build(db, case_id):
     opts = (by_tool.get('eligibility_check') or {}).get('data', {}).get('options') or (plan_d['options'] if plan_d else [])
     unavailable = [dict(kind=o['kind'], label=catalog.CORRECTION_KINDS[o['kind']]['label'], reasons=o['reasons']) for o in opts if not o['eligible']]
     open_task = next((t for t in reversed(case['tasks']) if t['status'] == 'OPEN'), None)
+    # Downloads are logged in the DataDNA ledger but left out of the document, so exporting a report never changes it.
+    dna_records = [r for r in journal.datadna_records(db, case_id, pay['id']) if r['kind'] != 'export']
+    concl = inv_state.get('conclusion') or {}
+    data_protection = dict(
+        tally=datadna.tally(dna_records), calls=[datadna.compact(r) for r in dna_records],
+        envelope=next((dict(id=r['envelope_id'], purpose=r['purpose']) for r in dna_records if r.get('envelope_id') and r['kind'] != 'flow'), None),
+        plan=datadna.compile_plan(dna_records, outcome=concl.get('outcome'), kind=concl.get('kind'), performed=inv_state.get('used', []), envelope=inv_state.get('envelope')),
+        disclosure=datadna.DISCLOSURE)
     return dict(
         case_reference=case['reference'], payment_reference=pay['reference'], amount_minor=pay['amount_minor'], currency=pay['currency'],
         bank_label=pay['bank_label'], wallet_label=pay['wallet_label'], status=case['status'], resolution=case.get('resolution', 'open'),
@@ -129,7 +137,7 @@ def build(db, case_id):
         blocked=unavailable,
         operator=dict(owner=owner_label(case['owner']), next_action=(open_task or {}).get('question') or ('None. The case is resolved.' if case.get('resolution') == 'credit_confirmed' else 'Review the saved evidence.'),
                       next_review=case['next_review']),
-        log=log, execution_mode=policy.MODE_LABEL + ' (a deterministic policy over returned observations; no language model)', disclosure=DISCLOSURE)
+        log=log, data_protection=data_protection, execution_mode=policy.MODE_LABEL + ' (a deterministic policy over returned observations; no language model)', disclosure=DISCLOSURE)
 
 
 def markdown(r):
@@ -158,6 +166,23 @@ def markdown(r):
         L += ['', '### Options not available, and why']
         for o in r['blocked']:
             L.append(f"- {o['label']}: " + ' '.join(o['reasons']))
+    dp = r.get('data_protection')
+    if dp:
+        t = dp['tally']
+        L += ['', '## Data protection (DataDNA)',
+              f"{t['total']} data call{'s' if t['total'] != 1 else ''} reviewed through five gates (Why, Who, Where, How, Until when): {t['passed']} passed, {t['controlled']} released with controls, {t['blocked']} blocked. "
+              f"{t['blocked_concerns']} concern{'s' if t['blocked_concerns'] != 1 else ''} blocked access; {t['mitigated_concerns']} {'was' if t['mitigated_concerns'] == 1 else 'were'} mitigated by a control."]
+        for c in dp['calls']:
+            tag = {'passed': 'PASSED', 'controlled': 'CONTROLLED', 'blocked': 'BLOCKED'}[c['decision']]
+            L += ['', f"### {c['id']} · {c['label']} · {tag}" + (f" at gate {datadna.GATE_IDS.index(c['blocked_at']) + 1}" if c['blocked_at'] else '')]
+            if c.get('ask'):
+                L.append(f"- Request: {c['ask']}")
+            L += [f"- Why: {c['dna']['why']}", f"- Who: {c['dna']['who']}", f"- Where: {c['dna']['where']}", f"- How: {c['dna']['how']}", f"- Until when: {c['dna']['until']}"]
+            for k in c['concerns']:
+                L.append(f"- Concern ({k['status']}) {k['principle']}: {k['detail']}" + (f" Handling: {k['handling']}" if k['handling'] else '') + (f" Compliant alternative: {k['alternative']}" if k['alternative'] else ''))
+        L += ['', '### Compliance plan']
+        L += [f"- [{s['status']}] {s['step']} ({s['owner']}): {s['detail']}" for s in dp['plan']]
+        L += ['', dp['disclosure']]
     L += ['', '## Operator ownership', f"- Owner: {r['operator']['owner']}", f"- Next action: {r['operator']['next_action']}", f"- Next review: {'none, the case is closed' if r['operator']['next_action'].startswith('None') else hms(r['operator']['next_review']) + ' (Asia/Dhaka)'}",
           '', '## Action log']
     L += [f"- {hms(a['at'])} {a['text']}{cite(a['cites'])}" for a in r['log']]

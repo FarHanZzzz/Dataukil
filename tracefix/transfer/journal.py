@@ -54,3 +54,20 @@ def inbox_events(db, after=0, limit=500):
     rows = db.execute(f'SELECT * FROM tx_events WHERE seq>? AND type IN ({marks}) ORDER BY seq LIMIT ?',
                       (after, *STAFF_INBOX_TYPES, limit)).fetchall()
     return [staff_event(r) for r in rows]
+
+
+def datadna_records(db, case_id, payment_id=None):
+    """Every saved DataDNA decision for a case, oldest first. The journal is the ledger; nothing is stored twice.
+
+    With `payment_id`, the payment's own hand-off reviews (saved before any case existed) are included in journal order."""
+    if payment_id:
+        rows = db.execute("SELECT payload FROM tx_events WHERE type='DATADNA_REVIEWED' AND (case_id=? OR (payment_id=? AND case_id IS NULL)) ORDER BY seq",
+                          (case_id, payment_id)).fetchall()
+    else:
+        rows = db.execute("SELECT payload FROM tx_events WHERE case_id=? AND type='DATADNA_REVIEWED' ORDER BY seq", (case_id,)).fetchall()
+    return [json.loads(r['payload']) for r in rows]
+
+
+def processing_envelope(db, payment_id):
+    r = db.execute("SELECT payload FROM tx_events WHERE payment_id=? AND type='DATADNA_ENVELOPE' AND case_id IS NULL ORDER BY seq LIMIT 1", (payment_id,)).fetchone()
+    return json.loads(r['payload']) if r else None

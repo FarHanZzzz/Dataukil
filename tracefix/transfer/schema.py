@@ -6,7 +6,7 @@ without affecting QR cases. Transfer cases themselves live in the existing `case
 
 TABLES = ['tx_runs', 'tx_payments', 'tx_steps', 'tx_events', 'tx_attempts', 'tx_postings', 'tx_posting_lines',
           'tx_worker_logs', 'tx_mappings', 'tx_partner', 'tx_callbacks', 'tx_observations', 'tx_investigations',
-          'tx_corrections', 'tx_reports']
+          'tx_corrections', 'tx_reports', 'tx_chats', 'tx_chat_turns']
 
 SQL = '''
 CREATE TABLE IF NOT EXISTS tx_runs(
@@ -85,6 +85,16 @@ CREATE TABLE IF NOT EXISTS tx_reports(
   id TEXT PRIMARY KEY, case_id TEXT NOT NULL, version INTEGER NOT NULL, created_at TEXT NOT NULL, sha256 TEXT NOT NULL,
   body TEXT NOT NULL, markdown TEXT NOT NULL, UNIQUE(case_id, version));
 
+CREATE TABLE IF NOT EXISTS tx_chats(
+  id TEXT PRIMARY KEY, owner TEXT NOT NULL, payment_id TEXT NOT NULL REFERENCES tx_payments(id), created_at TEXT NOT NULL,
+  isolated INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS tx_chat_turns(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id TEXT NOT NULL REFERENCES tx_chats(id), idem_key TEXT NOT NULL,
+  digest TEXT NOT NULL, message TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('processing','completed','failed')),
+  lease TEXT NOT NULL, lease_until REAL NOT NULL, response TEXT, created_at TEXT NOT NULL,
+  UNIQUE(chat_id, idem_key));
+CREATE UNIQUE INDEX IF NOT EXISTS tx_chat_one_processing ON tx_chat_turns(chat_id) WHERE status='processing';
+
 CREATE TRIGGER IF NOT EXISTS tx_postings_no_update BEFORE UPDATE ON tx_postings BEGIN SELECT RAISE(ABORT,'postings are immutable'); END;
 CREATE TRIGGER IF NOT EXISTS tx_postings_no_delete BEFORE DELETE ON tx_postings BEGIN SELECT RAISE(ABORT,'postings are immutable'); END;
 CREATE TRIGGER IF NOT EXISTS tx_lines_no_update BEFORE UPDATE ON tx_posting_lines BEGIN SELECT RAISE(ABORT,'postings are immutable'); END;
@@ -102,3 +112,5 @@ def ensure(db):
     except Exception:
         pass
     db.executescript(SQL)
+    if 'isolated' not in {r[1] for r in db.execute('PRAGMA table_info(tx_chats)')}:
+        db.execute('ALTER TABLE tx_chats ADD COLUMN isolated INTEGER NOT NULL DEFAULT 0')

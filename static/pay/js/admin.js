@@ -5,6 +5,7 @@ import { h, clear, fill, link, navigate, taka, hms, dayTime, simClock, uuid, toa
 import { icon, STATE_ICON } from './icons.js';
 import { Graph } from './graph.js';
 import { buildModel, STATE_LABEL, HYP_LABEL } from './model.js';
+import { DnaFunnel, DnaLedger, dnaBadge, dnaPlanBlock, reportDataProtection } from './datadna.js';
 import { withRun, rememberPayment, rememberRun, knownRun, siteHeader, flowStrip } from './guide.js';
 
 const KIND_LABEL = { ledger: 'Authoritative posting source', process: 'Processing stage', branch: 'Related service or check' };
@@ -55,6 +56,15 @@ async function mountWorkspace(app, ident) {
   const replayBar = h('div', { class: 'replay-bar', hidden: true });
   const empty = h('div', { class: 'ws-empty' });
   stage.append(graphRoot, replayBar, empty);
+  // DataDNA funnel: every personal-data access shown passing the five gates. Clicking it opens the ledger popup.
+  let ledger = null;
+  const openLedger = (callId, tab, hop) => {
+    if (!ledger) ledger = new DnaLedger({ model: viewModel(), onClose: () => dnaFunnel && dnaFunnel.focus() });
+    ledger.setModel(viewModel());
+    ledger.open(typeof callId === 'string' ? callId : undefined, tab, hop);
+  };
+  const dnaFunnel = ident ? new DnaFunnel({ onOpen: (callId, tab, hop) => openLedger(callId, tab, hop) }) : null;
+  if (dnaFunnel) { stage.classList.add('has-dna'); stage.prepend(dnaFunnel.el); dnaFunnel.watchSize(); }
   const ws = h('div', { class: 'ws' }, top, queueEl, stage, inspector, logEl);
   app.append(ws);
   // Keep the payment queue visible on ordinary desktop screens; collapse it only when the
@@ -276,9 +286,12 @@ async function mountWorkspace(app, ident) {
   }
 
   function obsCard(o, m) {
-    const tone = o.status === 'unavailable' ? 'warn' : 'ok';
+    const blocked = o.status === 'blocked';
+    const tone = blocked ? 'bad' : o.status === 'unavailable' ? 'warn' : 'ok';
+    const call = m.dna.byObs[o.id];
     return h('article', { class: 'obs' },
-      h('header', { class: 'obs-head' }, h('span', { class: 'mono obs-id', text: o.id }), pill(tone, o.status === 'unavailable' ? 'Source unavailable' : 'Returned', true), h('time', { class: 'mono', text: hms(o.as_of) })),
+      h('header', { class: 'obs-head' }, h('span', { class: 'mono obs-id', text: o.id }), pill(tone, blocked ? 'Refused by DataDNA' : o.status === 'unavailable' ? 'Source unavailable' : 'Returned', true), h('time', { class: 'mono', text: hms(o.as_of) })),
+      call ? h('p', { class: 'obs-dna' }, dnaBadge(call, openLedger)) : null,
       h('h4', { text: o.label }),
       h('p', { class: 'obs-sum', text: o.summary }),
       h('p', { class: 'obs-meta' }, h('span', { text: 'Source: ' + o.source }), h('span', { text: 'Scope: ' + o.scope })),
@@ -317,7 +330,7 @@ async function mountWorkspace(app, ident) {
         c && c.complaints && c.complaints.length ? ['Customer report', c.complaints[c.complaints.length - 1].text] : null]) : h('p', { class: 'muted', text: 'Select a payment from the queue.' }),
       h('h4', { class: 'insp-h2', text: 'Checks performed' }),
       m.checks.length ? h('ul', { class: 'checks' }, [...m.checks].reverse().map((ch) => h('li', {}, h('button', { class: 'check-row', type: 'button', onclick: () => { S.selected = ch.node_id; graph.select(ch.node_id); } },
-        h('span', { class: 'check-ic st-' + (ch.status === 'running' ? 'running' : ch.status === 'unavailable' ? 'unavailable' : 'completed') }, icon(ch.status === 'running' ? 'ring' : ch.status === 'unavailable' ? 'warning' : 'check', 14, ch.status === 'running' ? 'spin-ic' : '')),
+        h('span', { class: 'check-ic st-' + (ch.status === 'running' ? 'running' : ch.status === 'blocked' ? 'failed' : ch.status === 'unavailable' ? 'unavailable' : 'completed') }, icon(ch.status === 'running' ? 'ring' : ch.status === 'blocked' ? 'x' : ch.status === 'unavailable' ? 'warning' : 'check', 14, ch.status === 'running' ? 'spin-ic' : '')),
         h('span', { class: 'check-txt' }, h('strong', { text: ch.label }), h('small', { text: ch.rationale || '' })),
         ch.observation_id ? h('span', { class: 'mono obs-id', text: ch.observation_id }) : null)))) : h('p', { class: 'muted', text: 'No checks yet. Starting an investigation authorises a bounded set of read-only checks.' }));
   }
@@ -386,13 +399,15 @@ async function mountWorkspace(app, ident) {
           kv([['Owner', hand.owner], ['Queue', hand.queue], ['Next requirement', hand.next_requirement], ['Next review', hand.next_review ? dayTime(hand.next_review) : null]])) : null,
         a && a.case ? link(withRun('/admin/cases/' + a.case.id + '/report', a.run.id), { class: 'btn btn--secondary btn--block' }, icon('doc', 16), 'Open the operator report') : null));
     }
+    const dnaBlock = dnaPlanBlock(m, openLedger);
     if (!blocks.length) {
+      if (dnaBlock) return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }), h('p', { class: 'muted', text: 'No correction plan yet.' }), dnaBlock);
       return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }),
         h('p', { class: 'muted', text: a && a.payment && a.payment.status === 'COMPLETED'
           ? 'No correction is needed. The wallet credit is confirmed in the saved records, so there is nothing to approve.'
           : 'No plan yet. After an investigation, a supported correction appears here for approval, or an owned handoff if automatic correction is not possible.' }));
     }
-    return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }), blocks);
+    return h('div', { class: 'insp-sec' }, h('h3', { class: 'insp-h', text: 'Correction plan' }), blocks, dnaBlock);
   }
 
   // ------------------------------------------------------------------------------------------------ log
@@ -438,6 +453,7 @@ async function mountWorkspace(app, ident) {
   function exitReplay() {
     if (S.replay) clearTimeout(S.replay.timer);
     S.replay = null;
+    if (dnaFunnel) dnaFunnel.reset();
     graph.setModel(S.model);
     syncHub(S.model);
     paintReplay();
@@ -447,6 +463,7 @@ async function mountWorkspace(app, ident) {
   function rebuildReplay(i) {
     S.replay.idx = i;
     S.replay.model = buildModel(S.snap, S.events, i);
+    if (dnaFunnel) dnaFunnel.reset();
     graph.setModel(S.replay.model);
     syncHub(S.replay.model);
   }
@@ -467,6 +484,7 @@ async function mountWorkspace(app, ident) {
       S.replay.idx += 1;
       graph.refresh(fx);
       syncHub(S.replay.model);
+      dnaFx(fx, S.replay.model);
       paint(true);
       paintReplay();
       scheduleNext();
@@ -509,6 +527,7 @@ async function mountWorkspace(app, ident) {
       paintTop();
       paintInspector();
       paintLog();
+      if (dnaFunnel && m) { dnaFunnel.render(m); if (ledger) ledger.setModel(m); }
     });
   }
 
@@ -536,6 +555,15 @@ async function mountWorkspace(app, ident) {
   }
   const refreshAuthSoon = debounce(refreshAuth, 180);
 
+  // Funnel animation follows the same saved events as the graph: a request waits at the mouth, then the verdict plays through the gates.
+  function dnaFx(fx, m) {
+    if (!dnaFunnel) return;
+    for (const f of fx) {
+      if (f.type === 'probe-start') { const c = m.checks.find((x) => x.id === f.check); if (c) dnaFunnel.reviewing(c.label); }
+      else if (f.type === 'datadna') dnaFunnel.play(f.call, m);
+    }
+  }
+
   function onEvent(e) {
     if (S.evSeen.has(e.event_id)) return;
     S.evSeen.add(e.event_id);
@@ -544,6 +572,7 @@ async function mountWorkspace(app, ident) {
     if (!S.replay) {
       graph.refresh(fx);
       syncHub(S.model);
+      dnaFx(fx, S.model);
     }
     const needs = AUTH_EVENTS.has(e.type) || (S.auth && S.auth.plan && S.auth.plan.status === 'proposed' && (e.type === 'STAGE_OBSERVED' || e.type === 'CHECK_COMPLETED'));
     if (needs) refreshAuthSoon();
@@ -561,6 +590,7 @@ async function mountWorkspace(app, ident) {
     S.events = [...S.snap.events];
     S.evSeen = new Set(S.events.map((x) => x.event_id));
     S.model = buildModel(S.snap, S.events);
+    if (dnaFunnel) dnaFunnel.reset();
     takeAuth(S.snap);
     graph.setModel(S.model);
     syncHub(S.model);
@@ -597,6 +627,7 @@ async function mountWorkspace(app, ident) {
       }).start();
     } catch (e) {
       empty.hidden = false;
+      if (dnaFunnel) { dnaFunnel.el.hidden = true; stage.classList.remove('has-dna'); }
       fill(empty, h('div', { class: 'empty-card' }, h('h2', { text: 'Record not found' }), h('p', { text: e instanceof ApiError ? e.detail : 'This payment could not be loaded.' }),
         link('/admin/queue', { class: 'btn btn--primary' }, 'Back to the queue')));
     }
@@ -613,6 +644,7 @@ async function mountWorkspace(app, ident) {
   const keys = (ev) => {
     if (ev.target.closest('input, textarea, select') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
     if (ev.key === 'p' || ev.key === 'P') document.body.classList.toggle('presenting');
+    else if ((ev.key === 'd' || ev.key === 'D') && dnaFunnel && S.snap) openLedger();
     else if (ev.key === 'Escape' && S.selected) { S.selected = null; graph.select(null); }
   };
   document.addEventListener('keydown', keys);
@@ -631,6 +663,8 @@ async function mountWorkspace(app, ident) {
     inbox.stop();
     if (S.replay) clearTimeout(S.replay.timer);
     graph.destroy();
+    if (dnaFunnel) dnaFunnel.destroy();
+    if (ledger) ledger.destroy();
     document.removeEventListener('keydown', keys);
     mo.disconnect();
     document.body.classList.remove('presenting');
@@ -681,6 +715,7 @@ async function mountReport(app, ident) {
       sec('Proposed repair and outcome', r.plan ? h('div', {}, h('p', {}, h('strong', { text: r.plan.label }), ' · ' + r.plan.status + (r.plan.approved_by ? ' · approved by ' + (r.plan.approved_by === 'staff_2' ? 'Investigator 2' : 'Investigator 1') : '')), r.plan.outcome ? h('p', { text: r.plan.outcome.message || '' }) : null)
         : h('p', { class: 'muted', text: 'No repair was proposed.' }),
       r.blocked.length ? h('div', {}, h('h3', { text: 'Options not available, and why' }), h('ul', {}, r.blocked.map((b) => h('li', {}, h('strong', { text: b.label + ': ' }), (b.reasons || []).join(' '))))) : null),
+      r.data_protection ? sec('Data protection (DataDNA)', reportDataProtection(r.data_protection, snapshot.datadna)) : null,
       sec('Operator ownership', h('p', {}, h('strong', { text: 'Owner: ' }), r.operator.owner), h('p', {}, h('strong', { text: 'Next action: ' }), r.operator.next_action)),
       sec('Action log', h('ol', { class: 'rep-log' }, r.log.map((l) => h('li', {}, h('time', { class: 'mono', text: hms(l.at) }), h('span', {}, l.text, ' ', cites(l.cites)))))),
       h('footer', { class: 'rep-foot' }, h('p', { text: r.execution_mode }), h('p', { class: 'muted', text: r.disclosure })))));

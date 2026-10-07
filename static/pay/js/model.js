@@ -14,9 +14,15 @@ export const NODE_SHORT = {
 };
 
 export class TraceModel {
-  constructor(topology, hypotheses = [], tools = {}) {
+  constructor(topology, hypotheses = [], tools = {}, dnaConfig = null) {
     this.topology = topology;
     this.tools = tools;
+    // DataDNA: every personal-data access, in order, with the gate decision for each. Folded only from saved events.
+    this.dna = {
+      config: dnaConfig, envelopes: [], calls: [], byObs: {}, byId: {}, hops: {}, plan: null,
+      tally: { total: 0, passed: 0, controlled: 0, blocked: 0, concerns: 0, blocked_concerns: 0 },
+      gates: Object.fromEntries(['why', 'who', 'where', 'how', 'until'].map((g) => [g, { pass: 0, control: 0, block: 0 }])),
+    };
     this.nodes = {};
     for (const n of topology.nodes) {
       this.nodes[n.id] = {
@@ -41,7 +47,7 @@ export class TraceModel {
     this.clock = { paused: false, speed: 1, clock_ms: 0 };
     this.simMs = 0;
     this.lastSeq = 0;
-    this.rev = { nodes: 0, hyps: 0, log: 0, checks: 0, plan: 0, meta: 0 };
+    this.rev = { nodes: 0, hyps: 0, log: 0, checks: 0, plan: 0, meta: 0, dna: 0 };
   }
 
   apply(e) {
@@ -120,10 +126,37 @@ export class TraceModel {
         }
         this.rev.checks++;
         this.rev.nodes++;
-        note('Check', `${p.label}: ${o.summary}`, p.status === 'unavailable' ? 'warn' : 'info', [o.id]);
+        note('Check', `${p.label}: ${o.summary}`, p.status === 'blocked' ? 'bad' : p.status === 'unavailable' ? 'warn' : 'info', [o.id]);
         fx.push({ type: 'probe-done', node: e.node_id || (check && check.node_id), check: p.check_id, status: p.status });
         break;
       }
+      case 'DATADNA_ENVELOPE':
+        this.dna.envelopes.push(p);
+        this.rev.dna++;
+        note('DataDNA', p.kind === 'export' ? `Export envelope ${p.id} opened for ${p.actor_label}.` : p.kind === 'processing' ? `Payment envelope ${p.id} opened. Purpose: ${p.purpose}. Scope: ${p.scope}.` : `Access envelope ${p.id} opened. Purpose: ${p.purpose}. Scope: ${p.scope}.`, 'info');
+        fx.push({ type: 'datadna-envelope', envelope: p });
+        break;
+      case 'DATADNA_REVIEWED': {
+        const call = { ...p, seq: e.sequence, at: e.occurred_at };
+        this.dna.calls.push(call);
+        this.dna.byId[call.id] = call;
+        if (call.observation_id) this.dna.byObs[call.observation_id] = call;
+        if (call.kind === 'flow' && call.hop) this.dna.hops[call.hop] = call; // the latest review of each payment hand-off
+        const t = this.dna.tally;
+        t.total++;
+        t[call.decision]++;
+        for (const k of call.concerns) { t.concerns++; if (k.status === 'blocked') t.blocked_concerns++; }
+        for (const g of call.gates) this.dna.gates[g.id][g.status]++;
+        this.rev.dna++;
+        note('DataDNA', call.summary, call.decision === 'blocked' ? 'bad' : call.decision === 'controlled' ? 'info' : 'good');
+        fx.push({ type: 'datadna', call });
+        break;
+      }
+      case 'DATADNA_PLAN':
+        this.dna.plan = p;
+        this.rev.dna++;
+        note('DataDNA', `Compliance plan ready: ${p.steps.length} steps, ${p.steps.filter((x) => x.status === 'action').length} for an operator.`, 'good');
+        break;
       case 'FINDING_RECORDED': {
         const h = this.hyps.find((x) => x.id === p.hypothesis_id);
         if (h) Object.assign(h, { status: p.status, rationale: p.rationale, cites: p.cites || [] });
@@ -204,7 +237,7 @@ export class TraceModel {
 }
 
 export function buildModel(snapshot, events = snapshot.events, upto = events.length) {
-  const m = new TraceModel(snapshot.topology, snapshot.hypotheses, snapshot.tools);
+  const m = new TraceModel(snapshot.topology, snapshot.hypotheses, snapshot.tools, snapshot.datadna || null);
   for (let i = 0; i < upto; i++) m.apply(events[i]);
   return m;
 }

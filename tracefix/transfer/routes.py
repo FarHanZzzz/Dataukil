@@ -18,7 +18,7 @@ from fastapi.responses import PlainTextResponse, StreamingResponse
 from .. import store
 from ..auth import read_session
 from ..domain import now, uid
-from . import catalog, correction, engine, investigation, journal, policy, report
+from . import catalog, correction, datadna, engine, investigation, journal, policy, report
 
 router = APIRouter(prefix='/api/transfer')
 
@@ -350,7 +350,8 @@ def staff_snapshot(db, payment):
         investigation=dict(id=inv['id'], status=inv['status'], checks_used=inv['checks_used'], budget=inv['budget'], mode=inv['mode'], mode_label=policy.MODE_LABEL) if inv else None,
         report=dict(version=rep['version'], sha256=rep['sha256'], created_at=rep['created_at']) if rep else None,
         sandbox_enabled=engine.sandbox_enabled(), incident_after_ms=engine.incident_after_ms(), mode=policy.MODE, mode_label=policy.MODE_LABEL,
-        check_budget=engine.check_budget())
+        check_budget=engine.check_budget(),
+        datadna=dict(gates=datadna.GATES, principles=datadna.PRINCIPLES, disclosure=datadna.DISCLOSURE))
 
 
 @router.get('/staff/queue')
@@ -457,23 +458,48 @@ def get_report(ident: str, request: Request):
         return dict(version=row['version'], sha256=row['sha256'], created_at=row['created_at'], report=json.loads(row['body']))
 
 
+def _gate_export(db, s, pay, fmt, text):
+    """Every download leaves the platform, so it passes DataDNA too. The record is saved even when the export is refused."""
+    case = store.get_case(db, pay['case_id'])
+    run = engine.run_row(db, pay['run_id'])
+    label = engine.owner_label(s['actor'])
+    env = datadna.open_envelope(s['actor'], label, case, pay, purpose_id='accountability_record', tools=['report_export'])
+    ctx = datadna.context(case, pay, env, actor=s['actor'], actor_label=label, role=s['role'], origin='export')
+    rec = datadna.review_export(ctx, fmt, text, sim_ms=run['clock_ms'])
+    journal.emit(db, 'DATADNA_ENVELOPE', run_id=run['id'], payment_id=pay['id'], case_id=case['id'], case_version=case['version'], sim_ms=run['clock_ms'],
+                 payload=dict(env, investigation_id=None, kind='export'))
+    journal.emit(db, 'DATADNA_REVIEWED', run_id=run['id'], payment_id=pay['id'], case_id=case['id'], case_version=case['version'], sim_ms=run['clock_ms'], payload=rec)
+    return rec
+
+
 @router.get('/staff/cases/{ident}/report.md')
 def get_report_md(ident: str, request: Request):
-    need(request, 'staff')
+    s = need(request, 'staff')
+    refused = None
     with store.transaction() as db:
         pay, row = _report(db, ident)
         c = store.get_case(db, pay['case_id'])
+        rec = _gate_export(db, s, pay, 'md', row['markdown'])
+        refused = rec['summary'] if rec['decision'] == 'blocked' else None
+    if refused:
+        raise HTTPException(409, 'DataDNA blocked this export. ' + refused)
     return PlainTextResponse(row['markdown'], media_type='text/markdown', headers={
         'Content-Disposition': f'attachment; filename="{c["reference"]}-report-v{row["version"]}.md"', 'X-Report-SHA256': row['sha256']})
 
 
 @router.get('/staff/cases/{ident}/report.html')
 def get_report_html(ident: str, request: Request):
-    need(request, 'staff')
+    s = need(request, 'staff')
+    refused = None
     with store.transaction() as db:
         pay, row = _report(db, ident)
         c = store.get_case(db, pay['case_id'])
-    return PlainTextResponse(report.to_html(json.loads(row['body'])), media_type='text/html', headers={
+        body = report.to_html(json.loads(row['body']))
+        rec = _gate_export(db, s, pay, 'html', body)
+        refused = rec['summary'] if rec['decision'] == 'blocked' else None
+    if refused:
+        raise HTTPException(409, 'DataDNA blocked this export. ' + refused)
+    return PlainTextResponse(body, media_type='text/html', headers={
         'Content-Disposition': f'attachment; filename="{c["reference"]}-report-v{row["version"]}.html"', 'X-Report-SHA256': row['sha256']})
 
 

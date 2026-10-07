@@ -42,6 +42,7 @@ The launcher automatically opens the [homepage](http://127.0.0.1:8000/) when the
 | `/operations/cases/{case_id}/studio` | Dedicated AI investigation, hypotheses, citations, replay and separate approval/execution |
 | `/qr-demo` | Unified QR + cash journey with editable basket, realistic receipt reader, OpenCV regions, saved review, Marketplace and simulated resolution |
 | `/mfs` (also `/demo`) | Five-stage Add money guide: explicit scenario choice, same-tab progression and exact-run resume |
+| `/chat` | API chatbot with automatic keyword demo fallback; DataDNA blocks deceptive backend reads while ordinary questions make no protected-source calls |
 | `/customer/payment[/{id}]`, `/customer/cases/{id}` | Add money form, saved review, customer-safe status and investigation updates |
 | `/admin/queue`, `/admin/cases/{id}[ /report]` | Light investigation board with existing topology and controls, mobile Board/Details/Activity views, report and exports |
 
@@ -79,6 +80,11 @@ Fresh checkout ML preparation:
 The encoder is frozen; a logistic regression classifier head is actually trained. First-run grouped synthetic macro F1: **0.827**; separately authored challenge macro F1: **0.471**. All labels are agent-authored and lack independent human review. Rules are the primary advisory path, with actual trained labels separately visible. Revised rules reuse the challenge test; the original results are preserved. These scores are not real-world accuracy claims.
 
 The separate add-money investigation remains available at `/mfs`, with `/customer/payment` and `/admin/queue` pages, as documented in [docs/ADD_MONEY_INVESTIGATION.md](docs/ADD_MONEY_INVESTIGATION.md).
+
+The [chatbot + DataDNA demonstration](docs/CHATBOT_DATADNA.md) reuses that simulation and its saved journal with
+a third-party model API and an automatic keyword demo fallback. Open `/chat` to try it, even without a working API.
+Configure the provider, model and server-only key for live inference; failed API calls use clearly labelled demo rules.
+The classifier and deliberately gullible system prompt live in `tracefix/transfer/chat_model.py`.
 
 Copy-ready ElevenLabs narration for each customer-facing, operations, investigation, and demonstration page is available in [docs/ELEVENLABS_PAGE_NARRATION.md](docs/ELEVENLABS_PAGE_NARRATION.md).
 

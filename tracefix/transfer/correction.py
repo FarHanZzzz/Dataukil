@@ -253,7 +253,8 @@ def _r_verify_req(db, step, args):
 def _r_verify_done(db, step, args):
     run, p = _ctx(db, step)
     plan = plan_row(db, args['plan_id'])
-    obs, case = investigation.complete_check(db, run, p['case_id'], p, 'wallet_ledger_check', args['check_id'], origin='verification')
+    ctx = investigation.check_context(db, run, p['case_id'], p, actor=plan['approved_by'], origin='verification')
+    obs, case = investigation.complete_check(db, run, p['case_id'], p, 'wallet_ledger_check', args['check_id'], origin='verification', ctx=ctx)
     posting = obs['data'].get('posting')
     if not (obs['status'] == 'completed' and posting):
         return

@@ -527,7 +527,7 @@ export class Graph {
     const pr = this.probes.get(checkId);
     if (!pr) return;
     pr.done = true;
-    pr.g.classList.toggle('is-unavailable', status === 'unavailable');
+    pr.g.classList.toggle('is-unavailable', status === 'unavailable' || status === 'blocked');
     if (!reducedMotion()) this.travel(pr.path, pr.dot, 520, true);
     setTimeout(() => {
       pr.g.classList.add('is-fading');

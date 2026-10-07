@@ -9,8 +9,8 @@ import secrets
 
 from .. import store
 from ..domain import now, uid
-from . import catalog, journal, policy, tools
-from .engine import check_budget, customer_update, handler, mutate_case, payment_row, run_row, schedule
+from . import catalog, datadna, journal, policy, tools
+from .engine import check_budget, customer_update, handler, mutate_case, owner_label, payment_row, run_row, schedule
 
 
 def _obs_by_tool(db, case_id, investigation_id):
@@ -38,7 +38,8 @@ def start(db, run, case, payment, actor):
     if payment['status'] == 'COMPLETED' or case['status'] == 'OUTCOME_RECORDED':
         raise ValueError('This payment is already confirmed; there is nothing left to investigate.')
     inv_id = uid('inv')
-    state = dict(hyp={h['id']: dict(status='unchecked', rationale='', cites=[]) for h in catalog.HYPOTHESES}, used=[], pending=None)
+    envelope = datadna.open_envelope(actor, owner_label(actor), case, payment, budget=check_budget())
+    state = dict(hyp={h['id']: dict(status='unchecked', rationale='', cites=[]) for h in catalog.HYPOTHESES}, used=[], pending=None, envelope=envelope)
     db.execute('INSERT INTO tx_investigations(id,case_id,payment_id,run_id,mode,status,budget,checks_used,started_ms,started_by,state) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                (inv_id, case['id'], payment['id'], run['id'], policy.MODE, 'running', check_budget(), 0, run['clock_ms'], actor, json.dumps(state)))
     c = mutate_case(db, case['id'], lambda c: c.__setitem__('status', 'OPEN'), actor=actor, action='investigation_started')
@@ -48,6 +49,8 @@ def start(db, run, case, payment, actor):
                  sim_ms=run['clock_ms'], cust=cust,
                  payload=dict(investigation_id=inv_id, mode=policy.MODE, mode_label=policy.MODE_LABEL, budget=check_budget(), started_by=actor,
                               hypotheses=[dict(id=h['id'], title=h['title'], status='unchecked') for h in catalog.HYPOTHESES]))
+    journal.emit(db, 'DATADNA_ENVELOPE', run_id=run['id'], payment_id=payment['id'], case_id=case['id'], case_version=c['version'], sim_ms=run['clock_ms'],
+                 payload=dict(envelope, investigation_id=inv_id, kind='investigation'))
     schedule(db, run['id'], payment['id'], run['clock_ms'] + 700, 'INV_PLAN', investigation_id=inv_id)
     return _inv(db, inv_id)
 
@@ -68,9 +71,30 @@ def _cv(db, case_id):
     return json.loads(r['body'])['version'] if r else None
 
 
-def complete_check(db, run, case_id, payment, tool, check_id, *, performed=(), investigation_id=None, origin='investigation'):
-    """Run the read-only tool as of now, preserve the observation, bump the evidence version, announce the result."""
-    res = tools.run_tool(db, tool, payment, run['clock_ms'], performed)
+def check_context(db, run, case_id, payment, *, inv=None, actor=None, origin='investigation'):
+    """The DataDNA actor context for one check. Verification reads open their own short purpose-bound envelope."""
+    case = store.get_case(db, case_id)
+    if inv:
+        actor = inv['started_by']
+        env = inv['state'].get('envelope') or datadna.open_envelope(actor, owner_label(actor), case, payment)  # runs saved before DataDNA existed
+    else:
+        actor = actor or case['owner']
+        env = datadna.open_envelope(actor, owner_label(actor), case, payment, purpose_id='verify_correction', tools=['wallet_ledger_check'])
+        journal.emit(db, 'DATADNA_ENVELOPE', run_id=run['id'], payment_id=payment['id'], case_id=case_id, case_version=case['version'], sim_ms=run['clock_ms'],
+                     payload=dict(env, investigation_id=None, kind='verification'))
+    return datadna.context(case, payment, env, actor=actor, actor_label=owner_label(actor), origin=origin)
+
+
+def complete_check(db, run, case_id, payment, tool, check_id, *, performed=(), investigation_id=None, origin='investigation', ctx=None):
+    """Gate and run the read-only tool as of now, preserve the observation, bump the evidence version, announce the result.
+
+    The DataDNA gate sits in front of the tool: a refused call reads nothing, and an allowed call releases only the
+    allow-listed, redacted record. The gate decision is saved as its own journal event next to the check result.
+    """
+    ctx = ctx or check_context(db, run, case_id, payment, origin=origin)
+    res, dna = datadna.gate_tool(ctx, tool, lambda: tools.run_tool(db, tool, payment, run['clock_ms'], performed), check_id=check_id, sim_ms=run['clock_ms'])
+    if res is None:
+        res = datadna.blocked_result(tool, dna)
     c = mutate_case(db, case_id, lambda c: c.__setitem__('evidence_version', c['evidence_version'] + 1), action='observation_recorded')
     oid = 'OBS-' + secrets.token_hex(3).upper()
     as_of = now()
@@ -80,7 +104,10 @@ def complete_check(db, run, case_id, payment, tool, check_id, *, performed=(), i
     db.execute('INSERT INTO tx_observations(id,case_id,payment_id,run_id,tool,status,as_of_ms,as_of,source,scope,summary,data,evidence_version,investigation_id,origin) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
                (oid, case_id, payment['id'], run['id'], tool, res['status'], run['clock_ms'], as_of, res['source'], res['scope'], res['summary'],
                 json.dumps(res['data'], ensure_ascii=False), c['evidence_version'], investigation_id, origin))
-    kind = 'CHECK_UNAVAILABLE' if res['status'] == 'unavailable' else 'CHECK_COMPLETED'
+    dna['observation_id'] = oid
+    journal.emit(db, 'DATADNA_REVIEWED', run_id=run['id'], payment_id=payment['id'], case_id=case_id, case_version=c['version'],
+                 node_id=catalog.TOOLS[tool]['node'], sim_ms=run['clock_ms'], payload=dna)
+    kind = 'CHECK_COMPLETED' if res['status'] == 'completed' else 'CHECK_UNAVAILABLE'
     journal.emit(db, kind, run_id=run['id'], payment_id=payment['id'], case_id=case_id, case_version=c['version'],
                  node_id=catalog.TOOLS[tool]['node'], sim_ms=run['clock_ms'],
                  payload=dict(check_id=check_id, tool=tool, label=obs['label'], status=res['status'], observation=obs,
@@ -131,7 +158,8 @@ def _done(db, step, args):
     run = run_row(db, step['run_id'])
     payment = payment_row(db, inv['payment_id'])
     performed = [t for t in inv['state']['used'] if t != args['tool']]
-    obs, case = complete_check(db, run, inv['case_id'], payment, args['tool'], args['check_id'], performed=performed, investigation_id=inv['id'])
+    ctx = check_context(db, run, inv['case_id'], payment, inv=inv)
+    obs, case = complete_check(db, run, inv['case_id'], payment, args['tool'], args['check_id'], performed=performed, investigation_id=inv['id'], ctx=ctx)
     view = dict(obs=_obs_by_tool(db, inv['case_id'], inv['id']), hyp=inv['state']['hyp'], budget=inv['budget'], used=inv['checks_used'])
     for f in policy.assess(args['tool'], obs, view):
         inv['state']['hyp'][f['hypothesis_id']] = dict(status=f['status'], rationale=f['rationale'], cites=f['cites'])
@@ -139,6 +167,11 @@ def _done(db, step, args):
         journal.emit(db, 'FINDING_RECORDED', run_id=run['id'], payment_id=payment['id'], case_id=inv['case_id'], case_version=case['version'],
                      sim_ms=run['clock_ms'], payload=dict(hypothesis_id=f['hypothesis_id'], title=title, status=f['status'],
                                                            rationale=f['rationale'], cites=f['cites'], investigation_id=inv['id']))
+    # The planner may ask for more context than the purpose needs. Each ask goes through the same five gates.
+    for request_id in datadna.followups(args['tool'], obs):
+        dna = datadna.review_request(ctx, request_id, trigger=obs['id'], sim_ms=run['clock_ms'])
+        journal.emit(db, 'DATADNA_REVIEWED', run_id=run['id'], payment_id=payment['id'], case_id=inv['case_id'], case_version=case['version'],
+                     node_id=catalog.TOOLS[args['tool']]['node'], sim_ms=run['clock_ms'], payload=dna)
     inv['state']['pending'] = None
     _save_state(db, inv)
     schedule(db, run['id'], payment['id'], run['clock_ms'] + catalog.CHECK_GAP_MS, 'INV_PLAN', investigation_id=inv['id'])
@@ -158,4 +191,10 @@ def _finish(db, run, inv, case, payment, conclusion):
         correction.propose(db, run, case, payment, inv, conclusion)
     elif conclusion['outcome'] == 'handoff':
         correction.handoff(db, run, case, payment, inv, conclusion)
+    records = journal.datadna_records(db, case['id'], payment['id'])
+    journal.emit(db, 'DATADNA_PLAN', run_id=run['id'], payment_id=payment['id'], case_id=case['id'], case_version=store.get_case(db, case['id'])['version'], sim_ms=run['clock_ms'],
+                 payload=dict(investigation_id=inv['id'], envelope_id=(inv['state'].get('envelope') or {}).get('id'), outcome=conclusion['outcome'], kind=conclusion.get('kind'),
+                              tally=datadna.tally(records), closed_at=now(),
+                              steps=datadna.compile_plan(records, outcome=conclusion['outcome'], kind=conclusion.get('kind'), performed=inv['state']['used'],
+                                                         envelope=inv['state'].get('envelope'))))
     report.save(db, run, case['id'], reason='investigation_concluded')

@@ -17,6 +17,7 @@ from . import store
 from .auth import read_session
 from .domain import now, uid, evidence, current_text, facts, fresh, customer_view
 from .transfer import FAMILY as TRANSFER_FAMILY, router as transfer_router, start_ticker, stop_ticker
+from .transfer.chat import router as chat_router
 
 ROOT=Path(__file__).resolve().parents[1]
 ROLES={'customer':'customer_1','other_customer':'customer_2','staff':'staff_1','other_staff':'staff_2','judge':'judge_1'}
@@ -42,6 +43,7 @@ async def lifespan(app):
 app=FastAPI(title='DataUkil synthetic investigation workspace',lifespan=lifespan)
 app.mount('/static',StaticFiles(directory=ROOT/'static'),name='static')
 app.include_router(transfer_router)
+app.include_router(chat_router)
 
 
 @app.middleware('http')
@@ -193,6 +195,11 @@ def console_page():
     return FileResponse(ROOT/'static'/'console.html')
 # The add-money investigation lives on its own standalone pages (never inside the legacy single-page app).
 PAY_PAGES=ROOT/'static'/'pay'
+
+
+@app.get('/chat')
+def chat_page():
+    return FileResponse(PAY_PAGES/'chat.html')
 
 
 @app.get('/admin')

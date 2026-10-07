@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 from .. import store
 from ..domain import now, uid
-from . import catalog, journal
+from . import catalog, datadna, journal
 
 DHAKA = timezone(timedelta(hours=6))
 HANDLERS = {}
@@ -79,7 +79,10 @@ def create_run(db, scenario=None, speed=1.0, replaces=None):
 
 def default_run(db):
     """The most recent active run, or a new run with the default scenario (a direct visit to /customer/payment)."""
-    r = db.execute("SELECT id FROM tx_runs WHERE status='active' ORDER BY created_at DESC, rowid DESC LIMIT 1").fetchone()
+    r = db.execute("""SELECT id FROM tx_runs WHERE status='active' AND NOT EXISTS (
+                       SELECT 1 FROM tx_chats c JOIN tx_payments p ON p.id=c.payment_id
+                       WHERE p.run_id=tx_runs.id AND c.isolated=1)
+                       ORDER BY created_at DESC, rowid DESC LIMIT 1""").fetchone()
     return run_row(db, r['id']) if r else create_run(db)
 
 
@@ -127,6 +130,23 @@ def stage(db, run, payment, node_id, state, title, fact='', *, attempt_no=1, amo
     cv = case_version(db, case_id)
     return journal.emit(db, 'STAGE_OBSERVED', run_id=run['id'], payment_id=payment['id'], case_id=case_id, case_version=cv,
                         node_id=node_id, payload=payload, cust=cust, sim_ms=run['clock_ms'])
+
+
+def dna_flow(db, run, payment, hop, state='sent'):
+    """Review one hand-off of this payment through the DataDNA gates and save the decision on the run clock.
+
+    Facts come from the saved records only. Flow reviews carry no case id so a customer page, which never receives them,
+    and the investigation ledger, which is keyed by case, stay separate; the report joins them by payment."""
+    env = journal.processing_envelope(db, payment['id'])
+    if not env:  # a payment created before DataDNA existed: open its envelope at the first hand-off
+        env = datadna.open_processing_envelope(payment)
+        journal.emit(db, 'DATADNA_ENVELOPE', run_id=run['id'], payment_id=payment['id'], node_id='intent', sim_ms=run['clock_ms'], payload=env)
+    facts = {}
+    if hop == 'partner':
+        facts['candidates'] = db.execute('SELECT COUNT(*) AS n FROM tx_mappings WHERE payment_id=?', (payment['id'],)).fetchone()['n']
+    rec = datadna.review_flow(env, payment, hop, state=state, facts=facts, sim_ms=run['clock_ms'])
+    journal.emit(db, 'DATADNA_REVIEWED', run_id=run['id'], payment_id=payment['id'], node_id=rec['node'], sim_ms=run['clock_ms'], payload=rec)
+    return rec
 
 
 def case_version(db, case_id):
@@ -224,6 +244,9 @@ def create_payment(db, run, owner, key, digest, amount_minor, bank_code):
                  payload=dict(node_id='intent', state='completed', title='Intent created', fact=f"{taka(amount_minor)} from {payment['bank_label']}",
                               attempt_no=1, amount_minor=amount_minor, reference=reference, bank_label=payment['bank_label'],
                               wallet_label=payment['wallet_label']))
+    env = datadna.open_processing_envelope(payment)
+    journal.emit(db, 'DATADNA_ENVELOPE', run_id=run['id'], payment_id=pid, node_id='intent', sim_ms=run['clock_ms'], payload=env)
+    dna_flow(db, run, payment, 'request')
     t0 = run['clock_ms']
     for offset, kind in [(500, 'VALIDATION'), (1000, 'AUTH'), (1600, 'FUNDING'), (2400, 'BANK'), (3200, 'ROUTE'),
                          (catalog.ACK_TIMEOUT_AFTER_MS, 'ACK_TIMEOUT'), (incident_after_ms(), 'INCIDENT')]:
@@ -267,6 +290,7 @@ def _auth(db, step, args):
 @handler('FUNDING')
 def _funding(db, step, args):
     run, p = _ctx(db, step)
+    dna_flow(db, run, p, 'bank')
     stage(db, run, p, 'funding-check', 'completed', 'Funds available', 'Bank funding check passed')
 
 
@@ -291,6 +315,7 @@ def _route(db, step, args):
                    (p['id'], p['reference'], 'W-' + secrets.token_hex(3).upper(), f"{catalog.WALLET['name']} ••0127", run['clock_ms']))
     db.execute('INSERT INTO tx_partner(payment_id,at_ms,state,source_available,caps,detail) VALUES (?,?,?,?,?,?)',
                (p['id'], run['clock_ms'], 'processing', 1, json.dumps({}), 'Instruction accepted for delivery'))
+    dna_flow(db, run, p, 'partner')
     stage(db, run, p, 'routing-request', 'completed', 'Sent · attempt 1', 'Routed to the wallet partner')
     stage(db, run, p, 'partner-ack', 'pending', 'Waiting', 'No acknowledgement yet')
     stage(db, run, p, 'retry-history', 'pending', 'Attempt 1', 'Awaiting an outcome')
@@ -371,6 +396,7 @@ def finish_payment(db, run, payment, posting, how, skip=()):
         stage(db, run, payment, 'credit-worker', 'completed', 'Credit worker completed', f'Posted {taka(amt)}', attempt_no=a)
     if 'wallet-ledger' not in skip:
         stage(db, run, payment, 'wallet-ledger', 'completed', f'{taka(amt)} posted', posting['ref'], attempt_no=a, amount_minor=amt)
+    dna_flow(db, run, payment, 'ack')
     stage(db, run, payment, 'partner-ack', 'completed', 'Acknowledged', 'Partner acknowledged late' if how.startswith('late') else 'Partner acknowledged')
     stage(db, run, payment, 'posting-verify', 'completed', 'Posting verified', posting['ref'])
     stage(db, run, payment, 'reconciliation', 'completed', 'Bank and wallet match', f"{taka(amt)} debit matches credit")
@@ -379,6 +405,7 @@ def finish_payment(db, run, payment, posting, how, skip=()):
     cust = customer_update(db, run, payment, 'completed', f'Your {taka(amt)} is now in your wallet.', headline='Wallet credit confirmed',
                            facts=[f'{taka(amt)} was credited to {payment["wallet_label"]}.', f'Wallet reference {posting["ref"]}.'],
                            next_step='Nothing else is needed.', case=case, stage_key='confirmed', completed=True)
+    dna_flow(db, run, payment, 'customer', 'confirmed')
     stage(db, run, payment, 'customer-update', 'completed', 'Customer updated', f'Confirmed via {how}', cust=cust)
     mark_payment(db, pid, 'COMPLETED')
     if case:
@@ -409,6 +436,7 @@ def _ack_timeout(db, step, args):
     stage(db, run, p, 'ack-return', 'pending', 'Nothing to return', 'No acknowledgement received')
     cust = customer_update(db, run, p, 'uncertain', 'We have not confirmed your wallet credit yet.', headline='Wallet credit not confirmed yet',
                            next_step='Please do not send another transfer. We are checking and will update this page.', stage_key='wallet')
+    dna_flow(db, run, p, 'customer', 'unconfirmed')
     stage(db, run, p, 'customer-update', 'pending', 'Outcome unconfirmed', 'Customer told the credit is not yet confirmed', cust=cust)
 
 
